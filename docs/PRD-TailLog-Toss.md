@@ -53,7 +53,7 @@
 
 ### 1.4 비목표 (v1)
 - 앱스토어 독립 배포 없음
-- React Native 전환 없음 (WebView only)
+- WebView 경로 재검토 없음 (React Native 경로로 확정)
 - v1에서 다국어 미지원
 
 ### 1.5 성공 지표
