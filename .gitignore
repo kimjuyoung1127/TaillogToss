@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+dist/
+
+# Granite
+.granite
+.swc
+
+# Debug
+npm-debug.log
+yarn-error.log
+
+# Yarn
+.yarn/*
+.pnp.*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (Backend)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.vscode/settings.json
+.idea/

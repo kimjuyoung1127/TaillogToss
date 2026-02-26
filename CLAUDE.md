@@ -35,7 +35,7 @@ DogCoach(Next.js PWA) → Toss 미니앱(React Native) 마이그레이션.
 | 인증 | Toss Login → Edge Function → Supabase Auth 브릿지 |
 | 결제 | Toss IAP SDK (`verify-iap-order`) |
 | 광고 | 토스 Ads SDK 2.0 ver2 (Rewarded/Interstitial/Banner) |
-| 라우팅 | 파일 기반 라우팅 (`entrypoints/`) |
+| 라우팅 | Granite 파일 기반 라우팅 — `pages/`(라우터 re-export) + `src/pages/`(실제 컴포넌트) |
 
 ## 스킬 활용 가이드
 
@@ -96,10 +96,24 @@ login → welcome(최초 1회) → survey → survey-result → notification →
 - 경로 기준: `Backend/app/...`, `Backend/alembic/...`
 - Toss S2S/mTLS 브릿지는 `supabase/functions/...`에서 관리한다.
 
+### Granite 프로젝트 구조
+```
+pages/            # 라우터 엔트리 (thin re-export) — require.context가 스캔
+src/
+  _app.tsx        # 앱 컨테이너 (Granite.registerApp)
+  pages/          # 실제 페이지 컴포넌트 (createRoute)
+  components/     # 3계층: tds-ext ← shared ← features
+  lib/            # API, hooks, charts, guards, analytics, data, security
+  types/          # 도메인별 타입 (BE 미러)
+  stores/         # QueryClient, Context providers
+supabase/functions/  # Edge Function (Toss S2S mTLS)
+Backend/             # FastAPI + Alembic
+```
+
 ### 레이어 의존성
-- `entrypoints/` (화면) → components, lib, types 의존 가능
-- `components/` → lib, types 의존 가능
-- `lib/` → types만 의존 (컴포넌트 import 금지)
+- `src/pages/` (화면) → components, lib, types 의존 가능
+- `src/components/` → lib, types 의존 가능
+- `src/lib/` → types만 의존 (컴포넌트 import 금지)
 
 ### Toss 미니앱 개발 검수 방법 (3단계)
 1. 로컬 개발 (기본)

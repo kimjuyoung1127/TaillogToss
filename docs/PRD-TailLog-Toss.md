@@ -270,7 +270,7 @@ dogs, dog_env, behavior_logs, ai_coaching, ai_recommendation_snapshots, ai_recom
 
 ### 7.1 프론트엔드 신규 구조 (React Native)
 ```
-screens/          # 파일 기반 라우팅 (@apps-in-toss/react-native-framework)
+pages/            # Granite 파일 기반 라우팅 (pages/ → src/pages/ 2단계 구조)
 components/       # TDS RN 래퍼 컴포넌트 + 커스텀 컴포넌트
 lib/              # API client, hooks, utils (기존 DogCoach에서 ~70% 재사용)
 stores/           # TanStack Query (서버상태) + 필요 시 Zustand

@@ -51,7 +51,7 @@
 ### 4.2 화면 구조 (진짜 2페이지)
 
 ```
-screens/
+pages/
 ├── ops/today             ★ 운영 원스탑 (대부분의 업무 여기서)
 │   ├── [탭] 미기록         업무 상태 필터 기본
 │   ├── [탭] 주의 필요       이상징후/급증
@@ -66,7 +66,7 @@ screens/
 └── report/[shareToken]   비토스 보호자용 공개 링크
 ```
 
-> **Note**: React Native 파일 기반 라우팅 (`@apps-in-toss/react-native-framework`). 40마리 카드는 FlatList 네이티브 가상화로 60fps 보장.
+> **Note**: Granite 파일 기반 라우팅 (`pages/` → `src/pages/` 2단계 구조). 40마리 카드는 FlatList 네이티브 가상화로 60fps 보장.
 
 나머지는 전부 `ops/today`의 **탭/바텀시트**로 흡수. (드로어 대신 바텀시트 — 토스 UX 관습)
 
