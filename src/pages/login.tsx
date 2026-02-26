@@ -3,17 +3,19 @@
  * appLogin() → Edge Function(login-with-toss) → setSession → 온보딩/대시보드
  * Parity: AUTH-001
  */
-import { createRoute } from '@granite-js/react-native';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from 'stores/AuthContext';
+import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
 
 export const Route = createRoute('/login', {
   component: LoginPage,
 });
 
 function LoginPage() {
-  const { login } = useAuth();
+  const { login, syncOnboardingStatus } = useAuth();
+  const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ function LoginPage() {
       // mock: 1초 후 로그인 성공
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      login({
+      const mockUser = {
         id: 'mock-user-id',
         toss_user_key: 'mock-toss-key',
         role: 'user',
@@ -36,15 +38,24 @@ function LoginPage() {
         last_login_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      } as const;
 
-      // 로그인 성공 → welcome 또는 dashboard로 이동 (가드가 처리)
+      login(mockUser);
+
+      const hasCompletedOnboarding = await syncOnboardingStatus(mockUser.id);
+      if (hasCompletedOnboarding) {
+        const pending = consumePostLoginRedirect();
+        navigation.navigate(pending ?? '/dashboard');
+        return;
+      }
+
+      navigation.navigate('/onboarding/welcome');
     } catch {
       setError('로그인에 실패했어요. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
-  }, [login]);
+  }, [login, navigation, syncOnboardingStatus]);
 
   return (
     <SafeAreaView style={styles.safe}>

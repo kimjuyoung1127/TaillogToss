@@ -1,24 +1,199 @@
 /**
- * 메인 대시보드 화면 — Dashboard Grid 레이아웃 (ABC 기록 요약 + 퀵액션)
- * Parity: UI-001
+ * 메인 대시보드 화면 — TabLayout 3탭 (기록/분석/훈련)
+ * [기록] 탭: DogCard + StreakBanner + ABC LogCard 리스트
+ * [분석] 탭 클릭 → /dashboard/analysis 페이지 이동
+ * [훈련] 탭 → Phase 8 EmptyState
+ * Parity: UI-001, LOG-001
  */
-import { createRoute } from '@granite-js/react-native';
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { createRoute, useNavigation } from '@granite-js/react-native';
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useActiveDog } from 'stores/ActiveDogContext';
+import { useLogList, useDailyLogs } from 'lib/hooks/useLogs';
+import { DogCard } from 'components/features/dashboard/DogCard';
+import { StreakBanner } from 'components/features/dashboard/StreakBanner';
+import { LogCard } from 'components/features/log/LogCard';
+import { EmptyState } from 'components/tds-ext/EmptyState';
+import { ErrorState } from 'components/tds-ext/ErrorState';
+import { TabLayout } from 'components/shared/layouts/TabLayout';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/dashboard', {
   component: DashboardPage,
 });
 
 function DashboardPage() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Dashboard</Text>
+  const { activeDog } = useActiveDog();
+  const navigation = useNavigation();
+  const { isReady } = usePageGuard({ currentPath: '/dashboard' });
+
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const { data: allLogs, isLoading: logsLoading, error: logsError, refetch } = useLogList(activeDog?.id);
+  const { data: todayLogs } = useDailyLogs(activeDog?.id, today);
+
+  const handleQuickLog = useCallback(() => {
+    navigation.navigate('/dashboard/quick-log');
+  }, [navigation]);
+
+  const recordContent = (
+    <View style={styles.tabContent}>
+      {activeDog && (
+        <DogCard
+          dog={activeDog}
+          todayLogCount={todayLogs?.length ?? 0}
+          onPress={() => navigation.navigate('/dog/profile')}
+        />
+      )}
+
+      {allLogs && <StreakBanner logs={allLogs} />}
+
+      {logsLoading && (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0064FF" />
+        </View>
+      )}
+
+      {logsError && (
+        <ErrorState onRetry={() => { void refetch(); }} />
+      )}
+
+      {!logsLoading && !logsError && allLogs && allLogs.length === 0 && (
+        <EmptyState
+          title="아직 기록이 없어요"
+          description="아래 버튼으로 첫 기록을 남겨보세요"
+          icon={'\uD83D\uDCDD'}
+        />
+      )}
+
+      {!logsLoading && !logsError && allLogs && allLogs.length > 0 && (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.logListHeader}>
+            <Text style={styles.logListTitle}>최근 ABC 기록</Text>
+          </View>
+          {allLogs.slice(0, 20).map((log) => (
+            <LogCard key={log.id} log={log} />
+          ))}
+        </ScrollView>
+      )}
     </View>
+  );
+
+  const analysisContent = (
+    <View style={styles.center}>
+      <TouchableOpacity style={styles.analysisLink} onPress={() => navigation.navigate('/dashboard/analysis')} activeOpacity={0.7}>
+        <Text style={styles.analysisIcon}>{'\uD83D\uDCCA'}</Text>
+        <Text style={styles.analysisText}>행동 분석 보기</Text>
+        <Text style={styles.analysisArrow}>{'\u2192'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const trainingContent = (
+    <View style={styles.center}>
+      <TouchableOpacity
+        style={styles.analysisLink}
+        onPress={() => navigation.navigate('/training/academy')}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.analysisIcon}>{'\uD83C\uDF93'}</Text>
+        <Text style={styles.analysisText}>훈련 아카데미로 이동</Text>
+        <Text style={styles.analysisArrow}>{'\u2192'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const tabs = useMemo(() => [
+    { key: 'record', label: '기록', content: recordContent },
+    { key: 'analysis', label: '분석', content: analysisContent },
+    { key: 'training', label: '훈련', content: trainingContent },
+  ], [recordContent, analysisContent, trainingContent]);
+
+  if (!isReady) return null;
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <View style={styles.body}>
+          <TabLayout title="테일로그" tabs={tabs} defaultTab="record" />
+        </View>
+        <View style={styles.bottomCTA}>
+          <TouchableOpacity style={styles.ctaButton} onPress={handleQuickLog} activeOpacity={0.8}>
+            <Text style={styles.ctaText}>+ 빠른 기록</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  text: { fontSize: 18, color: '#202632' },
+  safe: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  container: {
+    flex: 1,
+  },
+  body: {
+    flex: 1,
+  },
+  tabContent: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  logListHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  logListTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#202632',
+  },
+  analysisLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F4F4F5',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  analysisIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  analysisText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#202632',
+    flex: 1,
+  },
+  analysisArrow: {
+    fontSize: 18,
+    color: '#8B95A1',
+  },
+  bottomCTA: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E8EB',
+  },
+  ctaButton: {
+    backgroundColor: '#0064FF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  ctaText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

@@ -9,8 +9,8 @@ DogCoach(Next.js PWA) → Toss 미니앱(React Native) 마이그레이션.
 
 | 구분 | 경로 | 권한 |
 |------|------|------|
-| Write Repo | `C:\Users\ezen601\Desktop\Jason\tosstaillog` | 읽기/쓰기 |
-| Read-Only Ref | `C:\Users\ezen601\OneDrive\바탕 화면\DogCoach` | 읽기 전용 — 수정 금지 |
+| Write Repo | `C:\Users\gmdqn\tosstaillog` | 읽기/쓰기 |
+| Read-Only Ref | `C:\Users\gmdqn\DogCoach` | 읽기 전용 — 수정 금지 |
 
 ## 에이전트 실행 규약 (MUST)
 
@@ -160,4 +160,4 @@ Backend/             # FastAPI + Alembic
 | 마이그레이션 운영 모델 | `docs/10-MIGRATION-OPERATING-MODEL.md` |
 | 기능 패리티 매트릭스 | `docs/11-FEATURE-PARITY-MATRIX.md` |
 | 마이그레이션 웨이브 | `docs/12-MIGRATION-WAVES-AND-GATES.md` |
-| 원본 DogCoach (읽기 전용) | `C:\Users\ezen601\OneDrive\바탕 화면\DogCoach` |
+| 원본 DogCoach (읽기 전용) | `C:\Users\gmdqn\DogCoach` |

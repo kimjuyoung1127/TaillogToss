@@ -1,24 +1,232 @@
 /**
- * AI 코칭 결과 화면 — Card Stack 레이아웃 (맞춤 교정 플랜 + 광고 터치포인트 R3)
+ * AI 코칭 결과 화면 — 6블록 Card Stack + PRO 잠금 + R3 광고 터치포인트
+ * DetailLayout (패턴B) — BackButton + "AI 행동 진단"
  * Parity: AI-001
  */
-import { createRoute } from '@granite-js/react-native';
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { createRoute, useNavigation } from '@granite-js/react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { DetailLayout } from 'components/shared/layouts/DetailLayout';
+import { CoachingBlockList } from 'components/features/coaching/CoachingBlockList';
+import { EmptyState } from 'components/tds-ext/EmptyState';
+import { ErrorState } from 'components/tds-ext/ErrorState';
+import { useLatestCoaching, useSubmitFeedback } from 'lib/hooks/useCoaching';
+import { useIsPro } from 'lib/hooks/useSubscription';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { tracker } from 'lib/analytics/tracker';
+import { useActiveDog } from 'stores/ActiveDogContext';
+import { useAuth } from 'stores/AuthContext';
 
 export const Route = createRoute('/coaching/result', {
   component: CoachingResultPage,
 });
 
 function CoachingResultPage() {
+  const { user } = useAuth();
+  const { activeDog } = useActiveDog();
+  const isPro = useIsPro(user?.id);
+  const navigation = useNavigation();
+  const { isReady } = usePageGuard({ currentPath: '/coaching/result' });
+  const { data: coaching, isLoading, isError, refetch } = useLatestCoaching(activeDog?.id);
+  const submitFeedback = useSubmitFeedback();
+  const [selectedScore, setSelectedScore] = useState<number>(0);
+  const trackedRequestRef = useRef(false);
+  const trackedCoachingIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isReady && !trackedRequestRef.current) {
+      trackedRequestRef.current = true;
+      tracker.aiCoachRequested();
+    }
+  }, [isReady]);
+
+  useEffect(() => {
+    if (coaching && trackedCoachingIdRef.current !== coaching.id) {
+      trackedCoachingIdRef.current = coaching.id;
+      tracker.aiCoachCompleted('ai');
+    }
+  }, [coaching]);
+
+  const handleNavigateToAcademy = useCallback(() => {
+    navigation.navigate('/training/academy');
+  }, [navigation]);
+
+  const handleBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleStarPress = useCallback(
+    (score: 1 | 2 | 3 | 4 | 5) => {
+      if (!coaching) return;
+      setSelectedScore(score);
+      submitFeedback.mutate({ coachingId: coaching.id, score });
+    },
+    [coaching, submitFeedback],
+  );
+
+  if (!isReady) return null;
+
+  if (isLoading) {
+    return (
+      <DetailLayout title="AI 행동 진단" onBack={handleBack}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0064FF" />
+          <Text style={styles.loadingText}>코칭 결과를 불러오는 중...</Text>
+        </View>
+      </DetailLayout>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DetailLayout title="AI 행동 진단" onBack={handleBack}>
+        <ErrorState
+          title="코칭 결과를 불러올 수 없어요"
+          description="네트워크를 확인하고 다시 시도해 주세요"
+          onRetry={() => void refetch()}
+        />
+      </DetailLayout>
+    );
+  }
+
+  if (!coaching) {
+    return (
+      <DetailLayout title="AI 행동 진단" onBack={handleBack}>
+        <EmptyState
+          title="아직 코칭 결과가 없어요"
+          description="행동 기록을 쌓으면 AI가 맞춤 코칭을 제공합니다"
+          icon="🐾"
+        />
+      </DetailLayout>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Coaching Result</Text>
-    </View>
+    <DetailLayout
+      title="AI 행동 진단"
+      onBack={handleBack}
+      bottomCTA={{ label: '훈련 시작하기', onPress: handleNavigateToAcademy }}
+    >
+      {/* 코칭 날짜 헤더 */}
+      <View style={styles.dateHeader}>
+        <Text style={styles.dateLabel}>
+          {formatReportType(coaching.report_type)} 코칭
+        </Text>
+        <Text style={styles.dateText}>
+          {formatDate(coaching.created_at)}
+        </Text>
+      </View>
+
+      {/* 6블록 렌더링 */}
+      <CoachingBlockList
+        blocks={coaching.blocks}
+        isPro={isPro ?? false}
+      />
+
+      {/* 피드백 섹션 */}
+      {coaching.feedback_score === null && selectedScore === 0 && (
+        <View style={styles.feedbackSection}>
+          <Text style={styles.feedbackTitle}>이 코칭이 도움이 되었나요?</Text>
+          <View style={styles.feedbackStars}>
+            {([1, 2, 3, 4, 5] as const).map((star) => (
+              <TouchableOpacity
+                key={star}
+                onPress={() => handleStarPress(star)}
+                activeOpacity={0.7}
+                disabled={submitFeedback.isPending}
+              >
+                <Text style={[styles.star, star <= selectedScore && styles.starSelected]}>
+                  {star <= selectedScore ? '★' : '☆'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+    </DetailLayout>
   );
 }
 
+// ──────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────
+
+function formatReportType(type: string): string {
+  const labels: Record<string, string> = {
+    DAILY: '일간',
+    WEEKLY: '주간',
+    INSIGHT: '인사이트',
+  };
+  return labels[type] ?? type;
+}
+
+function formatDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  } catch {
+    return iso;
+  }
+}
+
+// ──────────────────────────────────────
+// Styles
+// ──────────────────────────────────────
+
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  text: { fontSize: 18, color: '#202632' },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#8B95A1',
+  },
+  dateHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0064FF',
+    backgroundColor: '#0064FF1A',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  dateText: {
+    fontSize: 13,
+    color: '#8B95A1',
+  },
+  feedbackSection: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F4F4F5',
+  },
+  feedbackTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333D4B',
+    marginBottom: 12,
+  },
+  feedbackStars: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  star: {
+    fontSize: 28,
+    color: '#D1D6DB',
+  },
+  starSelected: {
+    color: '#FFB800',
+  },
 });

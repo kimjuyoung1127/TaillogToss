@@ -3,14 +3,31 @@
  * Parity: APP-001
  */
 import React, { type PropsWithChildren } from 'react';
-import { Granite, type InitialProps } from '@granite-js/react-native';
+import { Granite, getSchemeUri, type InitialProps } from '@granite-js/react-native';
 import { context } from '../require.context';
+import { QueryProvider } from 'stores/QueryProvider';
+import { AuthProvider } from 'stores/AuthContext';
+import { ActiveDogProvider } from 'stores/ActiveDogContext';
+import { SurveyProvider } from 'stores/SurveyContext';
+import { rewriteInitialUrlForDeepEntry } from 'lib/guards';
 
 function AppContainer({ children }: PropsWithChildren<InitialProps>) {
-  return <>{children}</>;
+  return (
+    <QueryProvider>
+      <AuthProvider>
+        <ActiveDogProvider>
+          <SurveyProvider>{children}</SurveyProvider>
+        </ActiveDogProvider>
+      </AuthProvider>
+    </QueryProvider>
+  );
 }
 
 export default Granite.registerApp(AppContainer, {
   appName: 'taillog-toss',
   context,
+  getInitialUrl: async (initialScheme) => {
+    const initialUrl = getSchemeUri();
+    return rewriteInitialUrlForDeepEntry(initialUrl, initialScheme);
+  },
 });

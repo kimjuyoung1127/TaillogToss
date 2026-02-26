@@ -5,12 +5,16 @@
 import { createRoute } from '@granite-js/react-native';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/dog/switcher', {
   component: DogSwitcherPage,
 });
 
 function DogSwitcherPage() {
+  const { isReady } = usePageGuard({ currentPath: '/dog/switcher' });
+  if (!isReady) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Dog Switcher</Text>

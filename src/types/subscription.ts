@@ -102,7 +102,13 @@ export interface TossOrder {
 
 /** IAP 구매 요청 DTO */
 export interface PurchaseRequest {
+  productId?: string;
   product_id: string;
+  orderId?: string;
+  order_id?: string;
+  transactionId?: string;
+  transaction_id?: string;
+  idempotencyKey?: string;
   idempotency_key: string;
 }
 

@@ -3,18 +3,27 @@
  * 최초 1회만 표시. welcome → survey 전환
  * Parity: AUTH-001
  */
-import { createRoute } from '@granite-js/react-native';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/onboarding/welcome', {
   component: WelcomePage,
 });
 
 function WelcomePage() {
+  const navigation = useNavigation();
+  const { isReady } = usePageGuard({
+    currentPath: '/onboarding/welcome',
+    skipOnboarding: true,
+  });
+
   const handleStart = () => {
-    // TODO: navigation.push('/onboarding/survey') — Phase 10 가드 연결
+    navigation.navigate('/onboarding/survey');
   };
+
+  if (!isReady) return null;
 
   return (
     <SafeAreaView style={styles.safe}>

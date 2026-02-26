@@ -26,6 +26,8 @@ export interface SmartMessageRequest {
   user_id: string;
   notification_type: NotificationType;
   template: SmartMessageTemplate;
+  idempotencyKey?: string;
+  idempotency_key?: string;
 }
 
 /** 발송 이력 */

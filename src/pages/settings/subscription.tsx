@@ -5,12 +5,16 @@
 import { createRoute } from '@granite-js/react-native';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/settings/subscription', {
   component: SubscriptionPage,
 });
 
 function SubscriptionPage() {
+  const { isReady } = usePageGuard({ currentPath: '/settings/subscription' });
+  if (!isReady) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Subscription</Text>

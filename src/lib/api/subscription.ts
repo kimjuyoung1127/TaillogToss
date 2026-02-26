@@ -5,6 +5,22 @@
 import { supabase } from './supabase';
 import type { Subscription, TossOrder, PurchaseRequest } from 'types/subscription';
 
+function toIdempotencyKey(request: PurchaseRequest): string {
+  return request.idempotencyKey ?? request.idempotency_key ?? `idem_${Date.now().toString(36)}`;
+}
+
+function toOrderId(request: PurchaseRequest): string {
+  return request.orderId ?? request.order_id ?? `order_${Date.now().toString(36)}`;
+}
+
+function toTransactionId(request: PurchaseRequest): string {
+  return request.transactionId ?? request.transaction_id ?? `tx_${Date.now().toString(36)}`;
+}
+
+function toProductId(request: PurchaseRequest): string {
+  return request.productId ?? request.product_id;
+}
+
 /** 현재 구독 상태 */
 export async function getSubscription(userId: string): Promise<Subscription | null> {
   const { data, error } = await supabase
@@ -18,8 +34,15 @@ export async function getSubscription(userId: string): Promise<Subscription | nu
 
 /** IAP 구매 검증 (Edge Function) */
 export async function verifyIAPOrder(request: PurchaseRequest): Promise<TossOrder> {
+  const payload = {
+    orderId: toOrderId(request),
+    productId: toProductId(request),
+    transactionId: toTransactionId(request),
+    idempotencyKey: toIdempotencyKey(request),
+  };
+
   const { data, error } = await supabase.functions.invoke('verify-iap-order', {
-    body: request,
+    body: payload,
   });
   if (error) throw error;
   return data as TossOrder;

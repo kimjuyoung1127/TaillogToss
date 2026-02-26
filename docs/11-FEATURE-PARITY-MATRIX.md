@@ -20,14 +20,14 @@
 
 | Parity ID | Domain | DogCoach Source | TaillogToss Target | Change Type | Status | Test Scope | Risk | Notes |
 |---|---|---|---|---|---|---|---|---|
-| AUTH-001 | Auth | Supabase OAuth + guest | Toss Login bridge + Supabase session | rewrite | In Progress | integration/e2e | High | `appLogin` + `login-with-toss` |
-| APP-001 | App Shell | Next.js App Router | RN file-based routing app shell | rewrite | Not Started | unit/manual | Medium | nav/layout baseline |
-| UI-001 | Design System | Tailwind/Radix/Framer Motion | TDS React Native | rewrite | Not Started | visual/manual | High | UI 전면 교체 |
-| LOG-001 | Behavior Log | ABC 기록 폼(웹) | RN 기록 화면 + 바텀시트 | adapt | Not Started | unit/manual | Medium | 프리셋 우선 |
-| AI-001 | AI Coaching | 기존 FastAPI 코칭 API | RN API client + hook 재사용 | adapt | Not Started | unit/integration | Medium | BE 변경 최소화 |
-| IAP-001 | Billing | Stripe placeholder | Toss IAP + verify-iap-order | rewrite | Not Started | integration/e2e | High | 상태 2축 관리 + R1/R2/R3 광고 잠금 해제 계약 + Edge Function contract test 연계 |
-| MSG-001 | Notification | 미구현 | Smart Message Edge Function | new | Not Started | integration | High | 빈도 제한 정책 + Edge Function contract test(쿨다운/일일 제한) 필수 |
-| B2B-001 | Ops Queue | 없음 | Today Ops Queue (RN FlatList) | new | Not Started | manual/perf | High | 40마리 기준 + Wave 3 게이트 전에는 타입/테이블 스텁만 허용 |
+| AUTH-001 | Auth | Supabase OAuth + guest | Toss Login bridge + Supabase session | rewrite | In Progress | integration/e2e | High | `[x] login.tsx mock` `[x] AuthContext + useAuth` `[x] authGuard + onboardingGuard` `[x] usePageGuard 11개 페이지 적용` `[x] login-with-toss Edge Function(mock)` `[x] rateLimiter/piiGuard/pepperRotation` `[ ] mTLS 인증서` `[ ] Toss Sandbox E2E` |
+| APP-001 | App Shell | Next.js App Router | RN file-based routing app shell | rewrite | In Progress | unit/manual | Medium | `[x] 16라우트 + _app.tsx 프로바이더` `[x] 레이아웃 5종` `[x] 딥엔트리 3종` `[x] SurveyContext` `[ ] Sandbox 앱 검증` |
+| UI-001 | Design System | Tailwind/Radix/Framer Motion | TDS React Native | rewrite | In Progress | visual/manual | High | `[x] TDS-ext 6 + shared 6 + features 21 = 33컴포넌트` `[x] 16개 화면 전체 빌드` `[x] tsc 통과` `[ ] 실기기 비주얼 QA` |
+| LOG-001 | Behavior Log | ABC 기록 폼(웹) | RN 기록 화면 + 바텀시트 | adapt | In Progress | unit/manual | Medium | `[x] 대시보드 + 빠른기록 + 상세기록 + 분석` `[x] ABCForm + QuickLogForm` `[ ] Supabase API 실 연동` |
+| AI-001 | AI Coaching | 기존 FastAPI 코칭 API | RN API client + hook 재사용 | adapt | In Progress | unit/integration | Medium | `[x] 코칭 6블록 (Free 3 + PRO 3)` `[x] 피드백 별점 useSubmitFeedback` `[ ] FastAPI 코칭 API 실 연동` |
+| IAP-001 | Billing | Stripe placeholder | Toss IAP + verify-iap-order | rewrite | In Progress | integration/e2e | High | `[x] 구독 화면 + useIsPro` `[x] featureGuard (PRO + 멀티독)` `[x] verify-iap-order Edge Function(mock)` `[x] grant-toss-points Edge Function(mock)` `[ ] 결제 E2E` |
+| MSG-001 | Notification | 미구현 | Smart Message Edge Function | new | In Progress | integration | High | `[x] send-smart-message Edge Function(mock)` `[x] 쿨다운 정책(10분/일3회/22~08)` `[ ] noti_history 실DB 연동` `[ ] Sandbox 실발송 검증` |
+| B2B-001 | Ops Queue | 없음 | Today Ops Queue (RN FlatList) | new | Not Started | manual/perf | High | 빈 타입 10개만 존재. Wave 3 이전 |
 
 ## 3) 사용 규칙
 

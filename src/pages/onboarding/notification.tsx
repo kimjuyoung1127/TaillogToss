@@ -3,9 +3,15 @@
  * 기본값: 훈련 리마인더 ON, 행동 급증 ON, 프로모션 OFF
  * Parity: AUTH-001
  */
-import { createRoute } from '@granite-js/react-native';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Switch } from 'react-native';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { useUpdateSettings } from 'lib/hooks/useSettings';
+import { tracker } from 'lib/analytics/tracker';
+import { useAuth } from 'stores/AuthContext';
+import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
+import { useSurvey } from 'stores/SurveyContext';
 
 export const Route = createRoute('/onboarding/notification', {
   component: NotificationPage,
@@ -18,28 +24,82 @@ interface NotifPref {
 }
 
 function NotificationPage() {
+  const navigation = useNavigation();
+  const { user, syncOnboardingStatus } = useAuth();
+  const { clearSurveyData } = useSurvey();
+  const updateSettings = useUpdateSettings();
+  const { isReady } = usePageGuard({
+    currentPath: '/onboarding/notification',
+    skipOnboarding: true,
+  });
+
   const [prefs, setPrefs] = useState<NotifPref>({
     training_reminder: true,
     behavior_spike: true,
     promotions: false,
   });
 
-  const handleAllow = useCallback(() => {
-    // TODO: OS 푸시 권한 요청 + Smart Message API 등록 + dashboard 이동
-    void prefs;
-  }, [prefs]);
+  const completeOnboardingFlow = useCallback(async () => {
+    if (!user) {
+      navigation.navigate('/login');
+      return;
+    }
+
+    const hasCompletedOnboarding = await syncOnboardingStatus(user.id);
+    if (!hasCompletedOnboarding) {
+      navigation.navigate('/onboarding/survey');
+      return;
+    }
+
+    clearSurveyData();
+    tracker.onboardingComplete();
+    const pending = consumePostLoginRedirect();
+    navigation.navigate(pending ?? '/dashboard');
+  }, [clearSurveyData, navigation, syncOnboardingStatus, user]);
+
+  const handleAllow = useCallback(async () => {
+    if (!user) {
+      navigation.navigate('/login');
+      return;
+    }
+
+    try {
+      await updateSettings.mutateAsync({
+        userId: user.id,
+        updates: {
+          notification_pref: {
+            channels: { smart_message: true, push: true },
+            types: {
+              log_reminder: prefs.training_reminder,
+              surge_alert: prefs.behavior_spike,
+              coaching_ready: true,
+              training_reminder: prefs.training_reminder,
+              promo: prefs.promotions,
+            },
+            quiet_hours: { enabled: true, start_hour: 22, end_hour: 8 },
+          },
+        },
+      });
+    } catch {
+      // 설정 저장 실패 시에도 온보딩 완료 플로우는 유지
+    }
+
+    await completeOnboardingFlow();
+  }, [completeOnboardingFlow, navigation, prefs, updateSettings, user]);
 
   const handleSkip = useCallback(() => {
-    // TODO: navigation.push('/dashboard') — 알림 스킵
-  }, []);
+    void completeOnboardingFlow();
+  }, [completeOnboardingFlow]);
 
   const handleClose = useCallback(() => {
-    // TODO: navigation.push('/dashboard') — "나중에"
-  }, []);
+    void completeOnboardingFlow();
+  }, [completeOnboardingFlow]);
 
   const togglePref = (key: keyof NotifPref) => {
     setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  if (!isReady) return null;
 
   return (
     <SafeAreaView style={styles.safe}>

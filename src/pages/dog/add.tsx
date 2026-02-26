@@ -5,12 +5,19 @@
 import { createRoute } from '@granite-js/react-native';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/dog/add', {
   component: DogAddPage,
 });
 
 function DogAddPage() {
+  const { isReady } = usePageGuard({
+    currentPath: '/dog/add',
+    requireFeature: 'multiDog',
+  });
+  if (!isReady) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Add Dog</Text>

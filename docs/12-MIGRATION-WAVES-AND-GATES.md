@@ -21,39 +21,48 @@
 - 범위: 앱 셸, 라우팅, 환경변수, 인증 브릿지 골격
 - 대상 Parity: `APP-001`, `AUTH-001`
 - Exit Gate:
-  - RN 앱 기본 실행 가능
-  - Toss Login 브릿지 호출 성공(개발 환경)
+  - [x] RN 앱 기본 실행 가능
+  - [ ] Toss Login 브릿지 호출 성공(개발 환경) — mock만 완료, 실 mTLS 대기
+- **상태: 부분 통과**
 
 ### Wave 1: Core B2C
 
 - 범위: 대시보드/행동기록/AI 코칭 기본 플로우
 - 대상 Parity: `LOG-001`, `AI-001`, `UI-001`
 - Exit Gate:
-  - 기록 생성/조회/코칭 호출 E2E 1회 통과
-  - TDS RN 기반 화면 최소 3개 전환 완료
+  - [x] TDS RN 기반 화면 16개 전환 완료 (3+ 초과 달성)
+  - [x] 기록 생성/조회 UI 완료
+  - [x] 코칭 UI 완료
+  - [ ] 기록→코칭 E2E 1회 통과 — Supabase 실 연동 대기
+- **상태: 부분 통과 (FE 완료, BE 연동 대기)**
 
 ### Wave 2: Toss Core Features
 
 - 범위: IAP, Smart Message, 포인트 연동 준비
 - 대상 Parity: `IAP-001`, `MSG-001`
 - Exit Gate:
-  - 주문 검증 + 멱등 처리 확인
-  - 메시지 발송 정책(쿨다운/빈도) 확인
+  - [x] IAP UI + featureGuard 완료
+  - [x] 주문 검증 + 멱등 처리 코드 구현 (`verify-iap-order`, mock 기준)
+  - [x] 메시지 발송 정책(쿨다운/빈도) 코드 구현 (`send-smart-message`)
+  - [ ] Edge Function 런타임 invoke 검증 로그 확보 (Jest hang 이슈 해소 포함)
+- **상태: 부분 통과 (코드 구현 완료, 런타임 검증 대기)**
 
 ### Wave 3: B2B Expansion
 
 - 범위: Today Ops Queue, Bulk 편집, 보호자 공유
 - 대상 Parity: `B2B-001` 및 B2B 확장 항목
 - Exit Gate:
-  - 40마리 리스트 스크롤 성능 점검 통과
-  - 공유 링크 2경로(토스/비토스) 검증 완료
+  - [ ] 40마리 리스트 스크롤 성능 점검 통과
+  - [ ] 공유 링크 2경로(토스/비토스) 검증 완료
+- **상태: 미통과**
 
 ### Wave 4: Release Readiness
 
 - 범위: QA, 성능, 운영 점검
 - Exit Gate:
-  - 테스트 통과 + 릴리즈 체크리스트 충족
-  - Toss QA 제출 준비 완료
+  - [ ] 테스트 통과 + 릴리즈 체크리스트 충족
+  - [ ] Toss QA 제출 준비 완료
+- **상태: 미통과**
 
 ## 3) 공통 게이트 체크리스트
 

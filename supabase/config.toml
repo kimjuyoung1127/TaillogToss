@@ -1,0 +1,22 @@
+# Supabase Edge Functions config — Phase 11 contracts
+# login-with-toss only: verify_jwt = false
+
+[functions.login-with-toss]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/login-with-toss/index.ts"
+
+[functions.verify-iap-order]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/verify-iap-order/index.ts"
+
+[functions.send-smart-message]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/send-smart-message/index.ts"
+
+[functions.grant-toss-points]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/grant-toss-points/index.ts"

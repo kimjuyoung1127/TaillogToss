@@ -4,6 +4,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from 'lib/api/queryKeys';
+import { tracker } from 'lib/analytics/tracker';
 import * as subApi from 'lib/api/subscription';
 import type { PurchaseRequest } from 'types/subscription';
 
@@ -24,7 +25,8 @@ export function usePurchaseIAP() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (request: PurchaseRequest) => subApi.verifyIAPOrder(request),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      tracker.iapPurchaseSuccess(variables.product_id);
       void qc.invalidateQueries({ queryKey: queryKeys.subscription.all });
     },
   });

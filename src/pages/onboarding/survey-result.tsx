@@ -3,8 +3,8 @@
  * Skeleton 블러 잠금 영역: 광고 시청 또는 no-fill 시 해제
  * Parity: AUTH-001
  */
-import { createRoute } from '@granite-js/react-native';
-import React, { useState } from 'react';
+import { createRoute, useNavigation } from '@granite-js/react-native';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import {
   BehaviorTypeBadge,
@@ -13,25 +13,44 @@ import {
 } from 'components/features/survey/BehaviorTypeBadge';
 import { RewardedAdButton } from 'components/shared/ads/RewardedAdButton';
 import type { BehaviorType } from 'types/dog';
+import { useSurvey } from 'stores/SurveyContext';
+import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/onboarding/survey-result', {
   component: SurveyResultPage,
 });
 
 function SurveyResultPage() {
-  // TODO: route params에서 설문 데이터 수신 (Phase 10)
-  const mockBehaviors: BehaviorType[] = ['barking', 'anxiety'];
-  const dogName = '뽀삐';
+  const navigation = useNavigation();
+  const { surveyData } = useSurvey();
+  const { isReady } = usePageGuard({
+    currentPath: '/onboarding/survey-result',
+    skipOnboarding: true,
+  });
 
-  const behaviorType = classifyBehaviorType(mockBehaviors);
-  const riskLevel = estimateRiskLevel(mockBehaviors);
+  useEffect(() => {
+    if (!surveyData) {
+      navigation.navigate('/onboarding/survey');
+    }
+  }, [navigation, surveyData]);
+
+  const behaviors = useMemo<BehaviorType[]>(
+    () => surveyData?.step3_behavior.primary_behaviors ?? ['other'],
+    [surveyData]
+  );
+  const dogName = surveyData?.step1_basic.name ?? '우리 강아지';
+
+  const behaviorType = classifyBehaviorType(behaviors);
+  const riskLevel = estimateRiskLevel(behaviors);
   const riskScore = riskLevel === 'critical' ? 90 : riskLevel === 'high' ? 70 : riskLevel === 'medium' ? 50 : 25;
 
   const [isDetailUnlocked, setIsDetailUnlocked] = useState(false);
 
   const handleStartRecording = () => {
-    // TODO: navigation.push('/dashboard') — Phase 10 가드
+    navigation.navigate('/onboarding/notification');
   };
+
+  if (!isReady || !surveyData) return null;
 
   return (
     <SafeAreaView style={styles.safe}>

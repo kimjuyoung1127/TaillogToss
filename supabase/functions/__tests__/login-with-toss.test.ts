@@ -1,0 +1,38 @@
+import { InMemoryRateLimiter } from '../_shared/rateLimiter';
+import { createLoginWithTossHandler } from '../login-with-toss';
+
+describe('login-with-toss handler', () => {
+  test('returns session payload on valid request', async () => {
+    const handler = createLoginWithTossHandler({
+      rateLimiter: new InMemoryRateLimiter({ windowMs: 60_000, maxRequests: 10 }),
+      now: () => new Date('2026-02-26T00:00:00.000Z'),
+    });
+
+    const result = await handler(
+      {
+        authorizationCode: 'valid-code',
+        nonce: 'nonce-12345678',
+      },
+      { clientKey: 'client-a' }
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.data?.user.toss_user_key).toBe('toss_valid-code');
+    expect(result.data?.access_token).toContain('sb_access_');
+  });
+
+  test('rejects short nonce', async () => {
+    const handler = createLoginWithTossHandler();
+    const result = await handler(
+      {
+        authorizationCode: 'valid-code',
+        nonce: 'short',
+      },
+      { clientKey: 'client-a' }
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error?.code).toBe('VALIDATION_ERROR');
+  });
+});
