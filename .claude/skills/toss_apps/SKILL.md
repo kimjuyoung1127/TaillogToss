@@ -152,6 +152,119 @@ Apps in Toss provides an **MCP (Model Context Protocol)** server for Cursor and 
 - **QR Test**: Use `intoss-private://` scheme for private bundle testing.
 - **UX Writing**: Review mandatory [UX Writing Guide](https://developers-apps-in-toss.toss.im/design/ux-writing.html) to pass inspection.
 
+## 7.5 TDS 컴포넌트 갭 및 대안
+
+토스 미니앱 샌드박스 런타임에서 네이티브 모듈 링킹이 불가능하므로, TDS에 없는 UI 패턴은 아래 대안으로 구현한다.
+
+| 누락 패턴 | 대안 구현 | 비고 |
+|-----------|----------|------|
+| Chip/Tag (인터랙티브) | `TouchableOpacity` + `Badge` 래퍼 | quick-log 행동 칩 8개 |
+| Accordion/Collapsible | `Animated.View` height 보간 커스텀 | quick-log 상세탭, dog-profile |
+| DatePicker/TimePicker | `SegmentedControl` + `Dropdown` + `NumericSpinner` 조합 | 네이티브 모듈 제한으로 서드파티 불가 |
+| Radar/Heatmap 차트 | `WebView`(`@granite-js/native/react-native-webview`) + Chart.js | analysis 화면 |
+| Speech Bubble (말풍선) | `View` + `Shadow` + `Border`(radius) 커스텀 | coaching-result dog_voice |
+
+### Chip 구현 패턴
+```tsx
+// components/Chip.tsx — TouchableOpacity + Badge 래퍼
+import { TouchableOpacity } from 'react-native';
+import { Badge } from '@toss/tds';
+
+interface ChipProps {
+  label: string;
+  selected?: boolean;
+  onPress: () => void;
+}
+
+export function Chip({ label, selected, onPress }: ChipProps) {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <Badge
+        text={label}
+        variant={selected ? 'info' : 'default'}
+      />
+    </TouchableOpacity>
+  );
+}
+```
+
+### Accordion 구현 패턴
+```tsx
+// components/Accordion.tsx — Animated.View height 보간
+import { Animated, LayoutAnimation } from 'react-native';
+
+export function useAccordion(initialExpanded = false) {
+  const [expanded, setExpanded] = useState(initialExpanded);
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpanded(!expanded);
+  };
+  return { expanded, toggle };
+}
+```
+
+## 7.6 차트 전략 — TDS BarChart + WebView 하이브리드
+
+### 제약 사항
+- **Victory Native 사용 불가**: `react-native-svg`, `react-native-reanimated` 등 네이티브 모듈 링킹 불가 (토스 미니앱 샌드박스 런타임)
+- TDS에는 `BarChart` 1개만 존재 (Section 3-6 참조)
+
+### 하이브리드 전략
+| 차트 유형 | 구현 방식 | 사용 화면 |
+|----------|----------|----------|
+| 막대 차트 (행동 빈도) | TDS `BarChart` | analysis |
+| Radar 차트 (원인 분석 5차원) | WebView + Chart.js | analysis |
+| Heatmap (요일×시간 밀도) | WebView + Chart.js | analysis |
+| Line 차트 (트렌드) | WebView + Chart.js | analysis (향후) |
+
+### ChartWebView 재사용 컴포넌트
+```tsx
+// lib/charts/ChartWebView.tsx
+import WebView from '@granite-js/native/react-native-webview';
+import { useColorScheme } from '@toss/tds';
+
+interface ChartWebViewProps {
+  type: 'radar' | 'heatmap' | 'line';
+  data: unknown;
+  height?: number;
+}
+
+export function ChartWebView({ type, data, height = 250 }: ChartWebViewProps) {
+  const colorScheme = useColorScheme();
+  // TDS 색상 토큰에 맞춰 Chart.js 테마 자동 적용
+  const html = generateChartHTML(type, data, colorScheme);
+  return <WebView source={{ html }} style={{ height }} />;
+}
+```
+
+### 색상 토큰 매칭
+- WebView 내 Chart.js 차트는 TDS Colors v5 토큰을 CSS 변수로 주입
+- 다크/라이트 모드 자동 대응: `useColorScheme()` → Chart.js 테마 전환
+
+## 7.7 토스 Ads SDK 2.0 — 보상형 광고
+
+### 지원 광고 유형
+| 유형 | 지원 | 용도 |
+|------|------|------|
+| Interstitial (전면) | ✓ | 미사용 (UX 방해) |
+| **Rewarded (보상형)** | ✓ | R1/R2/R3 터치포인트 |
+| Banner (배너) | ✓ | 미사용 (v1) |
+
+### 제약 사항
+- `react-native-google-mobile-ads` 직접 사용 **불가** → 토스 통합 SDK 필수
+- 토스 광고 우선 노출 → AdMob 자동 폴백 (토스 내부 로직)
+- 테스트 ID: `ait-ad-test-rewarded-id`
+
+### 보상형 광고 터치포인트 (3개)
+| ID | 화면 | CTA 텍스트 | 보상 |
+|----|------|-----------|------|
+| R1 | survey-result | "광고 보고 전체 분석 보기" | 상세 리포트 1회 해제 |
+| R2 | dashboard | "광고 보고 코칭 열기" | 오늘의 코칭 1회 열기 |
+| R3 | coaching-result | "광고 보고 오늘의 코칭 열기" | 잠긴 3블록(④⑤⑥) 1회 해제 |
+
+### 전환 심리
+Skeleton 블러 → TextButton("광고 보고 열기") → Rewarded 시청 → 1회 해제 → "매번 광고 귀찮다 → PRO 구독" 자연 전환
+
 ## 8. Toss + Supabase Integration Pattern
 
 ### End-to-End Login Flow

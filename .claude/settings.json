@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.gpters.org)",
+      "Bash(test -f \"c:/Users/ezen601/Desktop/Jason/tosstaillog/AGENTS.md\")"
+    ]
+  }
+}

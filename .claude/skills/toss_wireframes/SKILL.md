@@ -22,15 +22,17 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 │                         │
 │                         │
 │  ┌───────────────────┐  │
-│  │  토스로 시작하기    │  │  ← Button(primary, full-width)
+│  │  토스로 시작하기    │  │  ← Button(primary, full-width, loading)
 │  └───────────────────┘  │
 │                         │
 │   이용약관 · 개인정보    │  ← TextButton × 2
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Asset`, `Button`, `TextButton`
+**사용 컴포넌트**: `Asset`, `Button`, `TextButton`, `Toast`, `Loader`
 **로직**: `appLogin()` → Edge Function(`login-with-toss`) → `setSession()` → onboarding or dashboard
+- 에러 시: `useToast("로그인에 실패했어요. 다시 시도해주세요")`
+- Edge Function 콜드스타트 3-5초 대응 로딩 상태 포함
 
 ---
 
@@ -60,8 +62,10 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Navbar(.BackButton)`, `ProgressBar`, `TextField`, `Dropdown`, `Radio`, `Checkbox`, `BottomCTA`, `Button`
-**스텝 구성**: 이름 → 품종 → 나이 → 체중 → 중성화 → 문제행동 선택 → 목표 설정
+**사용 컴포넌트**: `Navbar(.BackButton)`, `ProgressBar`, `TextField`, `Dropdown`, `Radio`, `Checkbox`, `NumericSpinner`, `BottomCTA`, `Button`
+**스텝 구성**: 이름 → 품종 → 나이(NumericSpinner×2: 년+개월) → 체중 → 중성화 → 문제행동(8개 Checkbox+기타 TextField) → 목표 설정
+- Step 6 카테고리(8개): 짖음/울음, 공격성, 분리불안, 파괴행동, 마운팅, 과잉흥분, 배변문제, 공포/회피 + 기타 자유입력 TextField
+- quick-log Fast 탭 프리셋과 연동 (서베이 선택 → quick-log 칩 자동 설정)
 **팁**: 각 스텝은 동일 레이아웃에 입력 컴포넌트만 교체. `SegmentedControl`로 선택형 스텝 구현 가능.
 
 ---
@@ -72,7 +76,7 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 ┌─────────────────────────┐
 │ 테일로그     [🔔] [⚙️]   │  ← Navbar(.Title, IconButton×2)
 ├─────────────────────────┤
-│ [기록] [분석] [훈련]     │  ← Tab(3개 탭)
+│ [기록] [분석] [훈련●]  │  ← Tab(3탭, B2B는 +[운영])
 ├─────────────────────────┤
 │ ┌───────────────────┐   │
 │ │ 🐕 뽀삐  ▸        │   │  ← ListRow(.Icon, .Texts, .RightTexts)
@@ -98,34 +102,50 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 ```
 
 **사용 컴포넌트**: `Navbar(.Title)`, `IconButton`, `Tab`, `ListRow(.Icon, .Texts, .RightTexts)`, `ListHeader`, `Badge`, `Border`, `Skeleton`, `BottomCTA`, `Button`
+**Tab 구성**: Tab(3탭 B2C / 4탭 B2B — [기록][분석][훈련][운영])
+- [훈련] 탭: Badge dot ● (미완료 미션 시)
+- B2B [운영] 탭은 role 기반 동적 표시 (B2C에선 숨김)
 **상태**: 로딩 시 `Skeleton(pattern="topList")`, 빈 목록 시 `Result` 컴포넌트로 빈 상태 표시
 
 ---
 
-## 9-4. dashboard/quick-log.tsx — ABC 빠른 기록
+## 9-4. dashboard/quick-log.tsx — ABC 빠른 기록 (2탭: 빠른/상세)
 
 ```
 ┌─ useBottomSheet ────────┐
 │ ┌───────────────────┐   │
-│ │  빠른 ABC 기록     │   │  ← ListHeader
+│ │  빠른 기록         │   │  ← ListHeader
 │ └───────────────────┘   │
 │                         │
-│ 선행(A)                 │
+│ ┌──────────┬──────────┐ │
+│ │  [빠른]  │  [상세]   │ │  ← SegmentedControl(2 segments)
+│ └──────────┴──────────┘ │
+│                         │
+│ ═══ 빠른 탭 (기본) ═══  │
+│                         │
+│ [짖음/울음] [공격성]     │  ← Chip ×8 (TouchableOpacity+Badge)
+│ [분리불안] [파괴행동]    │     원탭 = 즉시저장(intensity=3)
+│ [마운팅] [과잉흥분]      │     서베이 Step 6 동일 카테고리
+│ [배변문제] [공포/회피]   │
+│ [+ 기타]                │
+│                         │
+│ 날짜: 오늘 · 시간: 지금  │  ← 자동 기본값(today+now)
+│ TextButton("변경")      │     → 확장 시:
+│                         │     날짜 SegmentedControl
+│                         │       [오늘/어제/날짜선택]
+│                         │     시간 Dropdown[오전/오후]
+│                         │       + NumericSpinner
+│                         │
+│ ═══ 상세 탭 ═══         │
+│                         │
+│ 행동(B) *필수            │  ← TextField(label="행동")
 │ ┌───────────────────┐   │
-│ │ 어떤 상황이었나요?  │   │  ← TextField(label="선행")
+│ │ 어떤 행동을 했나요? │   │
 │ └───────────────────┘   │
 │                         │
-│ 행동(B)                 │
-│ ┌───────────────────┐   │
-│ │ 어떤 행동을 했나요? │   │  ← TextField(label="행동")
-│ └───────────────────┘   │
-│                         │
-│ 결과(C)                 │
-│ ┌───────────────────┐   │
-│ │ 결과는 어땠나요?    │   │  ← TextField(label="결과")
-│ └───────────────────┘   │
-│                         │
-│ 강도  ○ 낮음 ● 보통 ○ 높음│  ← SegmentedControl
+│ ▶ 선행(A)      [펼치기] │  ← Accordion(Animated.View)
+│ ▶ 결과(C)      [펼치기] │     칩 프리셋 + 기타 TextField
+│ ▶ 강도/시간    [펼치기] │     Slider + 날짜/시간 선택
 │                         │
 │ ┌───────────────────┐   │
 │ │      저장          │   │  ← Button(primary)
@@ -133,8 +153,10 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `useBottomSheet`, `ListHeader`, `TextField` × 3, `SegmentedControl`, `Button`
+**사용 컴포넌트**: `useBottomSheet`, `ListHeader`, `SegmentedControl`, `TouchableOpacity`+`Badge`(Chip), `TextField`, `Slider`, `NumericSpinner`, `Dropdown`, `Animated.View`(Accordion), `Button`
 **로직**: 저장 시 Supabase `behavior_logs` 테이블 INSERT → 대시보드 리프레시
+- Chip = TouchableOpacity + Badge 래퍼 (TDS 미지원)
+- Accordion = Animated.View height 보간 (TDS 미지원)
 
 ---
 
@@ -154,6 +176,19 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 │  │ 월 화 수 목 금 토 일│  │
 │  └───────────────────┘  │
 │                         │
+│                         │
+│  ┌───────────────────┐  │
+│  │ 🕸 원인 분석       │  │  ← WebView(Chart.js Radar)
+│  │ (5차원 레이더)     │  │     lib/charts/ChartWebView.tsx
+│  │  [Radar Chart]    │  │     TDS 색상 토큰 매칭
+│  └───────────────────┘  │
+│                         │
+│  ┌───────────────────┐  │
+│  │ 🗓 시간대별 밀도   │  │  ← WebView(Chart.js Heatmap)
+│  │ (요일×시간)        │  │     lib/charts/ChartWebView.tsx
+│  │  [Heatmap]        │  │
+│  └───────────────────┘  │
+│                         │
 │ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │  ← Border
 │ ┌───────────────────┐   │
 │ │ 📋 행동별 빈도     │   │  ← ListHeader
@@ -169,83 +204,137 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `SegmentedControl`, `BarChart`, `Border`, `ListHeader`, `ListRow(.Texts, .RightTexts)`, `BottomInfo`
+**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `SegmentedControl`, `BarChart`, `WebView`(Chart.js via `@granite-js/native/react-native-webview`), `Border`, `ListHeader`, `ListRow(.Texts, .RightTexts)`, `BottomInfo`
 **데이터**: Supabase `behavior_logs` 집계 쿼리 → 차트 데이터 변환
+- `lib/charts/ChartWebView.tsx` 재사용 컴포넌트 (WebView + Chart.js, TDS 색상 토큰 매칭)
+- Victory Native 사용 불가 (토스 미니앱 샌드박스 제한). TDS BarChart(단순 막대) + WebView Chart.js(Radar, Heatmap) 하이브리드
 
 ---
 
-## 9-6. coaching/result.tsx — AI 코칭 결과
+## 9-6. coaching/result.tsx — AI 행동 진단 (6블록)
 
 ```
 ┌─────────────────────────┐
-│ ← AI 코칭 결과           │  ← Navbar(.BackButton, .Title)
+│ ← AI 행동 진단           │  ← Navbar(.BackButton, .Title)
 ├─────────────────────────┤
 │  ScrollView              │
-│ ┌───────────────────┐   │
-│ │ 🤖 코칭 요약       │   │  ← ListHeader + Asset(icon)
-│ │                   │   │
-│ │ "뽀삐의 짖음 행동은 │   │  ← Paragraph (Text)
-│ │  분리불안에서 기인할 │   │
-│ │  가능성이 높습니다. │   │
-│ │  아래 훈련을 권장   │   │
-│ │  합니다."          │   │
-│ └───────────────────┘   │
 │                         │
-│ ┌───────────────────┐   │
-│ │ 📋 권장 훈련       │   │  ← ListHeader
-│ ├───────────────────┤   │
-│ │ 1. 탈감작 훈련     │   │  ← ListRow(.Texts) + Badge("필수")
-│ ├───────────────────┤   │
-│ │ 2. 자리 훈련       │   │  ← ListRow(.Texts) + Badge("추천")
-│ ├───────────────────┤   │
-│ │ 3. 보상 기반 교정   │   │  ← ListRow(.Texts)
-│ └───────────────────┘   │
+│  ┌───────────────────┐  │  ← ① insight (무료)
+│  │ [Asset: AI 아이콘] │  │     패턴 요약 텍스트
+│  │ "뽀삐의 짖음은     │  │
+│  │  분리불안 패턴과    │  │
+│  │  일치합니다."      │  │
+│  └───────────────────┘  │
+│                         │
+│  ┌───────────────────┐  │  ← ② action_plan (무료)
+│  │ 📋 3단계 교정      │  │     ListHeader + ListRow×3
+│  │    프로토콜        │  │     Badge("1단계"/"2단계"/"3단계")
+│  ├───────────────────┤  │
+│  │ Step 1: 탈감작     │  │
+│  │ Step 2: 안전 공간  │  │
+│  │ Step 3: 보상 체계  │  │
+│  └───────────────────┘  │
+│                         │
+│  ┌───────────────────┐  │  ← ③ dog_voice (무료)
+│  │ 🐕 뽀삐의 마음     │  │     말풍선 커스텀
+│  │ ┌─ 말풍선 ──────┐ │  │     View + Shadow + Border
+│  │ │"혼자 있으면    │ │  │
+│  │ │ 불안해요."     │ │  │
+│  │ └───────────────┘ │  │
+│  └───────────────────┘  │
+│                         │
+│  ═══ 잠금 영역 ═══      │  ← PRO/광고 해제 필요
+│                         │
+│  ┌───────────────────┐  │  ← ④ next_7_days_plan (Skeleton)
+│  │ 📅 7일 훈련 계획   │  │     ListHeader + ListRow×7
+│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  │  │     Skeleton 블러
+│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  │  │
+│  │                   │  │
+│  │ TextButton:       │  │  ← "다른 접근 방식 보기"
+│  │ "다른 접근 방식    │  │     → Plan B/C 바텀시트
+│  │  보기"            │  │
+│  └───────────────────┘  │
+│                         │
+│  ┌───────────────────┐  │  ← ⑤ risk_signals (Skeleton)
+│  │ ⚠️ 위험 신호       │  │     Badge(variant="danger")×N
+│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  │  │     Skeleton 블러
+│  └───────────────────┘  │
+│                         │
+│  ┌───────────────────┐  │  ← ⑥ consultation_questions (Skeleton)
+│  │ 💬 전문가 질문     │  │     ListRow×3
+│  │ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄  │  │     Skeleton 블러
+│  └───────────────────┘  │
+│                         │
+│  TextButton:            │  ← R3 Rewarded Ad
+│  "광고 보고 오늘의      │     → 잠긴 ④⑤⑥ 1회 해제
+│   코칭 열기"            │
 │                         │
 ├─────────────────────────┤
 │  ┌───────────────────┐  │
 │  │  훈련 시작하기     │  │  ← BottomCTA > Button(primary)
-│  └───────────────────┘  │
+│  └───────────────────┘  │     → training-academy
+│  TextButton("PDF 리포트 │  ← PRO 전용
+│   다운로드(PRO)")       │
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `ScrollView`(RN 기본), `ListHeader`, `Asset`, `Text`(Paragraph), `ListRow(.Texts)`, `Badge`, `BottomCTA`, `Button`
-**로직**: Supabase Edge Function(`generate-coaching`) → OpenAI/Claude API → 결과 저장 후 표시
+**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `ScrollView`, `Asset`, `ListHeader`×6, `ListRow`×N, `Badge`, `Shadow`, `Border`, `Skeleton`(블러), `TextButton`, `BottomCTA`, `Button`
+**로직**:
+- 잠금 범위: ①②③ = 무료, ④⑤⑥ = Skeleton (PRO/광고 해제)
+- R3 Rewarded Ad: "광고 보고 오늘의 코칭 열기" → 잠긴 3블록 1회 해제
+- Plan B/C: ④7일플랜 하단 "다른 접근 방식 보기" TextButton → 바텀시트(현재/대안1/대안2)
+- 데이터: Edge Function `generate-coaching` → insight, action_plan, dog_voice, next_7_days_plan, risk_signals, consultation_questions
 
 ---
 
-## 9-7. training/academy.tsx — 훈련 커리큘럼
+## 9-7. training/academy.tsx — 훈련 아카데미 (커리큘럼 기반)
 
 ```
 ┌─────────────────────────┐
 │ ← 훈련 아카데미          │  ← Navbar(.BackButton, .Title)
 ├─────────────────────────┤
-│ ■■■■■■□□□□  60%         │  ← ProgressBar(value=0.6)
-│ "기본 과정 진행중"        │
-├─────────────────────────┤
+│ ┌───────────────────┐   │
+│ │ 📋 오늘의 훈련     │   │  ← ListHeader + ListRow
+│ ├───────────────────┤   │     Badge("D-3")
+│ │ 분리불안 Day 3     │   │     현재 진행 중인 커리큘럼 스텝
+│ └───────────────────┘   │
+│                         │
+│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │  ← Border
+│                         │
 │ ┌──────┐ ┌──────┐      │
-│ │ 🎯   │ │ 🦮   │      │
-│ │앉아   │ │산책   │      │  ← GridList(columns=2)
-│ │Badge: │ │Badge: │      │     각 셀: Asset + Text + Badge
-│ │완료 ✓ │ │진행중 │      │
+│ │ 🎯   │ │ 🦮   │      │  ← GridList(columns=2)
+│ │분리   │ │짖음   │      │     7개 커리큘럼 카드
+│ │불안   │ │소음   │      │     DogCoach 정적 데이터 포팅
+│ │Badge: │ │Badge: │      │
+│ │추천 ✓ │ │진행중 │      │     Badge("추천"): AI 서베이 기반
+│ │60%   │ │30%   │      │     ProgressBar 진행률
 │ └──────┘ └──────┘      │
 │ ┌──────┐ ┌──────┐      │
 │ │ 🐾   │ │ 🏠   │      │
-│ │기다려 │ │하우스 │      │
+│ │배변   │ │이식증 │      │
+│ │Badge: │ │Badge: │      │
+│ │미시작 │ │잠금🔒 │      │     무료: 추천 1개 전체
+│ └──────┘ └──────┘      │     PRO: 7개 전체 + Plan C
+│ ┌──────┐ ┌──────┐      │
+│ │ 🦶   │ │ 🐕🐕 │      │
+│ │산책   │ │다견   │      │
 │ │Badge: │ │Badge: │      │
 │ │미시작 │ │잠금🔒 │      │
 │ └──────┘ └──────┘      │
-│                         │
-│ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │  ← Border
-│ ┌───────────────────┐   │
-│ │ 📋 오늘의 훈련     │   │  ← ListHeader
-│ ├───────────────────┤   │
-│ │ 산책 훈련 Day 3    │   │  ← ListRow + Badge("D-3")
-│ └───────────────────┘   │
+│ ┌──────┐               │
+│ │ 😰   │               │
+│ │공포   │               │
+│ │Badge: │               │
+│ │잠금🔒 │               │
+│ └──────┘               │
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `ProgressBar`, `GridList`, `Asset`, `Badge`, `Border`, `ListHeader`, `ListRow`
-**상태**: `Badge` variant로 완료(success)/진행중(info)/미시작(default)/잠금(disabled) 표현
+**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `ListHeader`, `ListRow`, `Badge`("추천"/"진행중"/"미시작"/"잠금"), `GridList`, `ProgressBar`, `Border`
+- 7개 커리큘럼: separation_anxiety, barking_noise, toilet_training, pica_correction, leash_walking, multi_dog, fear_avoidance
+- DogCoach Frontend/src/data/curriculum/ 정적 데이터 포팅 (각 5-6일 × 3스텝, ~100스텝, ~150대안)
+- 구독 차별화: 무료=AI추천 1개 전체 접근, PRO=7개 전체+Plan C(AI 동적 생성)
+- 진행 방식: 권장 순서 표시 + 자유 접근 (Day 선택 가능)
 
 ---
 
@@ -276,9 +365,27 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 │ ┌───────────────────┐   │
 │ │ 중성화 여부    [●]│   │  ← Switch
 │ └───────────────────┘   │
+│                         │
 │ ┌───────────────────┐   │
-│ │ 알림 받기      [●]│   │  ← Switch
+│ │ ▶ 환경 정보       │   │  ← Accordion(접이식)
+│ │  주거형태 Dropdown │   │     아파트/주택/빌라
+│ │  가족 수 NumericSp │   │     NumericSpinner
+│ │  주 양육자 TextField│  │
 │ └───────────────────┘   │
+│ ┌───────────────────┐   │
+│ │ ▶ 건강 정보       │   │  ← Accordion(접이식)
+│ │  건강 상태 Dropdown│   │     양호/질환있음/관리중
+│ │  선호 간식 TextField│  │
+│ └───────────────────┘   │
+│ ┌───────────────────┐   │
+│ │ ▶ 행동 트리거     │   │  ← Accordion(접이식)
+│ │  문제행동 Checkbox │   │     서베이 Step 6 편집 가능
+│ │  (8개 카테고리)    │   │     짖음/공격성/분리불안/...
+│ └───────────────────┘   │
+│                         │
+│ ┌───────────────────┐   │
+│ │  반려견 삭제        │   │  ← TextButton(color="danger")
+│ └───────────────────┘   │     → useDialog 확인
 │                         │
 ├─────────────────────────┤
 │  ┌───────────────────┐  │
@@ -287,7 +394,7 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `Asset`, `TextField` × 4, `Switch` × 2, `BottomCTA`, `Button`
+**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `Asset`, `TextField` × 4, `Switch`, `Animated.View`(Accordion), `Dropdown`, `NumericSpinner`, `Checkbox`, `TextButton`, `useDialog`, `BottomCTA`, `Button`
 **검증**: 필수 필드(이름, 품종) 미입력 시 `TextField(error="필수 항목입니다")`, Button disabled 처리
 
 ---
@@ -319,6 +426,14 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 │ └───────────────────┘   │
 │                         │
 │ ┌───────────────────┐   │
+│ │ 📋 서비스          │   │  ← ListHeader
+│ ├───────────────────┤   │
+│ │ 구독 관리       ▸  │   │  ← ListRow → subscription
+│ ├───────────────────┤   │
+│ │ 내 반려견        ▸  │   │  ← ListRow → dog-profile
+│ └───────────────────┘   │
+│                         │
+│ ┌───────────────────┐   │
 │ │ 로그아웃            │   │  ← TextButton(color="danger")
 │ └───────────────────┘   │
 │ ┌───────────────────┐   │
@@ -329,7 +444,7 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 └─────────────────────────┘
 ```
 
-**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `ListHeader`, `ListRow`, `Switch`, `TextButton`, `useDialog`, `BottomInfo`
+**사용 컴포넌트**: `Navbar(.BackButton, .Title)`, `ListHeader`(알림/계정/서비스/로그아웃 4섹션), `ListRow`, `Switch`, `TextButton`, `useDialog`, `BottomInfo`
 **로직**: 회원탈퇴 시 `useDialog` → 확인 → Supabase Auth `deleteUser()` → 로그인 화면 이동
 
 ---
@@ -340,7 +455,7 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 ┌─────────────────────────┐
 │ Ops 대시보드    [👤 관리자]│  ← Navbar(.Title) + Badge("관리자")
 ├─────────────────────────┤
-│ [대기중] [진행중] [완료]  │  ← Tab(3개 탭)
+│ [미기록] [주의필요] [리포트미발송] [내담당] │  ← Tab(4개 탭, B2B PRD 기준)
 ├─────────────────────────┤
 │ ┌───────────────────┐   │
 │ │ 🐕 뽀삐 / 김지영  │   │  ← ListRow(.Icon, .Texts)
@@ -470,7 +585,7 @@ DogCoach(Next.js) → TaillogToss(React Native) 마이그레이션 대상 화면
 | 화면 | 기본 패턴 | 추가 조합 |
 |------|----------|----------|
 | login.tsx | — (단독) | `Asset` + `Button` + `TextButton` |
-| onboarding/welcome.tsx | B (상세형) | `Carousel` + `Asset`(Lottie) |
+| onboarding/welcome.tsx | B (상세형) | 단일 카드 `Asset`(Lottie) + `BottomCTA` |
 | onboarding/survey.tsx | C (입력폼형) | `ProgressBar` + 스텝별 입력 교체 |
 | onboarding/survey-result.tsx | B (상세형) | `Skeleton`(블러) + `Badge` + 광고 CTA |
 | onboarding/notification.tsx | B (상세형) | `Checkbox` × 3 + `Asset`(Lottie) |

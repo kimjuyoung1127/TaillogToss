@@ -99,7 +99,7 @@
 - WebView/RN 모두 132개 TSX 전면 재작성 필요 → UI 재작성 규모 동일, 기존 "WebView가 기존 코드 재활용" 전제 무효
 - SKILL.md "Mandatory TDS WebView for non-game apps"는 "WebView 선택 시 TDS 필수"라는 의미이며, RN은 별도 구현 옵션으로 명시됨
 - B2B 확장 시 40마리+ 카드 리스트: RN FlatList(네이티브 가상화) >> WebView react-virtuoso
-- 차트 16+개 동시 렌더링: react-native-svg 네이티브 렌더러 >> WebView SVG DOM
+- 차트: TDS BarChart(네이티브) + WebView Chart.js(Radar/Heatmap) 하이브리드 — 토스 미니앱 샌드박스에서 Victory Native/react-native-svg 사용 불가
 - 앱 시작 속도: 네이티브 0.5-1초 vs WebView 2-3초
 - 향후 네이티브 기능 확장 가능 (카메라, GPS, 깊은 푸시 통합)
 
@@ -123,7 +123,7 @@
 | 영역 | 기존 (DogCoach) | 목표 (Toss 인앱) |
 |------|-----------------|------------------|
 | FE 프레임워크 | Next.js 16 + React 19 | `@apps-in-toss/react-native-framework` (React Native) |
-| UI 시스템 | Tailwind CSS v4 + Radix UI + Framer Motion | **TDS React Native** 전면 교체 + Victory Native(차트) |
+| UI 시스템 | Tailwind CSS v4 + Radix UI + Framer Motion | **TDS React Native** 전면 교체 + WebView Chart.js(Radar/Heatmap) |
 | 인증 | Supabase Auth (Google/Kakao OAuth + 게스트) | **Toss Login → Supabase Edge Function → Supabase Auth** (브릿지 패턴) |
 | 인증 mTLS | 없음 | **Supabase Edge Function(Deno)**에서 mTLS 인증서 처리 |
 | 결제 | Stripe 플레이스홀더 | **Toss IAP** (소모품/비소모품) |
@@ -143,9 +143,10 @@
 - `@apps-in-toss/react-native-framework` + TypeScript 5.x (strict)
 - TDS React Native 컴포넌트 (40+): Navbar, ListRow, ListHeader, Badge, BarChart, Button, Checkbox, Dialog, Asset 등
 - TDS RN Hooks: useOverlay (모달/시트/다이얼로그 관리)
-- 보충 라이브러리: `@gorhom/bottom-sheet` (바텀시트), `react-native-toast-message` (토스트)
+- 보충 라이브러리: TDS `useBottomSheet` (바텀시트), TDS `useToast` (토스트)
 - 상태관리: TanStack Query v5 (서버상태, RN 호환) + 필요 시 Zustand (로컬상태)
-- 차트: Victory Native + react-native-svg (네이티브 렌더러, BarChart는 TDS 제공)
+- 차트: TDS BarChart(단순 막대) + WebView(`@granite-js/native/react-native-webview`) + Chart.js (Radar, Heatmap, Line) — Victory Native 사용 불가 (토스 미니앱 샌드박스에서 네이티브 모듈 링킹 불가)
+- 차트 재사용 컴포넌트: `lib/charts/ChartWebView.tsx` (WebView + Chart.js, TDS 색상 토큰 자동 매칭)
 - 리스트: React Native FlatList (네이티브 가상화, B2B 40마리+ 성능 보장)
 
 ### 4.2 인증 레이어 (Toss + Supabase 브릿지 패턴)
@@ -201,10 +202,10 @@
 | AI 코칭 카드 | ListRow + BoardRow + Loader | 스켈레톤 로딩 |
 | 훈련 미션 리스트 | ListRow + Badge + ProgressBar | 진행률 표시 |
 | 설정 토글 | ListRow + RN Switch | TDS에 Switch 미확인 → RN 기본 |
-| 차트 (Radar/Bar/Heatmap) | Victory Native + TDS BarChart | 복합 차트 |
+| 차트 (Radar/Bar/Heatmap) | TDS BarChart + WebView(Chart.js) | 복합 차트 — Victory Native 사용 불가 |
 | 모달/다이얼로그 | Dialog + useOverlay | 확인/취소 |
-| 바텀시트 | `@gorhom/bottom-sheet` or useOverlay | TDS Gap 보충 |
-| 토스트 | `react-native-toast-message` | TDS Gap 보충 |
+| 바텀시트 | TDS `useBottomSheet` | TDS 내장 |
+| 토스트 | TDS `useToast` | TDS 내장 |
 | 아이콘 | TDS Asset | Lucide 대체 |
 
 - **제거 대상**: Tailwind CSS v4, Radix UI, Framer Motion, Lucide Icons, Glassmorphism → 전부 TDS RN + 표준 RN 라이브러리로 교체
@@ -542,10 +543,14 @@ supabase/
 - v1에서는 AI 코칭만, v2에서 전문가 매칭 추가
 - 비즈 모델: 상담 건당 수수료 or 훈련사 구독
 
-### 9.10 인앱 광고 — 무료 티어 수익화 (Phase 2+)
-- 추천 위치: 무료 티어 대시보드 하단 (PRO 업그레이드 CTA와 경쟁하지 않는 구간)
-- "광고 제거"를 PRO 혜택에 포함 → 전환율 향상
-- UX/QA 심사 리스크 있으므로 Phase 2 이후 도입
+### 9.10 인앱 광고 — 토스 Ads SDK 2.0 보상형 광고
+- **토스 Ads SDK 2.0 ver2** 사용 (Interstitial, Rewarded, Banner 지원)
+- **Rewarded 광고만 v1 사용**: 배너/전면 광고 없음
+- 토스 광고 우선 노출 → AdMob 자동 폴백
+- 테스트 ID: `ait-ad-test-rewarded-id`
+- `react-native-google-mobile-ads` 직접 사용 불가 → 토스 통합 SDK 필수
+- 터치포인트: R1(survey-result), R2(dashboard), R3(coaching-result)
+- "광고 제거"를 PRO 혜택에 포함 → 자연 전환
 
 ---
 
@@ -682,7 +687,7 @@ supabase/
 | Toss QA 심사 반려 | 중 | 높음 | 사전 점검 체크리스트 적용 (부록 C) |
 | mTLS 인증서 장애 | 낮음 | 치명적 | 갱신 30일 전 알림, 모니터링, 인증서 2벌 보관 |
 | TDS 컴포넌트 제약 | 중 | 중간 | 필요 컴포넌트 사전 검증, 커스텀 fallback 준비 |
-| ~~WebView 차트 성능~~ RN 차트 라이브러리 호환성 | 중 | 중간 | Victory Native + react-native-svg 벤치마크. TDS BarChart 활용 |
+| WebView 차트 성능 | 중 | 중간 | TDS BarChart(네이티브) + WebView Chart.js(Radar/Heatmap) 하이브리드. Victory Native 사용 불가 (토스 샌드박스 제한) |
 | IAP 결제성공+지급실패 | **높음** | **높음** | toss_status/grant_status 2축 분리 + 재처리 큐 + getPendingOrders 복구 |
 | IAP 환불 후 상품 미회수 | 중 | 중간 | 연결해제/환불 웹훅 → grant_status=REVOKED + 유예기간 |
 | 포인트 중복 지급 | 중 | 높음 | 멱등키 + key 1회 사용 + 4113 방어 로직 |
