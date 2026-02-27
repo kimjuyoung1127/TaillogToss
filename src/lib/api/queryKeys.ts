@@ -45,4 +45,36 @@ export const queryKeys = {
     all: ['notification'] as const,
     history: (userId: string) => [...queryKeys.notification.all, 'history', userId] as const,
   },
+  // B2B 네임스페이스
+  org: {
+    all: ['org'] as const,
+    detail: (orgId: string) => [...queryKeys.org.all, 'detail', orgId] as const,
+    members: (orgId: string) => [...queryKeys.org.all, 'members', orgId] as const,
+  },
+  orgDogs: {
+    all: ['orgDogs'] as const,
+    list: (orgId: string) => [...queryKeys.orgDogs.all, 'list', orgId] as const,
+    detail: (orgDogId: string) => [...queryKeys.orgDogs.all, 'detail', orgDogId] as const,
+  },
+  assignments: {
+    all: ['assignments'] as const,
+    byTrainer: (trainerId: string) => [...queryKeys.assignments.all, 'trainer', trainerId] as const,
+    byOrg: (orgId: string) => [...queryKeys.assignments.all, 'org', orgId] as const,
+  },
+  reports: {
+    all: ['reports'] as const,
+    byOrg: (orgId: string, date?: string) =>
+      date
+        ? [...queryKeys.reports.all, 'org', orgId, date] as const
+        : [...queryKeys.reports.all, 'org', orgId] as const,
+    byDog: (dogId: string) => [...queryKeys.reports.all, 'dog', dogId] as const,
+    detail: (reportId: string) => [...queryKeys.reports.all, 'detail', reportId] as const,
+    byShareToken: (token: string) => [...queryKeys.reports.all, 'share', token] as const,
+  },
+  orgSubscription: {
+    all: ['orgSubscription'] as const,
+    current: (orgId: string) => [...queryKeys.orgSubscription.all, 'current', orgId] as const,
+    trainerCurrent: (trainerId: string) =>
+      [...queryKeys.orgSubscription.all, 'trainer', trainerId] as const,
+  },
 } as const;

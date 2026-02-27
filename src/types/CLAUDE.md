@@ -23,12 +23,14 @@ types/{domain}.ts  ↔  Backend/app/models/{domain}.py
 | `chart.ts` | 차트 | 신규 | Radar 5축, Heatmap 7×24 |
 | `api.ts` | API 공통 | 신규 | ApiResponse\<T\>, ErrorCode |
 | `ads.ts` | 광고 | 신규 | AdPlacement R1/R2/R3, 무광고 폴백 |
-| `b2b.ts` | B2B 확장 | SCHEMA-B2B.md | v1 숨김, 빈 인터페이스 10개 |
+| `b2b.ts` | B2B 확장 | SCHEMA-B2B.md | 10인터페이스 완전 채움, enum 13종, B2B_IAP_PRODUCTS 6개, B2B_PLAN_LIMITS |
 | `index.ts` | barrel export | — | 전체 re-export |
 
 ## 비즈니스 규칙 상수
 
 - `IAP_PRODUCTS`: PRO ₩4,900 / 토큰10 ₩1,900 / 토큰30 ₩4,900
+- `B2B_IAP_PRODUCTS`: 센터 Basic ₩29,000 / Pro ₩59,000 / Enterprise ₩99,000 / 훈련사 10 ₩9,900 / 30 ₩19,900 / 50 ₩39,900
+- `B2B_PLAN_LIMITS`: 플랜별 maxDogs / maxStaff 제한 (entitlement 검증에 사용)
 - `DOG_LIMITS`: 무료 1마리, PRO 5마리
 - `DEFAULT_COOLDOWN`: 10분 간격, 하루 3회, 22~08시 금지
 - `DEFAULT_AD_FALLBACK`: 무광고 폴백 활성, 5초 타임아웃

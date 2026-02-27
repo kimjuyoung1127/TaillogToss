@@ -42,3 +42,12 @@ export function useCreateDetailedLog() {
     },
   });
 }
+
+/** B2B: 조직 소속 강아지 기록 조회 */
+export function useOrgDogLogs(orgId: string | undefined, dogId: string | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.logs.all, 'org', orgId ?? '', dogId ?? ''] as const,
+    queryFn: () => logApi.getOrgDogLogs(orgId!, dogId!),
+    enabled: !!orgId && !!dogId,
+  });
+}

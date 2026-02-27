@@ -49,6 +49,8 @@ TDS에 없는 UI 패턴을 React Native 기본 컴포넌트로 구현.
 | `training/` | 8 | CurriculumCard, MissionChecklist |
 | `dog/` | 9 | DogProfileForm |
 | `settings/` | 9 | SubscriptionCompare |
+| `ops/` | B2B | OpsList, OpsListItem, OpsBadge, OpsBottomInfo, RecordModal, BulkActionBar, BulkPresetSheet, PresetChipGrid, ReportCard, ReportPreviewSheet, MemberList, InviteSheet, OrgStatsSheet, PresetManager (14개) |
+| `parent/` | B2B | ReportViewer, ReactionForm (2개) |
 
 **import 가능**: `tds-ext/`, `shared/`, `@toss/tds-react-native`, `lib/`, `types/`
 **import 금지**: 다른 `features/` 폴더 (공유 필요 시 `shared/`로 승격)

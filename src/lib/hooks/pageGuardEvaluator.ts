@@ -1,17 +1,24 @@
+/**
+ * pageGuardEvaluator — 페이지 가드 평가 파이프라인 (auth → onboarding → feature/role)
+ * Parity: B2B-001
+ */
 import { authGuard, onboardingGuard, featureGuard } from 'lib/guards';
 import type { FeatureRequirement, GuardResult, GuardRoute } from 'lib/guards';
+import type { UserRole } from 'types/auth';
 
 export interface EvaluatePageGuardInput {
   currentPath: string;
   skipAuth: boolean;
   skipOnboarding: boolean;
   requireFeature?: FeatureRequirement;
+  requireRole?: UserRole[];
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
   isPro: boolean;
   dogCount: number;
   isSubscriptionLoading: boolean;
   isDogsLoading: boolean;
+  userRole?: UserRole;
 }
 
 export type GuardEvaluation =
@@ -25,12 +32,14 @@ export function evaluatePageGuard(input: EvaluatePageGuardInput): GuardEvaluatio
     skipAuth,
     skipOnboarding,
     requireFeature,
+    requireRole,
     isAuthenticated,
     hasCompletedOnboarding,
     isPro,
     dogCount,
     isSubscriptionLoading,
     isDogsLoading,
+    userRole,
   } = input;
 
   let result: GuardResult = { allow: true };
@@ -41,6 +50,13 @@ export function evaluatePageGuard(input: EvaluatePageGuardInput): GuardEvaluatio
 
   if (result.allow && !skipOnboarding) {
     result = onboardingGuard({ hasCompletedOnboarding, currentPath });
+  }
+
+  // Role guard (B2B): requireRole이 명시되면 역할 검사
+  if (result.allow && requireRole && requireRole.length > 0) {
+    if (!userRole || !requireRole.includes(userRole)) {
+      return { status: 'redirect', redirectTo: '/dashboard' };
+    }
   }
 
   if (result.allow && requireFeature) {
@@ -55,6 +71,7 @@ export function evaluatePageGuard(input: EvaluatePageGuardInput): GuardEvaluatio
       requirement: requireFeature,
       isPro,
       dogCount,
+      userRole,
     });
   }
 

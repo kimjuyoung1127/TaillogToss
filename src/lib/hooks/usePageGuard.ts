@@ -1,9 +1,14 @@
+/**
+ * usePageGuard — 페이지 접근 가드 훅 (인증/온보딩/기능/역할)
+ * Parity: B2B-001
+ */
 import { useEffect, useRef, useState } from 'react';
 import { useNavigation } from '@granite-js/react-native';
 import { useAuth } from 'stores/AuthContext';
 import { useDogList } from 'lib/hooks/useDogs';
 import { useCurrentSubscription } from 'lib/hooks/useSubscription';
 import type { FeatureRequirement, GuardRoute } from 'lib/guards';
+import type { UserRole } from 'types/auth';
 import { evaluatePageGuard } from './pageGuardEvaluator';
 import { setPostLoginRedirect } from 'stores/postLoginRedirect';
 
@@ -12,10 +17,17 @@ interface UsePageGuardOptions {
   skipAuth?: boolean;
   skipOnboarding?: boolean;
   requireFeature?: FeatureRequirement;
+  requireRole?: UserRole[];
 }
 
 export function usePageGuard(options: UsePageGuardOptions): { isReady: boolean } {
-  const { currentPath, skipAuth = false, skipOnboarding = false, requireFeature } = options;
+  const {
+    currentPath,
+    skipAuth = false,
+    skipOnboarding = false,
+    requireFeature,
+    requireRole,
+  } = options;
   const navigation = useNavigation();
   const { user, isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
 
@@ -39,12 +51,14 @@ export function usePageGuard(options: UsePageGuardOptions): { isReady: boolean }
       skipAuth,
       skipOnboarding,
       requireFeature,
+      requireRole,
       isAuthenticated,
       hasCompletedOnboarding,
       isPro: Boolean(isPro),
       dogCount,
       isSubscriptionLoading,
       isDogsLoading,
+      userRole: user?.role,
     });
 
     if (evaluated.status === 'pending') {
@@ -78,8 +92,10 @@ export function usePageGuard(options: UsePageGuardOptions): { isReady: boolean }
     isSubscriptionLoading,
     navigation,
     requireFeature,
+    requireRole,
     skipAuth,
     skipOnboarding,
+    user?.role,
   ]);
 
   return { isReady };

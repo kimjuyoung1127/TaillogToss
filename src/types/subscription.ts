@@ -4,8 +4,11 @@
  * 가격 기준일: 2026-02-26
  */
 
-/** 플랜 유형 */
+/** 플랜 유형 (B2C) */
 export type PlanType = 'FREE' | 'PRO_MONTHLY';
+
+/** B2C + B2B 통합 플랜 유형 */
+export type AllPlanType = PlanType | import('./b2b').OrgPlanType;
 
 /** IAP 상품 유형 */
 export type ProductType = 'non_consumable' | 'consumable';

@@ -8,6 +8,7 @@ import { context } from '../require.context';
 import { QueryProvider } from 'stores/QueryProvider';
 import { AuthProvider } from 'stores/AuthContext';
 import { ActiveDogProvider } from 'stores/ActiveDogContext';
+import { OrgProvider } from 'stores/OrgContext';
 import { SurveyProvider } from 'stores/SurveyContext';
 import { rewriteInitialUrlForDeepEntry } from 'lib/guards';
 
@@ -16,7 +17,9 @@ function AppContainer({ children }: PropsWithChildren<InitialProps>) {
     <QueryProvider>
       <AuthProvider>
         <ActiveDogProvider>
-          <SurveyProvider>{children}</SurveyProvider>
+          <OrgProvider>
+            <SurveyProvider>{children}</SurveyProvider>
+          </OrgProvider>
         </ActiveDogProvider>
       </AuthProvider>
     </QueryProvider>

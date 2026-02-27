@@ -16,6 +16,10 @@ import { Route as _DogSwitcherRoute } from '../pages/dog/switcher';
 import { Route as _DogAddRoute } from '../pages/dog/add';
 import { Route as _SettingsRoute } from '../pages/settings/';
 import { Route as _SubscriptionRoute } from '../pages/settings/subscription';
+import { Route as _OpsTodayRoute } from '../pages/ops/today';
+import { Route as _ParentReportsRoute } from '../pages/parent/reports';
+import { Route as _ShareTokenReportRoute } from '../pages/report/[shareToken]';
+import { Route as _OpsSettingsRoute } from '../pages/ops/settings';
 
 declare module '@granite-js/react-native' {
   interface RegisterScreenInput {
@@ -35,6 +39,10 @@ declare module '@granite-js/react-native' {
     '/dog/add': (typeof _DogAddRoute)['_inputType'];
     '/settings': (typeof _SettingsRoute)['_inputType'];
     '/settings/subscription': (typeof _SubscriptionRoute)['_inputType'];
+    '/ops/today': (typeof _OpsTodayRoute)['_inputType'];
+    '/parent/reports': (typeof _ParentReportsRoute)['_inputType'];
+    '/report/[shareToken]': (typeof _ShareTokenReportRoute)['_inputType'];
+    '/ops/settings': (typeof _OpsSettingsRoute)['_inputType'];
   }
 
   interface RegisterScreen {
@@ -54,5 +62,9 @@ declare module '@granite-js/react-native' {
     '/dog/add': (typeof _DogAddRoute)['_outputType'];
     '/settings': (typeof _SettingsRoute)['_outputType'];
     '/settings/subscription': (typeof _SubscriptionRoute)['_outputType'];
+    '/ops/today': (typeof _OpsTodayRoute)['_outputType'];
+    '/parent/reports': (typeof _ParentReportsRoute)['_outputType'];
+    '/report/[shareToken]': (typeof _ShareTokenReportRoute)['_outputType'];
+    '/ops/settings': (typeof _OpsSettingsRoute)['_outputType'];
   }
 }

@@ -9,6 +9,8 @@ import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useActiveDog } from 'stores/ActiveDogContext';
+import { useAuth } from 'stores/AuthContext';
+import { isB2BRole } from 'stores/OrgContext';
 import { useLogList, useDailyLogs } from 'lib/hooks/useLogs';
 import { DogCard } from 'components/features/dashboard/DogCard';
 import { StreakBanner } from 'components/features/dashboard/StreakBanner';
@@ -24,8 +26,10 @@ export const Route = createRoute('/dashboard', {
 
 function DashboardPage() {
   const { activeDog } = useActiveDog();
+  const { user } = useAuth();
   const navigation = useNavigation();
   const { isReady } = usePageGuard({ currentPath: '/dashboard' });
+  const showOpsTab = isB2BRole(user?.role);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const { data: allLogs, isLoading: logsLoading, error: logsError, refetch } = useLogList(activeDog?.id);
@@ -102,11 +106,31 @@ function DashboardPage() {
     </View>
   );
 
-  const tabs = useMemo(() => [
-    { key: 'record', label: '기록', content: recordContent },
-    { key: 'analysis', label: '분석', content: analysisContent },
-    { key: 'training', label: '훈련', content: trainingContent },
-  ], [recordContent, analysisContent, trainingContent]);
+  const opsContent = (
+    <View style={styles.center}>
+      <TouchableOpacity
+        style={styles.analysisLink}
+        onPress={() => navigation.navigate('/ops/today')}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.analysisIcon}>{'\uD83D\uDCCB'}</Text>
+        <Text style={styles.analysisText}>운영 대시보드로 이동</Text>
+        <Text style={styles.analysisArrow}>{'\u2192'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const tabs = useMemo(() => {
+    const base = [
+      { key: 'record', label: '기록', content: recordContent },
+      { key: 'analysis', label: '분석', content: analysisContent },
+      { key: 'training', label: '훈련', content: trainingContent },
+    ];
+    if (showOpsTab) {
+      base.push({ key: 'ops', label: '운영', content: opsContent });
+    }
+    return base;
+  }, [recordContent, analysisContent, trainingContent, showOpsTab, opsContent]);
 
   if (!isReady) return null;
 

@@ -11,6 +11,12 @@ export interface EventPayloadMap {
   ad_rewarded: { placement: string };
   ad_error: { placement: string };
   ad_no_fill: { placement: string; reason: string };
+  // B2B 이벤트
+  ops_log_created: { mode: 'preset' | 'manual'; bulk: boolean };
+  ops_bulk_saved: { count: number };
+  report_generated: { template_type: string };
+  report_sent: { method: 'toss' | 'link' };
+  parent_reaction: { type: string };
 }
 
 export type EventName = keyof EventPayloadMap;
@@ -38,4 +44,12 @@ export const tracker = {
   adError: (placement: string) => track('ad_error', { placement }),
   adNoFill: (placement: string, reason: string) =>
     track('ad_no_fill', { placement, reason }),
+  // B2B 이벤트
+  opsLogCreated: (mode: 'preset' | 'manual', bulk: boolean) =>
+    track('ops_log_created', { mode, bulk }),
+  opsBulkSaved: (count: number) => track('ops_bulk_saved', { count }),
+  reportGenerated: (templateType: string) =>
+    track('report_generated', { template_type: templateType }),
+  reportSent: (method: 'toss' | 'link') => track('report_sent', { method }),
+  parentReaction: (type: string) => track('parent_reaction', { type }),
 };

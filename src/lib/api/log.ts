@@ -78,3 +78,16 @@ export async function deleteLog(logId: string): Promise<void> {
   const { error } = await supabase.from('behavior_logs').delete().eq('id', logId);
   if (error) throw error;
 }
+
+/** B2B: 조직 소속 강아지의 기록 조회 */
+export async function getOrgDogLogs(orgId: string, dogId: string, limit = 50): Promise<BehaviorLog[]> {
+  const { data, error } = await supabase
+    .from('behavior_logs')
+    .select('*')
+    .eq('org_id', orgId)
+    .eq('dog_id', dogId)
+    .order('occurred_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data as BehaviorLog[];
+}

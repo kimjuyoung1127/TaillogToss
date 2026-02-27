@@ -58,9 +58,23 @@
 - 범위: Today Ops Queue, Bulk 편집, 보호자 공유
 - 대상 Parity: `B2B-001` 및 B2B 확장 항목
 - Exit Gate:
-  - [ ] 40마리 리스트 스크롤 성능 점검 통과
-  - [ ] 공유 링크 2경로(토스/비토스) 검증 완료
-- **상태: 미통과**
+  - [x] B2B 7 Phase 코드 구현 완료 (P1~P7)
+  - [x] tsc --noEmit 전체 통과 (B2C 깨짐 없음)
+  - [x] 타입 10개 + DB 마이그레이션 SQL + RLS 정책
+  - [x] roleGuard + OrgContext + featureGuard b2bOnly
+  - [x] API 2모듈(org/report) + 훅 5개 + tracker B2B 이벤트
+  - [x] Ops Queue 4탭 FlatList (성능 최적화 적용)
+  - [x] RecordModal + BulkActionBar + PresetChipGrid (프리셋 23개)
+  - [x] 보호자 리포트 공유 2경로 (parent/reports + report/[shareToken])
+  - [x] Ops 설정 + 직원관리 + 통계 + 프리셋관리
+  - [x] B2B 구독 카드 + verify-iap-order B2B 확장
+  - [x] PRD 문서 정합성 검증 완료 (SCHEMA↔타입↔SQL↔라우트 전부 일치)
+  - [x] PRD 갭 6건 수정: todayLogCount 실JOIN, entitlement 검증, 전화번호 인증, 토스/비토스 공유 2경로, PII 암호화, 통계 연결
+  - [ ] 40마리 리스트 스크롤 성능 실측 통과
+  - [ ] 공유 링크 2경로(토스/비토스) 실기기 검증 완료
+  - [ ] B2C 회귀 테스트 완료
+  - [ ] verify_parent_phone_last4 Supabase RPC 서버 함수 구현
+- **상태: 부분 통과 (코드+정합성 완료, 성능/실기기 검증 대기)**
 
 ### Wave 4: Release Readiness
 

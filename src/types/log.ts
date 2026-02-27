@@ -53,6 +53,10 @@ export interface BehaviorLog {
   occurred_at: string; // ISO 8601
   created_at: string;
   updated_at: string;
+
+  // B2B 확장 (optional — B2C에서는 항상 undefined)
+  org_id?: string; // FK → organizations.id
+  recorded_by?: string; // FK → users.id (기록 작성자)
 }
 
 /** 미디어 에셋 */

@@ -5,7 +5,8 @@ export type GuardRoute =
   | '/dashboard'
   | '/dashboard/quick-log'
   | '/coaching/result'
-  | '/training/academy';
+  | '/training/academy'
+  | '/ops/today';
 
 export type GuardResult =
   | { allow: true }

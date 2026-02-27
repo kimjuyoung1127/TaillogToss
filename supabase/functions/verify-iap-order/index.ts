@@ -26,6 +26,9 @@ export interface VerifyIapOrderRequest {
   transactionId: string;
   idempotencyKey: string;
   userId?: string;
+  // B2B 확장 (optional)
+  orgId?: string; // center_* 플랜용
+  trainerUserId?: string; // trainer_* 플랜용
 }
 
 export interface VerifyIapOrderResponse {
