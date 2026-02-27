@@ -6,16 +6,25 @@ import React, { type PropsWithChildren } from 'react';
 import { Granite, getSchemeUri, type InitialProps } from '@granite-js/react-native';
 import { context } from '../require.context';
 import { QueryProvider } from 'stores/QueryProvider';
-import { AuthProvider } from 'stores/AuthContext';
+import { AuthProvider, useAuth } from 'stores/AuthContext';
 import { ActiveDogProvider } from 'stores/ActiveDogContext';
 import { OrgProvider } from 'stores/OrgContext';
 import { SurveyProvider } from 'stores/SurveyContext';
 import { rewriteInitialUrlForDeepEntry } from 'lib/guards';
+import { usePendingOrderRecovery } from 'lib/hooks/useSubscription';
+
+/** 미완료 IAP 주문 복구 — 앱 마운트 시 자동 실행 */
+function PendingOrderRecovery() {
+  const { user } = useAuth();
+  usePendingOrderRecovery(user?.id);
+  return null;
+}
 
 function AppContainer({ children }: PropsWithChildren<InitialProps>) {
   return (
     <QueryProvider>
       <AuthProvider>
+        <PendingOrderRecovery />
         <ActiveDogProvider>
           <OrgProvider>
             <SurveyProvider>{children}</SurveyProvider>

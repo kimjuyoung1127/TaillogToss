@@ -1,23 +1,94 @@
 /**
- * 반려견 추가 화면 — Stepper Form 레이아웃 (새 반려견 등록)
+ * 반려견 추가 — 서베이 축소판 (이름/품종/성별 3필드)
+ * 멀티독: 무료 1마리, PRO 5마리
+ * 와이어프레임 9-8 변형, 패턴 C (입력폼형)
  * Parity: APP-001
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Alert,
+} from 'react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { useAuth } from 'stores/AuthContext';
+import { useActiveDog } from 'stores/ActiveDogContext';
+import { useCreateDogFromSurvey } from 'lib/hooks/useDogs';
+import type { DogSex, SurveyData } from 'types/dog';
 
 export const Route = createRoute('/dog/add', {
   component: DogAddPage,
 });
 
+const SEX_OPTIONS: { value: DogSex; label: string }[] = [
+  { value: 'MALE', label: '수컷' },
+  { value: 'FEMALE', label: '암컷' },
+  { value: 'MALE_NEUTERED', label: '수컷 (중성화)' },
+  { value: 'FEMALE_NEUTERED', label: '암컷 (중성화)' },
+];
+
 function DogAddPage() {
   const navigation = useNavigation();
-  const { isReady } = usePageGuard({
-    currentPath: '/dog/add',
-    requireFeature: 'multiDog',
-  });
+  const { isReady } = usePageGuard({ currentPath: '/dog/add', requireFeature: 'multiDog' });
+  const { user } = useAuth();
+  const { setDogs, dogs } = useActiveDog();
+  const createDog = useCreateDogFromSurvey();
+
+  const [name, setName] = useState('');
+  const [breed, setBreed] = useState('');
+  const [sex, setSex] = useState<DogSex>('MALE');
+
+  const handleSave = useCallback(() => {
+    if (!user?.id || !name.trim() || !breed.trim()) return;
+
+    // 최소 SurveyData 구조로 생성 (createDogFromSurvey API가 step1_basic만 사용)
+    const survey: SurveyData = {
+      step1_basic: { name: name.trim(), breed: breed.trim(), age_months: 0, sex },
+      step2_environment: {
+        household: {
+          members_count: 1,
+          has_children: false,
+          has_other_pets: dogs.length > 0,
+          living_type: 'apartment',
+        },
+        daily_alone_hours: 0,
+      },
+      step3_behavior: { primary_behaviors: [], severity: {} as never },
+      step4_triggers: { triggers: [], worst_time: 'random' },
+      step5_history: { past_attempts: [], professional_help: false },
+      step6_goals: { goals: [], priority_behavior: 'other' },
+      step7_preferences: {
+        ai_tone: 'empathetic',
+        ai_perspective: 'coach',
+        notification_consent: true,
+      },
+    };
+
+    createDog.mutate(
+      { userId: user.id, survey },
+      {
+        onSuccess: (newDog) => {
+          setDogs([...dogs, newDog]);
+          Alert.alert('등록 완료', `${newDog.name}이(가) 추가되었어요!`, [
+            { text: '확인', onPress: () => navigation.goBack() },
+          ]);
+        },
+        onError: () => {
+          Alert.alert('오류', '반려견 등록에 실패했어요. 다시 시도해주세요.');
+        },
+      }
+    );
+  }, [user?.id, name, breed, sex, dogs, createDog, setDogs, navigation]);
+
   if (!isReady) return null;
+
+  const canSave = name.trim().length > 0 && breed.trim().length > 0 && !createDog.isPending;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -28,8 +99,74 @@ function DogAddPage() {
         <Text style={styles.navTitle}>반려견 추가</Text>
         <View style={styles.backButton} />
       </View>
-      <View style={styles.container}>
-        <Text style={styles.text}>Add Dog</Text>
+
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        {/* 아바타 */}
+        <View style={styles.avatarSection}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarEmoji}>{'\uD83D\uDC36'}</Text>
+          </View>
+          <Text style={styles.avatarHint}>새 반려견을 등록해주세요</Text>
+        </View>
+
+        {/* 이름 */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.fieldLabel}>
+            이름 <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.textInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="반려견 이름"
+            placeholderTextColor="#B0B8C1"
+            autoFocus
+          />
+        </View>
+
+        {/* 품종 */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.fieldLabel}>
+            품종 <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.textInput}
+            value={breed}
+            onChangeText={setBreed}
+            placeholder="품종 (예: 비숑, 골든리트리버)"
+            placeholderTextColor="#B0B8C1"
+          />
+        </View>
+
+        {/* 성별 */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.fieldLabel}>성별</Text>
+          <View style={styles.sexRow}>
+            {SEX_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={[styles.sexChip, sex === opt.value && styles.sexChipSelected]}
+                onPress={() => setSex(opt.value)}
+              >
+                <Text style={[styles.sexText, sex === opt.value && styles.sexTextSelected]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* 저장 버튼 */}
+      <View style={styles.bottomCTA}>
+        <TouchableOpacity
+          style={[styles.saveButton, !canSave && styles.saveDisabled]}
+          onPress={handleSave}
+          disabled={!canSave}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.saveText}>{createDog.isPending ? '등록 중...' : '등록하기'}</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -49,6 +186,65 @@ const styles = StyleSheet.create({
   backButton: { width: 40 },
   backText: { fontSize: 20, color: '#191F28' },
   navTitle: { fontSize: 17, fontWeight: '600', color: '#191F28' },
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  text: { fontSize: 18, color: '#202632' },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32 },
+
+  // Avatar
+  avatarSection: { alignItems: 'center', marginBottom: 32 },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F4F4F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  avatarEmoji: { fontSize: 36 },
+  avatarHint: { fontSize: 14, color: '#8B95A1' },
+
+  // Inputs
+  inputGroup: { marginBottom: 20 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#8B95A1', marginBottom: 6 },
+  required: { color: '#E5503C' },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#E5E8EB',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#191F28',
+  },
+
+  // Sex chips
+  sexRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  sexChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E8EB',
+    backgroundColor: '#FFFFFF',
+  },
+  sexChipSelected: { borderColor: '#0064FF', backgroundColor: '#E8F3FF' },
+  sexText: { fontSize: 14, color: '#6B7684' },
+  sexTextSelected: { color: '#0064FF', fontWeight: '600' },
+
+  // Bottom CTA
+  bottomCTA: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F2F4F6',
+    backgroundColor: '#FFFFFF',
+  },
+  saveButton: {
+    backgroundColor: '#0064FF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  saveDisabled: { backgroundColor: '#B0B8C1' },
+  saveText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
 });

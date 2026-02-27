@@ -54,22 +54,16 @@ function SubscriptionPage() {
 
   const handlePurchase = useCallback((productId: string) => {
     setPurchasingId(productId);
-    purchaseMutation.mutate(
-      {
-        product_id: productId,
-        idempotency_key: `idem_${Date.now().toString(36)}_${productId}`,
+    purchaseMutation.mutate(productId, {
+      onSuccess: () => {
+        setPurchasingId(null);
+        Alert.alert('구매 완료', '구매가 완료되었습니다.');
       },
-      {
-        onSuccess: () => {
-          setPurchasingId(null);
-          Alert.alert('구매 완료', '구매가 완료되었습니다.');
-        },
-        onError: () => {
-          setPurchasingId(null);
-          Alert.alert('구매 실패', '결제 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
-        },
-      }
-    );
+      onError: () => {
+        setPurchasingId(null);
+        Alert.alert('구매 실패', '결제 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
+      },
+    });
   }, [purchaseMutation]);
 
   const handleRestore = useCallback(() => {
