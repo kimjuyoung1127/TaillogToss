@@ -31,7 +31,8 @@ export function createMockAdsSdk(): TossAdsSdk {
   let loaded = false;
 
   return {
-    async loadRewardedAd(_unitId: string) {
+    async loadRewardedAd(unitId: string) {
+      void unitId;
       await delay(300);
       loaded = true;
     },

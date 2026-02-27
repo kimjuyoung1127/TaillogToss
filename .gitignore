@@ -5,6 +5,7 @@ dist/
 # Granite
 .granite
 .swc
+public/
 
 # Debug
 npm-debug.log

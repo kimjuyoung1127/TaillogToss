@@ -11,15 +11,22 @@
 - [x] 메시지 발송 성공 + DB 기록 실패 시 fail-open 처리로 중복 발송 방지
 - [x] Deno runtime entrypoints (`main.ts`) and `supabase/config.toml` entrypoint mapping
 
-## Runtime invoke evidence (pending manual trigger)
-- [ ] `login-with-toss` success log
-- [ ] `login-with-toss` failure log
-- [ ] `verify-iap-order` success log
-- [ ] `verify-iap-order` failure log
-- [ ] `send-smart-message` success log
-- [ ] `send-smart-message` failure log
-- [ ] `grant-toss-points` success log
-- [ ] `grant-toss-points` failure log
+## Runtime invoke evidence (captured via Supabase logs)
+- [x] `login-with-toss` success log (`POST 200`, log id: `e4e69556-9104-4a90-bf37-78a48cc4e8cb`)
+- [x] `login-with-toss` failure log (`POST 400`, log id: `910cb3fc-be6e-4b6e-8d72-888ce4756048`)
+- [x] `verify-iap-order` success log (`POST 200`, log id: `4fbf2444-c9ae-40cf-99ec-f7d335615928`)
+- [x] `verify-iap-order` failure log (`POST 400`, log id: `a04c03e4-611f-4ed7-8239-385a49a7dab3`)
+- [x] `send-smart-message` success log (`POST 200`, log id: `555b479d-c4c5-46d3-8e0b-f05a0875db7b`)
+- [x] `send-smart-message` failure log (`POST 403`, log id: `05990e0c-ba1d-40b9-bf20-27a0ff8460c9`)
+- [x] `grant-toss-points` success log (`POST 200`, log id: `115b453d-53c0-44f0-ae6d-7699d93fd61b`)
+- [x] `grant-toss-points` failure log (`POST 403`, log id: `bd130741-003f-4114-b0f0-ccf2bf69a474`)
+
+## Notes
+- `grant-toss-points` deployed and status verified as `ACTIVE` (version `1`).
+- `send-smart-message` success 응답에서 `noti_history.error_code=NOTI_HISTORY_WRITE_FAILED` 확인:
+  런타임에서 DB 쓰기 실패 시 fail-open + 멱등 완료 처리(중복 발송 방지) 동작이 실제로 검증됨.
+- `send-smart-message`를 실제 `public.users.id`(FK 유효 사용자)로 재호출하여
+  `noti_history` insert 성공도 확인 (`error_code=null`, row id: `ab7fda25-f09b-49bc-9b5e-444f4577564c`).
 
 ## How to collect (fixed procedure)
 1. Deploy latest edge functions (MCP or CLI).

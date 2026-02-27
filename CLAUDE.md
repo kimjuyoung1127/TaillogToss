@@ -160,7 +160,7 @@ Backend/             # FastAPI + Alembic
 | 1~10 | 초기화 → 인증 가드 | Done | FE 전체 완료 |
 | 11 | 보안 (PII가드, rate-limit) | Done | 코드 완료. mTLS 인증서 = 사업자등록 후 |
 | 12 | 광고 (Toss Ads SDK R1/R2/R3) | Done | mock SDK. 실 Ad Unit ID = 사업자등록 후 |
-| 13 | E2E 테스트 + 배포 준비 | Not started | 다음 우선순위 |
+| 13 | E2E 테스트 + 배포 준비 | In progress | Playbook 작성 완료, Sandbox 실기기 검증 대기 |
 
 ### 현재 Mock/대기 항목
 - **mTLS 인증서**: `supabase/functions/_shared/mTLSClient.ts` — 사업자등록 후 실제 cert/key 교체
@@ -184,4 +184,5 @@ Backend/             # FastAPI + Alembic
 | 기능 패리티 매트릭스 | `docs/11-FEATURE-PARITY-MATRIX.md` |
 | 마이그레이션 웨이브 | `docs/12-MIGRATION-WAVES-AND-GATES.md` |
 | Phase 11 런타임 증적 | `docs/2-27/PHASE11-RUNTIME-EVIDENCE.md` |
+| Phase 13 E2E/Sandbox 플레이북 | `docs/2-27/PHASE13-E2E-SANDBOX-PLAYBOOK.md` |
 | 원본 DogCoach (읽기 전용) | `C:\Users\gmdqn\DogCoach` |

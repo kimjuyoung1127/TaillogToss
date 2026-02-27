@@ -47,9 +47,11 @@
   - [x] 주문 검증 + 멱등 처리 코드 구현 (`verify-iap-order`, mock 기준)
   - [x] 메시지 발송 정책(쿨다운/빈도) 코드 구현 (`send-smart-message`)
   - [x] `noti_history` 실DB 영속 연결 + 확장 스키마 반영
+  - [x] `send-smart-message` 런타임 DB insert 성공 확인 (FK 유효 사용자 기준)
   - [x] Jest timeout 이슈 해소 (`test:app`/`test:edge` 분리)
-  - [ ] Edge Function 런타임 invoke 검증 로그 확보 (앱 수동호출 + MCP 로그 수집 대기)
-- **상태: 부분 통과 (코드/테스트/DB 완료, 런타임 invoke 증적 대기)**
+  - [x] Edge Function 런타임 invoke 검증 로그 확보 (4개 함수 성공/실패 로그, 2026-02-27)
+  - [ ] Sandbox 실발송/실결제 E2E 검증
+- **상태: 부분 통과 (코드/테스트/DB/런타임 로그 완료, Sandbox E2E 대기)**
 
 ### Wave 3: B2B Expansion
 

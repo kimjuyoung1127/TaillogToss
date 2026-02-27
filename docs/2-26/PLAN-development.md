@@ -12,9 +12,9 @@
 - [x] Phase 8: 코칭/훈련 3페이지 + 7컴포넌트 + curriculum data
 - [x] Phase 9: 반려견/설정 5페이지
 - [x] Phase 10: 순수 가드 4개 + 가드 훅 1개 + 훅 3개 + 온보딩 네비 + 딥엔트리 + 안정화
-- [ ] Phase 11: Supabase Edge Functions + 보안 (진행중: 테스트 타임아웃 해소 + noti_history 영속화 완료, 런타임 invoke 증적 대기)
-- [ ] Phase 12: DB 마이그레이션 (Alembic)
-- [ ] Phase 13: Disconnection Webhook + FastAPI
+- [x] Phase 11: Supabase Edge Functions + 보안 (코드/테스트/런타임 invoke 증적 완료)
+- [x] Phase 12: 광고 (Toss Ads SDK R1/R2/R3, mock SDK 기준 완료)
+- [ ] Phase 13: E2E 테스트 + 배포 준비 (진행중: Playbook 작성 완료, Sandbox 실기기 검증 대기)
 
 검증: `npm run typecheck` ✅ | `npm test` ✅ (`test:app` + `test:edge` 분리, timeout 해소)
 
@@ -22,9 +22,12 @@
 
 ## Context
 
-현재 TaillogToss 프로젝트는 **Phase 10 완료, Phase 11 구현 진행중, Phase 12~13 보류** 상태.
+현재 TaillogToss 프로젝트는 **Phase 12까지 완료, Phase 13 대기** 상태.
 사업자등록까지 약 1주일 소요 예상. 이 기간 동안 Toss 인증서/콘솔 없이도 가능한
 **프론트엔드 중심 개발**을 최대한 진행하여, 등록 후 mock→실제 연동 교체만으로 런칭 준비를 마친다.
+
+> 참고: 이 문서 하단의 상세 섹션 제목(Phase 11~13)은 초기 작성 시점의 레거시 명칭이 일부 남아 있다.
+> 최신 Phase 상태 표준은 `CLAUDE.md`와 본 문서 상단 진행 현황을 따른다.
 
 **핵심 전략**: 프론트엔드 먼저 → BE/FE 도메인 미러 구조 유지 (DogCoach 패턴 계승)
 
@@ -61,17 +64,20 @@ lib/hooks/use{Domain}.ts ↔ Backend/app/services/{domain}.py
 - Jest 실행 경로 분리 (`test:app`, `test:edge`)로 Edge retry timeout 이슈 해소
 - `noti_history` 확장 스키마 적용 + `send-smart-message` service_role 영속 insert 연동
 - Edge Function Deno main 엔트리 추가 (`main.ts`) 및 `supabase/config.toml` entrypoint 전환
+- Supabase 런타임 invoke 로그 8건 확보 (4개 함수 성공/실패 1건씩)
+- `send-smart-message` 런타임 DB insert 성공 증적 확보 (`error_code=null`, FK 유효 user_id 케이스)
 
 ### 다음 플랜 (2026-02-27)
-1. Phase 11 런타임 검증 마감
-   - [x] Jest hang 원인 분리/해결 후 `_shared`/Edge Function 테스트 실행 로그 확보
-   - [ ] 앱 수동 호출 + MCP `edge-function` 로그 수집으로 invoke 증적 확보 (`login-with-toss`, `verify-iap-order`, `send-smart-message`, `grant-toss-points`)
-2. Phase 11 게이트 보강
-   - [x] `send-smart-message`의 `noti_history` 영속 기록(DB) 연결
-   - `login-with-toss` 요청 서명 검증 경로 추가(mock/실연동 분기)
-3. Phase 12 착수 조건 정리
-   - `Backend/` 경로(또는 별도 Backend 저장소) 확보 후 Alembic 마이그레이션 착수 (다음 구현 세션 시작 시점)
-   - 확보 전까지는 Phase 11/문서/테스트 안정화에 집중
+1. Phase 13 착수 준비
+   - [x] E2E 시나리오 템플릿 작성 (AUTH/IAP/MSG/AD 성공/실패)
+   - [x] Sandbox 실기기 검증 체크리스트 문서화
+   - 참고: `docs/2-27/PHASE13-E2E-SANDBOX-PLAYBOOK.md`
+2. Mock→실연동 전환 대기 항목 정리
+   - mTLS 인증서 적용 경로 확정 (`supabase/functions/_shared/mTLSClient.ts`)
+   - 실 Ad Unit ID 교체 포인트 확정 (`src/lib/ads/config.ts`)
+3. 문서/게이트 정합성 유지
+   - `docs/11`, `docs/12`, `docs/2-27` 동기화 유지
+   - 세션 종료 시 완료 포맷(Self-Review/Next-Session Docs/Next Recommendations) 고정 보고
 
 ---
 
