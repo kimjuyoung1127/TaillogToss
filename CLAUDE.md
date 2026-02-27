@@ -164,20 +164,21 @@ Backend/             # FastAPI + Alembic
 | B2B | B2B 확장 (P1~P7) + 정합성 수정 | Done | 코드+문서정합성 완료. 성능/실기기 검증 대기 |
 | REG | 토스 콘솔 등록 준비 | Done | legal 4종 + toss-disconnect + RealMTLSClient + 앱 내 약관 페이지 |
 | FIX | 공식 문서 갭 수정 | Done | config.toml 7종, Ads SDK ver2 정렬, Settings 실구현, 뒤로가기 전수, CORS, 멱등성 |
+| IMPL | dog 프로필/추가 + IAP 패턴 | Done | profile.tsx/add.tsx 실 구현, IAP 공식 패턴 래퍼, 미완료 주문 복구 |
 
 ### 현재 Mock/대기 항목
 - **mTLS 인증서**: `supabase/functions/_shared/mTLSClient.ts` — RealMTLSClient 구현 완료, Supabase secrets 등록 필요
 - **Ad Group ID**: `src/lib/ads/config.ts` — 공식 SDK ver2 시그니처 적용 완료, 테스트 ID 사용 중 (사업자등록 후 교체)
 - **Supabase 실 연동**: API 호출은 mock, Edge Function deploy 후 연결
 - **ChartWebView**: `@granite-js/native` WebView 실제 연결 대기
-- **IAP SDK**: `@apps-in-toss/framework` 패키지 확인 후 `createOneTimePurchaseOrder` 패턴 적용 필요
+- **IAP SDK**: `lib/api/iap.ts` 래퍼 구현 완료 (createOneTimePurchaseOrder + getPendingOrders). `@apps-in-toss/framework` 확인 후 실 SDK 교체
 
 ### 다음 우선순위
 1. Supabase Edge Function deploy (7종 전체) + secrets 등록
 2. 토스 콘솔 앱 등록 (URL 입력 + 콜백 설정 + mTLS cert 등록)
-3. IAP SDK 공식 패턴 적용 (`@apps-in-toss/framework` 패키지 확인 후)
-4. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성
-5. 사업자등록 완료 시 Ad Group ID 실 교체
+3. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성
+4. 사업자등록 완료 시 Ad Group ID 실 교체
+5. B2B IAP도 동일 공식 패턴으로 정렬 (useOrgSubscription.ts)
 
 ## 참고 문서
 
