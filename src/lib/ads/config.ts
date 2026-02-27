@@ -1,29 +1,31 @@
 /**
- * 토스 Ads SDK 2.0 설정 — placement별 ad unit ID 매핑 + SDK 인터페이스
- * 사업자등록 후 실제 ID로 교체. 현재 테스트 ID 사용.
+ * 토스 Ads SDK 2.0 ver2 설정 — 공식 인터페이스 기준
+ * loadFullScreenAd / showFullScreenAd / adGroupId / destroy 패턴.
+ * 사업자등록 후 실제 adGroupId로 교체. 현재 테스트 ID 사용.
  * Parity: AD-001
  */
 import type { AdPlacement } from 'types/ads';
 
-/** Ad Unit ID 매핑 (사업자등록 후 Developers Console에서 발급) */
-const AD_UNIT_IDS: Record<AdPlacement, string> = {
+/** Ad Group ID 매핑 (사업자등록 후 Developers Console에서 발급) */
+const AD_GROUP_IDS: Record<AdPlacement, string> = {
   R1: 'ait-ad-test-rewarded-id', // survey-result
   R2: 'ait-ad-test-rewarded-id', // dashboard/analysis
   R3: 'ait-ad-test-rewarded-id', // coaching-result
 };
 
-export function getAdUnitId(placement: AdPlacement): string {
-  return AD_UNIT_IDS[placement];
+export function getAdGroupId(placement: AdPlacement): string {
+  return AD_GROUP_IDS[placement];
 }
 
 /**
- * 토스 Ads SDK 추상 인터페이스 — 실제 SDK 연결 시 구현체 교체
- * 현재는 mock 구현. SDK import 시 아래 인터페이스 기준으로 어댑터 작성.
+ * 토스 Ads SDK 2.0 ver2 공식 인터페이스
+ * loadFullScreenAd({ adGroupId }) → showFullScreenAd() → destroy()
  */
 export interface TossAdsSdk {
-  loadRewardedAd(unitId: string): Promise<void>;
-  showRewardedAd(): Promise<{ rewarded: boolean }>;
-  isLoaded(): boolean;
+  loadFullScreenAd(options: { adGroupId: string }): Promise<void>;
+  showFullScreenAd(): Promise<{ rewarded: boolean }>;
+  isAdLoaded(): boolean;
+  destroy(): void;
 }
 
 /** Mock SDK — 1초 후 보상 지급 시뮬레이션 */
@@ -31,19 +33,22 @@ export function createMockAdsSdk(): TossAdsSdk {
   let loaded = false;
 
   return {
-    async loadRewardedAd(unitId: string) {
-      void unitId;
+    async loadFullScreenAd(options: { adGroupId: string }) {
+      void options;
       await delay(300);
       loaded = true;
     },
-    async showRewardedAd() {
+    async showFullScreenAd() {
       if (!loaded) throw new Error('Ad not loaded');
       loaded = false;
       await delay(700);
       return { rewarded: true };
     },
-    isLoaded() {
+    isAdLoaded() {
       return loaded;
+    },
+    destroy() {
+      loaded = false;
     },
   };
 }
@@ -54,7 +59,7 @@ function delay(ms: number): Promise<void> {
 
 /**
  * SDK 싱글턴 — 사업자등록 후 실제 토스 Ads SDK로 교체
- * TODO: import TossAds from '@toss/ads-sdk'; 후 실구현체 반환
+ * TODO: import { createAdsClient } from '@apps-in-toss/ads'; 후 실구현체 반환
  */
 let sdkInstance: TossAdsSdk | null = null;
 

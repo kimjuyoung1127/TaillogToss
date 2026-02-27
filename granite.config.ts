@@ -9,5 +9,9 @@ import { defineConfig } from '@granite-js/react-native/config';
 export default defineConfig({
   appName: 'taillog-toss',
   scheme: 'granite',
+  // 토스 콘솔 등록 시 brand 정보 — defineConfig 타입 미지원 시 콘솔 수동 입력
+  // displayName: '테일로그'
+  // primaryColor: '#0064FF'
+  // icon: './assets/app-icon.png'
   plugins: [router(), hermes()],
 });

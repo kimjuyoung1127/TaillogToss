@@ -17,11 +17,21 @@ interface DisconnectRequest {
 
 const VALID_REFERRERS: DisconnectReferrer[] = ['UNLINK', 'WITHDRAWAL_TERMS', 'WITHDRAWAL_TOSS'];
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': 'https://apps-in-toss.toss.im',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+/** 허용 CORS origin: 콘솔 테스트 + Sandbox */
+const ALLOWED_ORIGINS = [
+  'https://apps-in-toss.toss.im',
+  'https://taillog-toss.private-apps.tossmini.com',
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin') ?? '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
 
 function verifyBasicAuth(authHeader: string | null): boolean {
   if (!authHeader?.startsWith('Basic ')) return false;
@@ -160,13 +170,41 @@ async function logDisconnect(
   }
 }
 
+async function checkAlreadyProcessed(
+  userKeyHash: string,
+  referrer: DisconnectReferrer,
+): Promise<boolean> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) return false;
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/noti_history?type=eq.toss_disconnect&select=payload&limit=1&order=created_at.desc&payload->>user_key_hash=eq.${encodeURIComponent(userKeyHash)}&payload->>referrer=eq.${encodeURIComponent(referrer)}&payload->>success=eq.true`,
+      {
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+        },
+      },
+    );
+    if (!res.ok) return false;
+    const rows = await res.json();
+    return rows.length > 0;
+  } catch {
+    return false; // 조회 실패 시 처리 진행 (fail-open)
+  }
+}
+
 Deno.serve(async (req: Request) => {
-  // CORS preflight (콘솔 테스트 버튼용)
+  const corsHeaders = getCorsHeaders(req);
+
+  // CORS preflight (콘솔 테스트 + Sandbox 버튼용)
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  const headers = { 'Content-Type': 'application/json', ...CORS_HEADERS };
+  const headers = { 'Content-Type': 'application/json', ...corsHeaders };
 
   // Basic Auth 검증
   const authHeader = req.headers.get('Authorization');
@@ -206,6 +244,15 @@ Deno.serve(async (req: Request) => {
     }
 
     const userKeyHash = hashUserKey(userKey);
+
+    // 멱등성: 동일 요청 이미 처리됐으면 즉시 200 반환 (토스 서버 재시도 대응)
+    const alreadyProcessed = await checkAlreadyProcessed(userKeyHash, referrer);
+    if (alreadyProcessed) {
+      return new Response(
+        JSON.stringify(ok({ processed: true, referrer, deduplicated: true })),
+        { status: 200, headers }
+      );
+    }
 
     // referrer별 처리
     switch (referrer) {

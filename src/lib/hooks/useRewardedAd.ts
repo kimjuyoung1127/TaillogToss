@@ -6,7 +6,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { AdPlacement, RewardedAdState } from 'types/ads';
 import { DEFAULT_AD_FALLBACK } from 'types/ads';
-import { getAdUnitId, getAdsSdk } from 'lib/ads/config';
+import { getAdGroupId, getAdsSdk } from 'lib/ads/config';
 import { tracker } from 'lib/analytics/tracker';
 
 /** 일일 광고 노출 카운트 (인메모리, 앱 재시작 시 리셋) */
@@ -54,6 +54,8 @@ export function useRewardedAd(
     return () => {
       mountedRef.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      // 공식 SDK cleanup 패턴
+      getAdsSdk().destroy();
     };
   }, []);
 
@@ -74,7 +76,7 @@ export function useRewardedAd(
     tracker.adRequested(placement);
 
     const sdk = getAdsSdk();
-    const unitId = getAdUnitId(placement);
+    const adGroupId = getAdGroupId(placement);
 
     // 타임아웃 폴백
     timeoutRef.current = setTimeout(() => {
@@ -85,12 +87,12 @@ export function useRewardedAd(
     }, DEFAULT_AD_FALLBACK.timeout_ms);
 
     sdk
-      .loadRewardedAd(unitId)
+      .loadFullScreenAd({ adGroupId })
       .then(() => {
         if (!mountedRef.current) return;
         tracker.adLoaded(placement);
         setAdState('showing');
-        return sdk.showRewardedAd();
+        return sdk.showFullScreenAd();
       })
       .then((result) => {
         if (!mountedRef.current) return;

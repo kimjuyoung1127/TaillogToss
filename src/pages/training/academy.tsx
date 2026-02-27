@@ -60,7 +60,7 @@ function TrainingAcademyPage() {
 
   if (isError) {
     return (
-      <ListLayout title="훈련 아카데미">
+      <ListLayout title="훈련 아카데미" onBack={() => navigation.goBack()}>
         <ErrorState
           title="훈련 정보를 불러올 수 없어요"
           onRetry={() => void refetch()}
@@ -70,7 +70,7 @@ function TrainingAcademyPage() {
   }
 
   return (
-    <ListLayout title="훈련 아카데미">
+    <ListLayout title="훈련 아카데미" onBack={() => navigation.goBack()}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0064FF" />

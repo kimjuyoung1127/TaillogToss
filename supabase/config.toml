@@ -1,5 +1,5 @@
-# Supabase Edge Functions config — Phase 11 contracts
-# login-with-toss only: verify_jwt = false
+# Supabase Edge Functions config — Phase 11 + REG contracts
+# verify_jwt=false: login-with-toss, legal, toss-disconnect (자체 인증)
 
 [functions.login-with-toss]
 enabled = true
@@ -20,3 +20,18 @@ entrypoint = "./functions/send-smart-message/main.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/grant-toss-points/main.ts"
+
+[functions.legal]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/legal/index.ts"
+
+[functions.toss-disconnect]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/toss-disconnect/index.ts"
+
+[functions.generate-report]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/generate-report/index.ts"
