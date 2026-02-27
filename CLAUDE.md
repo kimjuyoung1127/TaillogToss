@@ -159,7 +159,7 @@ Backend/             # FastAPI + Alembic
 |-------|------|------|------|
 | 1~10 | 초기화 → 인증 가드 | Done | FE 전체 완료 |
 | 11 | 보안 (PII가드, rate-limit) | Done | 코드 완료. mTLS 인증서 = 사업자등록 후 |
-| 12 | 광고 (Toss Ads SDK R1/R2/R3) | Done | mock SDK. 실 Ad Unit ID = 사업자등록 후 |
+| 12 | 광고 (Toss Ads SDK R1/R2/R3) | Done | mock SDK. 실 Ad Group ID = 사업자등록 후 |
 | 13 | E2E 테스트 + 배포 준비 | In progress | Playbook 작성 완료, Sandbox 실기기 검증 대기 |
 | B2B | B2B 확장 (P1~P7) + 정합성 수정 | Done | 코드+문서정합성 완료. 성능/실기기 검증 대기 |
 | REG | 토스 콘솔 등록 준비 | Done | legal 4종 + toss-disconnect + RealMTLSClient + 앱 내 약관 페이지 |
@@ -173,12 +173,19 @@ Backend/             # FastAPI + Alembic
 - **ChartWebView**: `@granite-js/native` WebView 실제 연결 대기
 - **IAP SDK**: `lib/api/iap.ts` 래퍼 구현 완료 (createOneTimePurchaseOrder + getPendingOrders). `@apps-in-toss/framework` 확인 후 실 SDK 교체
 
+### 블로커: 사업자등록 미완료
+아래 항목은 **사업자등록 완료 후**에만 진행 가능. 코드 작업으로 해결 불가.
+- mTLS 인증서 발급 (콘솔에서 발급)
+- Ad Group ID 실 교체 (콘솔에서 발급)
+- 토스 콘솔 앱 등록 (사업자 정보 필수)
+- IAP 실 결제 테스트
+
 ### 다음 우선순위
-1. Supabase Edge Function deploy (7종 전체) + secrets 등록
-2. 토스 콘솔 앱 등록 (URL 입력 + 콜백 설정 + mTLS cert 등록)
-3. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성
-4. 사업자등록 완료 시 Ad Group ID 실 교체
-5. B2B IAP도 동일 공식 패턴으로 정렬 (useOrgSubscription.ts)
+1. Supabase Edge Function deploy (7종 전체) + secrets 등록 — 사업자등록 없이 가능
+2. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성 — 사업자등록 없이 가능
+3. B2B IAP도 동일 공식 패턴으로 정렬 (useOrgSubscription.ts) — 사업자등록 없이 가능
+4. 토스 콘솔 앱 등록 (URL 입력 + 콜백 설정 + mTLS cert) — ⚠️ 사업자등록 필요
+5. Ad Group ID 실 교체 + IAP 실 결제 E2E — ⚠️ 사업자등록 필요
 
 ## 참고 문서
 
