@@ -39,14 +39,14 @@ DogCoach(Next.js PWA) → Toss 미니앱(React Native) 마이그레이션.
 
 ## 스킬 활용 가이드
 
-이 프로젝트에는 4개의 Claude 스킬이 있다. **구현 전 반드시 해당 스킬을 참조**한다.
+이 프로젝트에는 4개의 Claude 스킬이 있다. **구현 전 반드시 `Skill` 도구로 해당 스킬을 로드**한다.
 
-| 스킬 | 용도 | 참조 시점 |
-|------|------|-----------|
-| `toss_wireframes` | 19개 화면 ASCII 와이어프레임 + TDS 컴포넌트 매핑 + 5개 레이아웃 패턴 | 화면 구현 전 |
-| `toss_journey` | 6개 사용자 여정, 화면 전환 테이블(33행), 상태 전환, 인게이지먼트 훅 | 네비게이션/플로우 구현 전 |
-| `toss_apps` | TDS 47개 컴포넌트 카탈로그, Supabase+Toss 연동 패턴, 차트/광고/TDS 갭 대안 | 컴포넌트/API 구현 전 |
-| `toss_db_migration` | DogCoach→TaillogToss 스키마 비교(17→29테이블), Alembic 마이그레이션 계획, RLS 4-tier | DB/마이그레이션 작업 전 |
+| 스킬 | 용도 | 참조 시점 | Skill 호출 예 |
+|------|------|-----------|-------------|
+| `toss_wireframes` | 19개 화면 ASCII 와이어프레임 + TDS 컴포넌트 매핑 + 5개 레이아웃 패턴 | 화면 구현 전 | `Skill("toss_wireframes")` |
+| `toss_journey` | 6개 사용자 여정, 화면 전환 테이블(33행), 상태 전환, 인게이지먼트 훅 | 네비게이션/플로우 구현 전 | `Skill("toss_journey")` |
+| `toss_apps` | TDS 47개 컴포넌트 카탈로그, Supabase+Toss 연동 패턴, 차트/광고/TDS 갭 대안 | 컴포넌트/API 구현 전 | `Skill("toss_apps")` |
+| `toss_db_migration` | DogCoach→TaillogToss 스키마 비교(17→29테이블), Alembic 마이그레이션 계획, RLS 4-tier | DB/마이그레이션 작업 전 | `Skill("toss_db_migration")` |
 
 ## 확정 기술 결정
 
@@ -103,7 +103,7 @@ src/
   _app.tsx        # 앱 컨테이너 (Granite.registerApp)
   pages/          # 실제 페이지 컴포넌트 (createRoute)
   components/     # 3계층: tds-ext ← shared ← features
-  lib/            # API, hooks, charts, guards, analytics, data, security
+  lib/            # API, hooks, ads, charts, guards, analytics, data
   types/          # 도메인별 타입 (BE 미러)
   stores/         # QueryClient, Context providers
 supabase/functions/  # Edge Function (Toss S2S mTLS)
@@ -153,6 +153,26 @@ Backend/             # FastAPI + Alembic
 - Next Recommendations: 다음 세션 우선순위 작업 1~3개(짧은 이유 포함)
 ```
 
+## Phase 진행 현황
+
+| Phase | 내용 | 상태 | 비고 |
+|-------|------|------|------|
+| 1~10 | 초기화 → 인증 가드 | Done | FE 전체 완료 |
+| 11 | 보안 (PII가드, rate-limit) | Done | 코드 완료. mTLS 인증서 = 사업자등록 후 |
+| 12 | 광고 (Toss Ads SDK R1/R2/R3) | Done | mock SDK. 실 Ad Unit ID = 사업자등록 후 |
+| 13 | E2E 테스트 + 배포 준비 | Not started | 다음 우선순위 |
+
+### 현재 Mock/대기 항목
+- **mTLS 인증서**: `supabase/functions/_shared/mTLSClient.ts` — 사업자등록 후 실제 cert/key 교체
+- **Ad Unit ID**: `src/lib/ads/config.ts` — 테스트 ID 사용 중, 사업자등록 후 실 ID 교체
+- **Supabase 실 연동**: API 호출은 mock, Edge Function deploy 후 연결
+- **ChartWebView**: `@granite-js/native` WebView 실제 연결 대기
+
+### 다음 우선순위
+1. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성
+2. 사업자등록 완료 시 mTLS + Ad Unit ID 실 교체
+3. Supabase deploy + 실 API 연동
+
 ## 참고 문서
 
 | 문서 | 경로 |
@@ -163,4 +183,5 @@ Backend/             # FastAPI + Alembic
 | 마이그레이션 운영 모델 | `docs/10-MIGRATION-OPERATING-MODEL.md` |
 | 기능 패리티 매트릭스 | `docs/11-FEATURE-PARITY-MATRIX.md` |
 | 마이그레이션 웨이브 | `docs/12-MIGRATION-WAVES-AND-GATES.md` |
+| Phase 11 런타임 증적 | `docs/2-27/PHASE11-RUNTIME-EVIDENCE.md` |
 | 원본 DogCoach (읽기 전용) | `C:\Users\gmdqn\DogCoach` |
