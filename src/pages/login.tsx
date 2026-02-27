@@ -91,11 +91,11 @@ function LoginPage() {
           </TouchableOpacity>
 
           <View style={styles.termsRow}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('/legal/terms')}>
               <Text style={styles.termsLink}>이용약관</Text>
             </TouchableOpacity>
             <Text style={styles.termsDot}>·</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('/legal/privacy')}>
               <Text style={styles.termsLink}>개인정보처리방침</Text>
             </TouchableOpacity>
           </View>

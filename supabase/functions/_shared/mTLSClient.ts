@@ -1,5 +1,7 @@
 /**
- * mTLS Client — Toss S2S 호출을 감싸는 mock 전용 구현체.
+ * mTLS Client — Toss S2S 호출을 감싸는 mock/real 구현체.
+ * Real: Deno.createHttpClient + Base64 cert/key → Toss API Partner.
+ * Mock: 개발/테스트용 더미 응답.
  * Parity: AUTH-001, IAP-001, MSG-001
  */
 
@@ -65,6 +67,119 @@ export interface MTLSClient {
     reasonCode: string;
   }): Promise<{ executionId: string }>;
   getPointsGrantResult(executionId: string): Promise<PointsGrantResult>;
+}
+
+const TOSS_API_BASE = 'https://api-partner.toss.im';
+const TOSS_APP_PATH = '/api-partner/v1/apps-in-toss';
+
+class RealMTLSClient implements MTLSClient {
+  private httpClient: Deno.HttpClient;
+
+  constructor() {
+    const certChain = Deno.env.get('TOSS_CLIENT_CERT_BASE64');
+    const privateKey = Deno.env.get('TOSS_CLIENT_KEY_BASE64');
+    if (!certChain || !privateKey) {
+      throw new Error('TOSS_CLIENT_CERT_BASE64 and TOSS_CLIENT_KEY_BASE64 must be set');
+    }
+    this.httpClient = Deno.createHttpClient({
+      certChain: atob(certChain),
+      privateKey: atob(privateKey),
+    });
+  }
+
+  private async request<T>(
+    method: string,
+    path: string,
+    options?: { body?: unknown; headers?: Record<string, string> },
+  ): Promise<T> {
+    const url = `${TOSS_API_BASE}${path}`;
+    const res = await fetch(url, {
+      method,
+      client: this.httpClient,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      body: options?.body ? JSON.stringify(options.body) : undefined,
+    } as RequestInit & { client: Deno.HttpClient });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      const error = new Error(`Toss API ${method} ${path} failed: ${res.status} ${text}`) as StatusError;
+      error.status = res.status;
+      throw error;
+    }
+    return res.json();
+  }
+
+  async exchangeAuthorizationCode(authorizationCode: string): Promise<{ accessToken: string }> {
+    const appKey = Deno.env.get('TOSS_APP_KEY')!;
+    const result = await this.request<{ accessToken: string }>(
+      'POST',
+      `${TOSS_APP_PATH}/user/oauth2/generate-token`,
+      { body: { appKey, authorizationCode } },
+    );
+    return { accessToken: result.accessToken };
+  }
+
+  async fetchLoginProfile(accessToken: string): Promise<TossLoginProfile> {
+    return this.request<TossLoginProfile>(
+      'GET',
+      `${TOSS_APP_PATH}/user/oauth2/login-me`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+  }
+
+  async verifyIapOrder(request: {
+    orderId: string;
+    productId: string;
+    transactionId: string;
+  }): Promise<TossOrderVerification> {
+    return this.request<TossOrderVerification>(
+      'POST',
+      `${TOSS_APP_PATH}/iap/verify-order`,
+      { body: request },
+    );
+  }
+
+  async sendSmartMessage(request: {
+    userId: string;
+    templateCode: string;
+    variables: Record<string, string>;
+  }): Promise<SmartMessageResult> {
+    return this.request<SmartMessageResult>(
+      'POST',
+      `${TOSS_APP_PATH}/smart-message/send`,
+      { body: request },
+    );
+  }
+
+  async getPointsGrantKey(): Promise<PointsKeyResult> {
+    return this.request<PointsKeyResult>(
+      'POST',
+      `${TOSS_APP_PATH}/points/grant-key`,
+    );
+  }
+
+  async executePointsGrant(request: {
+    grantKey: string;
+    userId: string;
+    points: number;
+    reasonCode: string;
+  }): Promise<{ executionId: string }> {
+    return this.request<{ executionId: string }>(
+      'POST',
+      `${TOSS_APP_PATH}/points/grant`,
+      { body: request },
+    );
+  }
+
+  async getPointsGrantResult(executionId: string): Promise<PointsGrantResult> {
+    return this.request<PointsGrantResult>(
+      'GET',
+      `${TOSS_APP_PATH}/points/grant-result/${executionId}`,
+    );
+  }
 }
 
 class MockMTLSClient implements MTLSClient {
@@ -185,10 +300,7 @@ class MockMTLSClient implements MTLSClient {
 
 export function createMTLSClient(mode: 'mock' | 'real' = 'mock'): MTLSClient {
   if (mode === 'real') {
-    const error = new Error('Real mTLS mode is unavailable before business registration') as StatusError;
-    error.status = 501;
-    throw error;
+    return new RealMTLSClient();
   }
-
   return new MockMTLSClient();
 }

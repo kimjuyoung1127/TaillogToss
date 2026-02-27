@@ -103,7 +103,7 @@ src/
   _app.tsx        # 앱 컨테이너 (Granite.registerApp)
   pages/          # 실제 페이지 컴포넌트 (createRoute)
   components/     # 3계층: tds-ext ← shared ← features
-  lib/            # API, hooks, ads, charts, guards, analytics, data
+  lib/            # API, hooks, ads, charts, guards, analytics, data, security
   types/          # 도메인별 타입 (BE 미러)
   stores/         # QueryClient, Context providers
 supabase/functions/  # Edge Function (Toss S2S mTLS)
@@ -161,17 +161,20 @@ Backend/             # FastAPI + Alembic
 | 11 | 보안 (PII가드, rate-limit) | Done | 코드 완료. mTLS 인증서 = 사업자등록 후 |
 | 12 | 광고 (Toss Ads SDK R1/R2/R3) | Done | mock SDK. 실 Ad Unit ID = 사업자등록 후 |
 | 13 | E2E 테스트 + 배포 준비 | In progress | Playbook 작성 완료, Sandbox 실기기 검증 대기 |
+| B2B | B2B 확장 (P1~P7) + 정합성 수정 | Done | 코드+문서정합성 완료. 성능/실기기 검증 대기 |
+| REG | 토스 콘솔 등록 준비 | Done | legal 4종 + toss-disconnect + RealMTLSClient + 앱 내 약관 페이지 |
 
 ### 현재 Mock/대기 항목
-- **mTLS 인증서**: `supabase/functions/_shared/mTLSClient.ts` — 사업자등록 후 실제 cert/key 교체
+- **mTLS 인증서**: `supabase/functions/_shared/mTLSClient.ts` — RealMTLSClient 구현 완료, Supabase secrets 등록 필요
 - **Ad Unit ID**: `src/lib/ads/config.ts` — 테스트 ID 사용 중, 사업자등록 후 실 ID 교체
 - **Supabase 실 연동**: API 호출은 mock, Edge Function deploy 후 연결
 - **ChartWebView**: `@granite-js/native` WebView 실제 연결 대기
 
 ### 다음 우선순위
-1. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성
-2. 사업자등록 완료 시 mTLS + Ad Unit ID 실 교체
-3. Supabase deploy + 실 API 연동
+1. Supabase Edge Function deploy (legal + toss-disconnect 우선) + secrets 등록
+2. 토스 콘솔 앱 등록 (URL 입력 + 콜백 설정 + mTLS cert 등록)
+3. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성
+4. 사업자등록 완료 시 Ad Unit ID 실 교체
 
 ## 참고 문서
 
