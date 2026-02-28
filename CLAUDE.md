@@ -104,8 +104,8 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 ## 상태 업데이트 (2026-02-28)
 - FE API backend-first 전환: `dashboard`, `training` 포함 완료
 - Edge invoke/auth-policy 7종 스모크 검증 완료
-- `send-smart-message` v8, `grant-toss-points` v8 배포 완료
-- 위조 `x-user-role` 우회 재시도 차단 확인(4건 모두 403)
+- `send-smart-message` v8, `grant-toss-points` v8, `verify-iap-order` v8, `generate-report` v2 배포 완료
+- 위조 `x-user-role` 우회 재시도 차단 확인(8건 모두 403)
 
 ## 다음 우선순위 (Single Source)
 1. INFRA-2 후속: Edge happy-path payload 검증 + secrets drift 점검

@@ -92,6 +92,16 @@ function resolveIdempotentResponse(
   });
 }
 
+function isAllowedRole(role: EdgeContext['role']): boolean {
+  return (
+    role === 'user' ||
+    role === 'trainer' ||
+    role === 'org_owner' ||
+    role === 'org_staff' ||
+    role === 'service_role'
+  );
+}
+
 export function createVerifyIapOrderHandler(overrides?: Partial<VerifyIapDeps>) {
   const deps = { ...defaultDeps(), ...(overrides ?? {}) };
 
@@ -99,7 +109,9 @@ export function createVerifyIapOrderHandler(overrides?: Partial<VerifyIapDeps>) 
     request: VerifyIapOrderRequest,
     context: EdgeContext
   ): Promise<EdgeResult<VerifyIapOrderResponse>> => {
-    void context;
+    if (!isAllowedRole(context.role)) {
+      return fail('AUTH_FORBIDDEN', 'Only authenticated app roles can verify IAP orders', 403);
+    }
 
     if (!request.orderId || !request.productId || !request.transactionId || !request.idempotencyKey) {
       return fail('VALIDATION_ERROR', 'orderId/productId/transactionId/idempotencyKey are required', 400);
