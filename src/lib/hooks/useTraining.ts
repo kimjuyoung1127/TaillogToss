@@ -40,12 +40,13 @@ export function useCompleteStep() {
       progressId,
       stepId,
       currentSteps,
+      dogId,
     }: {
       progressId: string;
       stepId: string;
       currentSteps: string[];
       dogId: string;
-    }) => trainingApi.completeStep(progressId, stepId, currentSteps),
+    }) => trainingApi.completeStep(progressId, stepId, currentSteps, dogId),
     onSuccess: (_data, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.training.progress(variables.dogId) });
     },
