@@ -219,6 +219,8 @@ Backend/             # FastAPI + Alembic
 - FE API backend-first 전환 완료: `dashboard`, `training` 추가 반영 + app test 보강(2026-02-28)
 - Edge Function `generate-report` v1 배포 완료 (`verify_jwt=true`, mock AI)
 - Edge Function 7종 invoke/auth-policy smoke 검증 완료 (2026-02-28 14:05 KST, GET/POST expected 2xx/4xx 응답 + Edge 로그 확인)
+- Toss 공식 문서 대조 완료: Smart Message/Promotion API는 Bearer + `x-toss-user-key` 기준이며 호출자 임의 role 헤더 신뢰 패턴 없음
+- Edge Function 보안 패치 배포 완료: `send-smart-message` v8, `grant-toss-points` v8 재배포 + 위조 `x-user-role` 우회 재시도 4건 모두 `403` 차단 (2026-02-28 14:32 KST)
 
 ### 다음 우선순위 (Single Source — 다른 문서는 이 섹션 참조)
 
@@ -240,6 +242,7 @@ Backend/             # FastAPI + Alembic
 - ~~AUTH uuid user_id 블로커~~ → `login-with-toss` v12 배포 + auth bridge 정렬 완료
 - ~~FE→BE dashboard/training 잔여~~ → backend-first + fallback 전환 완료, API 단위테스트 추가
 - ~~INFRA-2 함수 invoke/auth-policy 점검~~ → 7종 스모크 검증 완료(2026-02-28, Edge Logs 기준)
+- ~~Edge role-header 권한 우회 리스크~~ → `send-smart-message`/`grant-toss-points` v8 재배포 후 위조 헤더 우회 차단 검증 완료
 
 ## 참고 문서
 

@@ -110,11 +110,11 @@
 | legal | ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
 | toss-disconnect | ✅ | false | ✅ invoke smoke(GET/POST 401, 인증정책 동작) / 콘솔 콜백 대기 |
 | verify-iap-order | ⚠️ Mock | true | ⚠️ invoke smoke(GET 401 / POST 400), happy-path 미검증 |
-| send-smart-message | ⚠️ Mock | true | ⚠️ invoke smoke(GET 401 / POST 403), Sandbox 실발송 미검증 |
-| grant-toss-points | ⚠️ Mock | true | ⚠️ invoke smoke(GET 401 / POST 403), happy-path 미검증 |
+| send-smart-message | ⚠️ Mock (v8) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403), Sandbox 실발송 미검증 |
+| grant-toss-points | ⚠️ Mock (v8) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403), happy-path 미검증 |
 | generate-report | ✅ v1 (mock AI) | true | ⚠️ invoke smoke(GET 401 / POST 400), OpenAI 실연동 미검증 |
 
-기준: 2026-02-28 14:05 KST (Supabase Edge Logs + HTTP 직접 호출)
+기준: 2026-02-28 14:32 KST (Supabase Edge Logs + HTTP 직접 호출)
 
 ---
 
@@ -127,7 +127,7 @@
 | BE↔DB 통합 테스트 | 미구현 | FastAPI + 실 Supabase 연결 테스트 (DB 마이그레이션 완료, 연결만 미검증) |
 | E2E 테스트 | 부분 | 로그인 + Edge invoke smoke 검증, IAP/광고 happy-path 미검증 |
 | 성능 테스트 | 미구현 | 40마리 FlatList, API p95 < 300ms |
-| 보안 테스트 | 부분 | mTLS real mode, PII 암호화 단위만 |
+| 보안 테스트 | 부분 | mTLS real mode, PII 암호화 단위 + Edge role-header 우회 차단 검증 완료 |
 
 ---
 
