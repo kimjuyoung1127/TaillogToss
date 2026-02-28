@@ -82,6 +82,12 @@ export async function setSessionFromBridgeResponse(payload: TossLoginResponse): 
     refresh_token: payload.refresh_token,
   });
   if (error) throw error;
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(payload.access_token);
+  if (userError || !userData.user) {
+    await supabase.auth.signOut();
+    return false;
+  }
   return true;
 }
 

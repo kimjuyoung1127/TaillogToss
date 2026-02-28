@@ -100,3 +100,18 @@ Next Action:
 - [ ] AUTH/IAP/MSG/AD E2E 시나리오 전부 수행
 - [ ] Sandbox 실기기 증적(스크린샷 + 로그 + DB 조회) 첨부
 - [ ] 미해결 리스크와 대응 계획 문서화
+
+## Current Baseline (2026-02-28 21:30 KST)
+
+IAP-001:
+- [x] 서버 호출 성공: `verify-iap-order v12` `POST 200` 2건 (`606b960d-729a-49aa-a425-77867e7eadd5`, `e9edb63f-d893-483d-9a45-93bd94833afa`)
+- [x] DB 반영 확인: `public.toss_orders` `order_count=2`, `latest_order_at=2026-02-28 21:17:26 KST`
+- [ ] 앱 UI 증적: 성공/복구/실패 3화면 + 각 시점 request id 연결
+
+MSG-001:
+- [x] DB 기준선: `public.noti_history` `noti_count=2`, `latest_noti_at=2026-02-28 00:52:11 KST`
+- [ ] Sandbox 실발송 `POST 200` + 카운트 증가 증적
+
+AD-001:
+- [x] 현재 설정: 테스트 ID `ait-ad-test-rewarded-id` (R1/R2/R3 공통)
+- [ ] 실 Ad Group ID 반영 후 R1/R2/R3 실노출 증적

@@ -21,6 +21,13 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
 }
 
+export function getSupabasePublicConfig(): { url: string; anonKey: string } {
+  return {
+    url: SUPABASE_URL,
+    anonKey: SUPABASE_ANON_KEY,
+  };
+}
+
 if (__DEV__ && !process.env.EXPO_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) {
   console.warn(
     '[APP-001] Using bundled Supabase public config. Set EXPO_PUBLIC_SUPABASE_URL/EXPO_PUBLIC_SUPABASE_ANON_KEY to override.'

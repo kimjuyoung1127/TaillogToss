@@ -5,18 +5,42 @@
 
 const mockInvoke = jest.fn();
 const mockFrom = jest.fn();
+const mockGetSession = jest.fn();
+const mockRefreshSession = jest.fn();
+const mockGetUser = jest.fn();
 
 jest.mock('lib/api/supabase', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
     from: (...args: unknown[]) => mockFrom(...args),
+    auth: {
+      getSession: (...args: unknown[]) => mockGetSession(...args),
+      refreshSession: (...args: unknown[]) => mockRefreshSession(...args),
+      getUser: (...args: unknown[]) => mockGetUser(...args),
+    },
   },
+  getSupabasePublicConfig: () => ({
+    url: 'https://kvknerzsqgmmdmyxlorl.supabase.co',
+    anonKey: 'test-anon-key',
+  }),
 }));
 
 import { verifyAndGrant, recoverPendingOrders, createOneTimePurchaseOrder } from '../iap';
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGetSession.mockResolvedValue({
+    data: { session: { access_token: 'eyJ.base.session' } },
+    error: null,
+  });
+  mockRefreshSession.mockResolvedValue({
+    data: { session: { access_token: 'eyJ.base.refreshed' } },
+    error: null,
+  });
+  mockGetUser.mockResolvedValue({
+    data: { user: { id: 'user-1' } },
+    error: null,
+  });
 });
 
 describe('verifyAndGrant', () => {
@@ -34,22 +58,110 @@ describe('verifyAndGrant', () => {
     expect(result).toBe(false);
   });
 
+  it('첫 호출 401이면 refresh 후 1회 재시도', async () => {
+    mockInvoke
+      .mockResolvedValueOnce({
+        data: null,
+        error: { context: { status: 401 } },
+      })
+      .mockResolvedValueOnce({
+        data: { data: { grant_status: 'granted' } },
+        error: null,
+      });
+
+    const result = await verifyAndGrant(receipt);
+    expect(result).toBe(true);
+    expect(mockRefreshSession).toHaveBeenCalledTimes(1);
+    expect(mockInvoke).toHaveBeenCalledTimes(2);
+  });
+
+  it('세션 토큰이 없으면 invoke 전 refresh로 토큰 확보', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    });
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: { access_token: 'eyJ.from.refresh' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValueOnce({ data: { ok: true }, error: null });
+
+    const result = await verifyAndGrant(receipt);
+    expect(result).toBe(true);
+    expect(mockRefreshSession).toHaveBeenCalledTimes(1);
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'verify-iap-order',
+      expect.objectContaining({
+        headers: { Authorization: 'Bearer eyJ.from.refresh' },
+      }),
+    );
+  });
+
+  it('refresh 후에도 JWT가 아니면 호출하지 않고 false 반환', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    });
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: { access_token: 'sb_publishable_not_jwt' } },
+      error: null,
+    });
+
+    const result = await verifyAndGrant(receipt);
+    expect(result).toBe(false);
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('JWT 형식이어도 getUser 검증 실패면 호출하지 않고 false 반환', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      data: { session: { access_token: 'eyJ.invalid.token' } },
+      error: null,
+    });
+    mockGetUser
+      .mockResolvedValueOnce({ data: { user: null }, error: new Error('Invalid JWT') })
+      .mockResolvedValueOnce({ data: { user: null }, error: new Error('Invalid JWT') });
+    mockRefreshSession.mockResolvedValueOnce({
+      data: { session: { access_token: 'eyJ.refreshed.token' } },
+      error: null,
+    });
+
+    const result = await verifyAndGrant(receipt);
+    expect(result).toBe(false);
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
   it('grant_status=granted 시 true 반환', async () => {
     mockInvoke.mockResolvedValue({ data: { grant_status: 'granted' }, error: null });
     const result = await verifyAndGrant(receipt);
     expect(result).toBe(true);
   });
 
+  it('Edge envelope에서 grant_status=grant_failed 시 false 반환', async () => {
+    mockInvoke.mockResolvedValue({
+      data: {
+        ok: true,
+        status: 200,
+        data: { grant_status: 'grant_failed', toss_status: 'FAILED' },
+      },
+      error: null,
+    });
+    const result = await verifyAndGrant(receipt);
+    expect(result).toBe(false);
+  });
+
   it('B2B context 포함 시 body에 orgId/trainerUserId 전달', async () => {
     mockInvoke.mockResolvedValue({ data: { ok: true }, error: null });
     await verifyAndGrant(receipt, { orgId: 'org-1', trainerUserId: 'trainer-1' });
 
-    expect(mockInvoke).toHaveBeenCalledWith('verify-iap-order', {
-      body: expect.objectContaining({
-        orgId: 'org-1',
-        trainerUserId: 'trainer-1',
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'verify-iap-order',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          orgId: 'org-1',
+          trainerUserId: 'trainer-1',
+        }),
       }),
-    });
+    );
   });
 
   it('B2B context 없이 호출 시 orgId 키 미포함', async () => {

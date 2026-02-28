@@ -40,7 +40,7 @@
 - [x] `npm run typecheck`
 - [x] `jest` app 핵심 4 suite
 - [x] `jest` edge suite
-- [x] Supabase Edge Function `login-with-toss` v12 배포 확인 (`get_edge_function`)
+- [x] Supabase Edge Function `login-with-toss` v13 ACTIVE 확인 (`list_edge_functions`)
 - [ ] Sandbox 실기기: survey 완료 -> survey-result -> notification -> dashboard
 
 5. AUTH 세션 안정화
@@ -74,3 +74,59 @@
 - 잘한 점: training/dashboard까지 backend-first 확장, LAN IP direct로 실기기 연결 해결, trailing slash 307 일괄 수정
 - 부족한 점: training `changeVariant`는 미사용 경로라 backend 전환 범위에서 제외되어 추후 정리 필요
 - 남은 공백: 실기기 E2E(설문 완료→대시보드) 증적 확보 및 IAP/MSG/AD 시나리오 검증
+
+## Next Execution Plan (2026-02-28 21:30 KST)
+
+Scope: `IAP-001`, `MSG-001`, `AD-001` (Phase13 게이트 마감)
+
+1. IAP-001 증적 마감 (진행 중)
+- [x] 서버 증적 고정: `verify-iap-order v12` `POST 200` 2건 (`606b960d-729a-49aa-a425-77867e7eadd5`, `e9edb63f-d893-483d-9a45-93bd94833afa`)
+- [x] DB 반영 고정: `public.toss_orders` `order_count=2`, `latest_order_at=2026-02-28 21:17:26 KST`
+- [ ] 앱 UI 증적 3종 수집: 구매 성공 / 복구 / 실패 (스크린샷 + 앱 로그 + request id 매핑)
+- [ ] 게이트 판정 업데이트: IAP `PARTIAL -> PASS` 또는 차단사유 명시
+
+2. MSG-001 실발송 증적 (대기)
+- [x] 기준선 확보: `public.noti_history` `noti_count=2`, `latest_noti_at=2026-02-28 00:52:11 KST`
+- [x] 자동 호출 시도 기록: Codex 실행환경 DNS 제한으로 `https://kvknerzsqgmmdmyxlorl.supabase.co` 해석 실패(`curl: Could not resolve host`)
+- [ ] Sandbox 실발송 1건 성공: `send-smart-message` `POST 200`
+- [ ] DB 증가 확인: `noti_history` 카운트 증가 + 최신 row `error_code is null`
+- [ ] 실패 케이스 403(권한 없음) 1건 재증적
+
+3. AD-001 실광고 증적 (대기)
+- [x] 현상 확인: `src/lib/ads/config.ts`가 테스트 ID(`ait-ad-test-rewarded-id`) 고정
+- [ ] 실 Ad Group ID 반영
+- [ ] R1/R2/R3 노출 + 보상/폴백(no-fill) 증적 수집
+
+4. 종료 조건
+- [ ] `docs/PROJECT-STATUS.md`, `docs/11-FEATURE-PARITY-MATRIX.md`, `docs/MISSING-AND-UNIMPLEMENTED.md` 동기화
+- [ ] Gate Summary 작성: `AUTH/IAP/MSG/AD`를 `PASS / PARTIAL / BLOCKED`로 확정
+
+## Windows PowerShell Runbook (즉시 실행)
+
+`MSG-001` 200 증적 수집:
+```powershell
+$envFile = "C:\Users\gmdqn\tosstaillog\Backend\.env"
+$serviceKey = ((Get-Content $envFile | Where-Object { $_ -like "SUPABASE_SERVICE_ROLE_KEY=*" } | Select-Object -First 1) -replace '^SUPABASE_SERVICE_ROLE_KEY=','')
+$url = "https://kvknerzsqgmmdmyxlorl.supabase.co/functions/v1/send-smart-message"
+$body = @{
+  userId = "f59ac308-f321-464e-9a72-d686f55dd94f"
+  notificationType = "training_reminder"
+  templateCode = "phase13_msg_test"
+  variables = @{ source = "phase13" }
+  idempotencyKey = "phase13-msg-$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"
+} | ConvertTo-Json -Depth 5
+$headers = @{
+  "apikey" = $serviceKey
+  "Authorization" = "Bearer $serviceKey"
+  "Content-Type" = "application/json"
+}
+$resp = Invoke-RestMethod -Method Post -Uri $url -Headers $headers -Body $body
+$resp
+```
+
+`MSG-001` DB 증가 확인(`noti_history`):
+```powershell
+$restUrl = "https://kvknerzsqgmmdmyxlorl.supabase.co/rest/v1/noti_history?select=id,user_id,sent_at,success,error_code,idempotency_key&order=sent_at.desc&limit=3"
+$rows = Invoke-RestMethod -Method Get -Uri $restUrl -Headers @{ "apikey" = $serviceKey; "Authorization" = "Bearer $serviceKey" }
+$rows
+```

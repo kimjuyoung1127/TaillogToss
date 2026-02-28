@@ -12,7 +12,10 @@ export function useLogin() {
   const loginWithToss = useCallback(
     async (authCode: string) => {
       const result = await authApi.loginWithToss(authCode);
-      await authApi.setSessionFromBridgeResponse(result);
+      const sessionEstablished = await authApi.setSessionFromBridgeResponse(result);
+      if (!sessionEstablished) {
+        throw new Error('BRIDGE_SESSION_NOT_ESTABLISHED');
+      }
       login(result.user);
       return result;
     },

@@ -4,7 +4,7 @@
  * @apps-in-toss/framework 확인 후 실 SDK로 교체 예정
  * Parity: IAP-001, B2B-001
  */
-import { supabase } from './supabase';
+import { getSupabasePublicConfig, supabase } from './supabase';
 
 // ──────────────────────────────────────
 // 공식 SDK 인터페이스 미러
@@ -33,6 +33,89 @@ export interface CreateOrderOptions {
   processProductGrant: (receipt: IAPReceipt) => Promise<boolean>;
   onEvent?: (event: IAPEvent) => void;
   onError?: (error: Error) => void;
+}
+
+async function resolveAccessToken(forceRefresh = false): Promise<string | null> {
+  if (forceRefresh) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (!refreshError && refreshed.session?.access_token) {
+      return refreshed.session.access_token;
+    }
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+  if (error) return null;
+  return data.session?.access_token ?? null;
+}
+
+function normalizeJwtToken(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const token = raw.trim();
+  if (!token) return null;
+  return token.split('.').length === 3 ? token : null;
+}
+
+async function isUsableAccessToken(token: string): Promise<boolean> {
+  const { data, error } = await supabase.auth.getUser(token);
+  return !error && !!data.user;
+}
+
+async function resolveAccessTokenForInvoke(): Promise<string | null> {
+  const activeToken = normalizeJwtToken(await resolveAccessToken(false));
+  if (activeToken && (await isUsableAccessToken(activeToken))) return activeToken;
+
+  const refreshedToken = normalizeJwtToken(await resolveAccessToken(true));
+  if (refreshedToken && (await isUsableAccessToken(refreshedToken))) return refreshedToken;
+  return null;
+}
+
+function isTestEnvironment(): boolean {
+  return typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+}
+
+async function invokeVerifyIapOrderViaFetch(
+  body: Record<string, unknown>,
+  accessToken: string | null,
+): Promise<{ data: unknown; error: unknown }> {
+  const { url, anonKey } = getSupabasePublicConfig();
+  const response = await fetch(`${url}/functions/v1/verify-iap-order`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: anonKey,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    return {
+      data: null,
+      error: {
+        status: response.status,
+        payload,
+      },
+    };
+  }
+
+  return { data: payload, error: null };
+}
+
+function getInvokeHttpStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+  const withContext = error as { context?: unknown; status?: number };
+  if (typeof withContext.status === 'number') return withContext.status;
+
+  const context = withContext.context as { status?: number } | undefined;
+  if (typeof context?.status === 'number') return context.status;
+  return undefined;
 }
 
 /**
@@ -88,18 +171,100 @@ export async function verifyAndGrant(
   receipt: IAPReceipt,
   b2bContext?: B2BGrantContext,
 ): Promise<boolean> {
-  const { data, error } = await supabase.functions.invoke('verify-iap-order', {
-    body: {
-      orderId: receipt.orderId,
-      productId: receipt.productId,
-      transactionId: receipt.transactionId,
-      idempotencyKey: `idem_${receipt.orderId}`,
-      ...(b2bContext?.orgId && { orgId: b2bContext.orgId }),
-      ...(b2bContext?.trainerUserId && { trainerUserId: b2bContext.trainerUserId }),
-    },
+  const body = {
+    orderId: receipt.orderId,
+    productId: receipt.productId,
+    transactionId: receipt.transactionId,
+    idempotencyKey: `idem_${receipt.orderId}`,
+    ...(b2bContext?.orgId && { orgId: b2bContext.orgId }),
+    ...(b2bContext?.trainerUserId && { trainerUserId: b2bContext.trainerUserId }),
+  };
+
+  const firstToken = await resolveAccessTokenForInvoke();
+  if (!firstToken) {
+    if (__DEV__) {
+      console.warn('[IAP-001] verify-iap-order skipped: missing/invalid auth jwt');
+    }
+    return false;
+  }
+  if (__DEV__) {
+    const { anonKey } = getSupabasePublicConfig();
+    const { data: tokenUserData, error: tokenUserError } = await supabase.auth.getUser(firstToken);
+    console.log('[IAP-001] verify-iap-order token debug', {
+      tokenPreview: `${firstToken.slice(0, 12)}...${firstToken.slice(-8)}`,
+      tokenLength: firstToken.length,
+      isAnonKey: firstToken === anonKey,
+      tokenUserId: tokenUserData.user?.id ?? null,
+      tokenUserError: tokenUserError?.message ?? null,
+    });
+  }
+  const firstInvoke = await supabase.functions.invoke('verify-iap-order', {
+    body,
+    headers: firstToken ? { Authorization: `Bearer ${firstToken}` } : undefined,
   });
-  if (error) return false;
-  return data?.ok === true || data?.grant_status === 'granted';
+
+  let data = firstInvoke.data;
+  let error = firstInvoke.error;
+
+  if (error && getInvokeHttpStatus(error) === 401) {
+    const refreshedToken = normalizeJwtToken(await resolveAccessToken(true));
+    const retryToken =
+      refreshedToken && (await isUsableAccessToken(refreshedToken)) ? refreshedToken : firstToken;
+    if (__DEV__) {
+      const { anonKey } = getSupabasePublicConfig();
+      console.log('[IAP-001] verify-iap-order retry token debug', {
+        source: retryToken === firstToken ? 'first' : 'refreshed',
+        isAnonKey: retryToken === anonKey,
+      });
+    }
+    const secondInvoke = await supabase.functions.invoke('verify-iap-order', {
+      body,
+      headers: { Authorization: `Bearer ${retryToken}` },
+    });
+    data = secondInvoke.data;
+    error = secondInvoke.error;
+
+    // RN 런타임에서 invoke 헤더 전달이 누락되는 경우를 대비해 fetch로 한 번 더 시도한다.
+    if (!isTestEnvironment() && error && getInvokeHttpStatus(error) === 401) {
+      const fallback = await invokeVerifyIapOrderViaFetch(body, retryToken);
+      data = fallback.data;
+      error = fallback.error;
+    }
+  }
+
+  if (error) {
+    if (__DEV__) {
+      console.warn('[IAP-001] verify-iap-order invoke failed', {
+        status: getInvokeHttpStatus(error),
+        error,
+      });
+    }
+    return false;
+  }
+
+  // Edge envelope({ ok, data })와 평탄 응답({ grant_status })을 모두 지원한다.
+  const payload = data as
+    | {
+        ok?: boolean;
+        grant_status?: string;
+        toss_status?: string;
+        data?: {
+          ok?: boolean;
+          grant_status?: string;
+          toss_status?: string;
+        };
+      }
+    | null
+    | undefined;
+
+  const grantStatus = payload?.grant_status ?? payload?.data?.grant_status;
+  if (grantStatus) return grantStatus === 'granted';
+
+  const tossStatus = payload?.toss_status ?? payload?.data?.toss_status;
+  if (tossStatus) return tossStatus === 'PAYMENT_COMPLETED';
+
+  const okFlag = payload?.ok ?? payload?.data?.ok;
+  return okFlag === true;
 }
 
 // ──────────────────────────────────────

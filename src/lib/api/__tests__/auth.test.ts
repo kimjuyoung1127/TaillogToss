@@ -5,12 +5,18 @@
 
 const mockInvoke = jest.fn();
 const mockSetSession = jest.fn();
+const mockGetUser = jest.fn();
+const mockSignOut = jest.fn();
 const mockIsConfigured = jest.fn().mockReturnValue(true);
 
 jest.mock('lib/api/supabase', () => ({
   supabase: {
     functions: { invoke: (...args: unknown[]) => mockInvoke(...args) },
-    auth: { setSession: (...args: unknown[]) => mockSetSession(...args) },
+    auth: {
+      setSession: (...args: unknown[]) => mockSetSession(...args),
+      getUser: (...args: unknown[]) => mockGetUser(...args),
+      signOut: (...args: unknown[]) => mockSignOut(...args),
+    },
   },
   isSupabaseConfigured: () => mockIsConfigured(),
 }));
@@ -20,6 +26,8 @@ import { loginWithToss, setSessionFromBridgeResponse } from '../auth';
 beforeEach(() => {
   jest.clearAllMocks();
   mockIsConfigured.mockReturnValue(true);
+  mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+  mockSignOut.mockResolvedValue({ error: null });
 });
 
 describe('loginWithToss', () => {
@@ -105,5 +113,18 @@ describe('setSessionFromBridgeResponse', () => {
       access_token: 'eyJ.abc.def',
       refresh_token: 'plain-refresh-token',
     });
+  });
+
+  it('setSession 후 getUser 검증 실패면 false 반환 + signOut', async () => {
+    mockSetSession.mockResolvedValue({ error: null });
+    mockGetUser.mockResolvedValueOnce({ data: { user: null }, error: new Error('Invalid JWT') });
+
+    const result = await setSessionFromBridgeResponse({
+      access_token: 'eyJ.abc.def',
+      refresh_token: 'plain-refresh-token',
+    } as any);
+
+    expect(result).toBe(false);
+    expect(mockSignOut).toHaveBeenCalled();
   });
 });
