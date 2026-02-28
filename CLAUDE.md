@@ -101,7 +101,7 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 - Real mTLS 전환(인증서/콘솔) 후속 필요
 - Ad Group ID 실 교체 대기
 - 일부 도메인 happy-path payload 실검증 필요
-- ~~backend-first 실기기 연결 불안정~~ → **해결(2026-02-28)**: LAN IP direct(`DEV_LAN_BACKEND_URL`) 전환으로 `Network request failed` 제거
+- ~~backend-first 실기기 연결 불안정~~ **해결(2026-02-28)**: LAN IP direct 전환 완료 (상세: `docs/2-28/PHASE13-FE-BE-ROLLING-MIGRATION.md`)
 
 ## 상태 업데이트 (2026-02-28)
 - FE API backend-first 전환: `dashboard`, `training` 포함 완료

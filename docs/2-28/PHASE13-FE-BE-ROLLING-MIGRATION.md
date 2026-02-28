@@ -43,6 +43,11 @@
 - [x] Supabase Edge Function `login-with-toss` v12 배포 확인 (`get_edge_function`)
 - [ ] Sandbox 실기기: survey 완료 -> survey-result -> notification -> dashboard
 
+5. AUTH 세션 안정화
+- [x] `auth.ts`: refresh token JWT 판별 완화 (Supabase refresh는 비-JWT 가능)
+- [x] `login.tsx`: bridge session 미수립 시 명시적 에러(`BRIDGE_SESSION_NOT_ESTABLISHED`) 처리
+- [x] `auth.test.ts`: access_token JWT + refresh_token 비-JWT 케이스 테스트 추가
+
 ## Known Issue (2026-02-28) — RESOLVED
 - 현상: 실기기에서 `WARN  [FE-BE] backend fallback to supabase [TypeError: Network request failed]` 반복.
 - 근본 원인: Granite이 `EXPO_PUBLIC_*` env를 번들에 인라인하지 않음 + Metro `0.0.0.0` 바인딩 시 `resolveBackendUrl()`이 `127.0.0.1:8000` 반환 → 실기기에서 `127.0.0.1`은 기기 자신.
