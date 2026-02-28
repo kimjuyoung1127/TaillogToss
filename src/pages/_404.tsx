@@ -6,7 +6,7 @@ import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
 
-export const Route = createRoute('/_404', {
+export const Route = createRoute('/_404' as '/', {
   component: NotFoundPage,
 });
 

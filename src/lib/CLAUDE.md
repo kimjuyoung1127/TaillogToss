@@ -89,4 +89,4 @@
 |------|------|
 | `piiEncrypt.ts` | AES-GCM 암호화, 전화번호/이메일 마스킹, 유효성 검사 |
 
-Edge Function 전담 보안 유틸(PII 가드, rate-limit 등)은 `supabase/functions/_shared/`에 위치 (7개 파일).
+Edge Function 전담 보안 유틸(PII 가드, rate-limit 등)은 `supabase/functions/_shared/`에 위치 (11개 파일).

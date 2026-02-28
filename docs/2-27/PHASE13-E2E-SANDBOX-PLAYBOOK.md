@@ -8,7 +8,7 @@
 ## Preconditions
 - [x] Edge Function 4종 배포 `ACTIVE`
 - [x] Runtime invoke 로그(성공/실패) 8건 확보
-- [ ] `npm run typecheck` 통과 (현재 기존 누적 오류 존재)
+- [x] `npm run typecheck` 통과 (2026-02-28, supabase/ exclude + _app.tsx Granite 전환 + iap/404 수정)
 - [x] `npm run lint`, `npm test` 통과
 - [x] Toss Sandbox 앱 실기기 준비 (로컬 Metro 연결 확인)
 - [x] mTLS cert/key 실환경 반영 (secret digest 일치)

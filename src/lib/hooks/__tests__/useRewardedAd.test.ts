@@ -10,11 +10,12 @@ let mockLoadFn: jest.Mock;
 let mockShowFn: jest.Mock;
 
 jest.mock('lib/ads/config', () => ({
-  getAdUnitId: () => 'test-unit-id',
+  getAdGroupId: () => 'test-ad-group-id',
   getAdsSdk: () => ({
-    loadRewardedAd: (...args: unknown[]) => mockLoadFn(...args),
-    showRewardedAd: (...args: unknown[]) => mockShowFn(...args),
-    isLoaded: () => true,
+    loadFullScreenAd: (...args: unknown[]) => mockLoadFn(...args),
+    showFullScreenAd: (...args: unknown[]) => mockShowFn(...args),
+    isAdLoaded: () => true,
+    destroy: jest.fn(),
   }),
 }));
 

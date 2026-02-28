@@ -3,8 +3,7 @@
  * Parity: APP-001
  */
 import React, { type PropsWithChildren } from 'react';
-import { getSchemeUri, type InitialProps } from '@granite-js/react-native';
-import { AppsInToss } from '@apps-in-toss/framework';
+import { Granite, getSchemeUri, type InitialProps } from '@granite-js/react-native';
 import { context } from '../require.context';
 import { QueryProvider } from 'stores/QueryProvider';
 import { AuthProvider, useAuth } from 'stores/AuthContext';
@@ -40,10 +39,10 @@ function AppContainer({ children }: PropsWithChildren<InitialProps>) {
   );
 }
 
-export default AppsInToss.registerApp(AppContainer, {
+export default Granite.registerApp(AppContainer, {
   appName: 'taillog-app',
   context,
-  getInitialUrl: async (initialScheme) => {
+  getInitialUrl: async (initialScheme: string) => {
     const initialUrl = getSchemeUri();
     return rewriteInitialUrlForDeepEntry(initialUrl, initialScheme);
   },

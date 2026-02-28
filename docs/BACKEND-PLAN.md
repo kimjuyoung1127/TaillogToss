@@ -748,6 +748,20 @@ DogCoach 참조 파일도 같이 읽어서 패턴 맞춰줘."
 - [ ] Supabase MCP 연결 (INFRA-1용, 선택사항)
 - [ ] `tosstaillog/Backend/.env` 파일 준비 (DB URL, JWT Secret 등)
 
-### 현재 상태
+### 현재 상태 (2026-02-28 업데이트)
 - INFRA-1~3: 수동 작업 필요 (콘솔 등록, mTLS 등)
-- BE-P1~P8: Claude Code가 순차 구현 가능
+- BE-P1: ✅ 완료 — scaffolding, config, database, security, exceptions, models, main, Dockerfile, alembic
+- BE-P2: ⏸️ 대기 — Supabase MCP 연결 후 SQL 마이그레이션 실행
+- BE-P3: ✅ 완료 — 27 SQLAlchemy 모델 + 22 enum (models.py 단일 파일)
+- BE-P4: ✅ 완료 — auth, onboarding, dogs, log, dashboard (5 feature 모듈)
+- BE-P5: ✅ 완료 — coaching (AI 6블록 생성 + 예산 + 룰 폴백)
+- BE-P6: ✅ 완료 — training, settings, subscription, notification
+- BE-P7: ✅ 완료 — org (14 endpoints), report (9 endpoints)
+- BE-P8: ✅ 완료 — 셀프리뷰 + 패리티 검증 + pytest 기본 테스트
+
+### 구현 통계
+- Python 파일: 48개
+- Feature 모듈: 12개 (auth, onboarding, dogs, log, dashboard, coaching, training, settings, subscription, notification, org, report)
+- 엔드포인트: 60+ (FE api/*.ts 14개 파일 95% 커버)
+- SQLAlchemy 모델: 27개 (B2C 17 + B2B 10)
+- Pydantic 스키마: 50+ DTO

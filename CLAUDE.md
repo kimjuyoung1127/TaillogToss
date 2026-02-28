@@ -181,10 +181,16 @@ Backend/             # FastAPI + Alembic
 - 남은 리스크는 외부 승인 이슈가 아니라 **실연동 증적 확보** 영역(로그인/IAP/광고)임
 
 ### 다음 우선순위
-1. AUTH-001 실패 케이스(의도적 잘못 코드) 400 증적 1건 추가 확보
-2. Phase 13: E2E 테스트 프레임워크 + Sandbox 검증 시나리오 작성 — 사업자등록 없이 가능
-3. B2B IAP도 동일 공식 패턴으로 정렬 (useOrgSubscription.ts) — 사업자등록 없이 가능
-4. Ad Group ID 실 교체 + IAP 실 결제 E2E
+1. AUTH-001 실패 케이스(의도적 잘못 코드) 400 증적 1건 추가 확보 — 실기기 필요
+2. IAP/MSG/AD Sandbox E2E 시나리오 실행 — 실기기 필요
+3. Ad Group ID 실 교체 — 사업자등록 후 Developers Console 발급
+4. lint 44건 일괄 정리 (no-explicit-any) — 실기기 불필요, 선택적
+
+### 완료 항목 (2026-02-28)
+- ~~B2B IAP 공식 패턴 정렬~~ → usePurchaseB2BIAP + usePendingOrderRecoveryB2B 구현 완료
+- ~~typecheck 에러~~ → 0 에러 (tsconfig supabase exclude + Granite 전환 + iap/404 수정)
+- ~~useRewardedAd 테스트 실패~~ → mock 메서드명 교정, 5/5 통과
+- ~~Jest 테스트 보강~~ → auth 7 + iap 8 + roleGuard 8 = 23케이스 추가 (총 66 tests, 0 fail)
 
 ## 참고 문서
 
