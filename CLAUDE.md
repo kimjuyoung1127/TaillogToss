@@ -188,11 +188,17 @@ Backend/             # FastAPI + Alembic
 - FE Jest 테스트 보강: auth 7 + iap 8 + roleGuard 8 + ads 5 = 66 tests 전체 통과
 - typecheck 0 에러 달성
 
-### 다음 우선순위
-1. FE→BE API 연결 — `src/lib/api/backend.ts` HTTP 클라이언트 래퍼 작성 (실기기 불필요)
-2. Phase 13 E2E 테스트 프레임워크 구축 (실기기 불필요)
-3. AUTH-001 실패 케이스 400 증적 + IAP/MSG/AD Sandbox E2E — 실기기 필요
-4. Ad Group ID 실 교체 — Developers Console 발급
+### 다음 우선순위 (Single Source — 다른 문서는 이 섹션 참조)
+
+**코드 레벨 (실기기 불필요)**:
+1. FE→BE API 연결 — `src/lib/api/backend.ts` HTTP 클라이언트 래퍼. 복잡 쿼리(coaching, dashboard, B2B org dogs)를 FastAPI로 전환
+2. INFRA-2: Edge Function 7종 배포 + Secrets 등록 — `supabase functions deploy` + 환경변수
+3. Phase 13 E2E 테스트 프레임워크 — Toss Auth mock + IAP 시뮬레이션 + FE↔BE 통합
+
+**외부/실기기 필요**:
+4. INFRA-3: mTLS 인증서 발급 + 토스 콘솔 등록 — Developers Console 접속 필요
+5. AUTH-001 실패 400 증적 + IAP/MSG/AD Sandbox E2E — 실기기 Sandbox 앱
+6. Ad Group ID 실 교체 — Developers Console 발급 후 `src/lib/ads/config.ts` 교체
 
 ### 완료 항목 (2026-02-28)
 - ~~B2B IAP 공식 패턴 정렬~~ → usePurchaseB2BIAP + usePendingOrderRecoveryB2B 구현 완료

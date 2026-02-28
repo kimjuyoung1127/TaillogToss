@@ -719,11 +719,12 @@ BE-P8: "feat(backend): self-review fixes + integration test suite"
 
 ## 다음 플랜 추천 (백엔드 완료 후)
 
-1. **FE→BE API 연결**: `src/lib/api/*.ts`에서 복잡 쿼리를 FastAPI 호출로 전환. `src/lib/api/backend.ts` HTTP 클라이언트 래퍼 생성. 단순 CRUD는 Supabase 유지.
+> **Single Source**: `CLAUDE.md` → "다음 우선순위" 섹션 참조.
+> 아래는 백엔드 관점 보충 설명만 유지한다.
 
-2. **Edge Function 배포 + 시크릿 등록**: 7종 Edge Function 실 Supabase 배포. 환경변수/시크릿 등록. FE 연결 검증.
-
-3. **Phase 13: E2E 테스트 + Sandbox 검증**: 전체 플로우 E2E 테스트 (Toss Login → 설문 → 대시보드 → 기록 → 코칭 → 훈련). IAP 3시나리오 테스트. `.ait` 번들 빌드.
+1. **FE→BE API 연결**: `src/lib/api/backend.ts` HTTP 클라이언트 래퍼 생성. 복잡 쿼리(coaching generate, dashboard 집계, B2B org dogs)를 FastAPI 호출로 전환. 단순 CRUD는 Supabase 유지.
+2. **INFRA-2**: 7종 Edge Function 실 Supabase 배포 + Secrets 등록.
+3. **INFRA-3**: 토스 콘솔 등록 + mTLS 인증서 발급 (수동).
 
 ---
 

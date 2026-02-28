@@ -176,14 +176,7 @@
 
 ---
 
-## 9. 다음 실행 순서 (권장)
+## 9. 다음 실행 순서
 
-```
-1. ✅ Supabase MCP 연결 + 실 DB 38테이블 완성 (INFRA-1 완료)
-2. ✅ BE-P1~P8 전체 완료 (48파일, 12모듈, 60+ endpoints)
-3. FE→BE API 연결 (src/lib/api/backend.ts HTTP 클라이언트 래퍼)
-4. Edge Function real mTLS 전환 (INFRA-3: 인증서 발급)
-5. IAP E2E + 광고 검증 (실기기 필요)
-6. Phase 13 E2E 테스트 프레임워크
-7. 실기기 비주얼 QA + B2B 성능 테스트
-```
+> **Single Source**: `CLAUDE.md` → "다음 우선순위" 섹션 참조.
+> 이 문서에서는 중복 관리하지 않는다.
