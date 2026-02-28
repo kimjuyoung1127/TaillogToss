@@ -40,8 +40,13 @@ function SurveyPage() {
         onSuccess: () => {
           navigation.navigate('/onboarding/survey-result');
         },
-        onError: () => {
-          Alert.alert('저장 실패', '설문 저장에 실패했어요. 다시 시도해주세요.');
+        onError: (error) => {
+          const message =
+            error instanceof Error
+              ? error.message.slice(0, 220)
+              : '알 수 없는 오류';
+          console.error('[AUTH-001] survey submit failed', error);
+          Alert.alert('저장 실패', `설문 저장에 실패했어요.\n${message}`);
         },
       }
     );

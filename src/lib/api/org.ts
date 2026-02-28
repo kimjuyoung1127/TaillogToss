@@ -3,6 +3,7 @@
  * Parity: B2B-001
  */
 import { supabase } from './supabase';
+import { requestBackend, withBackendFallback } from './backend';
 import type { Organization, OrgMember, OrgDog, DogAssignment } from 'types/b2b';
 
 /** 조직 상세 조회 */
@@ -32,12 +33,51 @@ export interface OrgDogWithStatus extends OrgDog {
   trainer_name: string | null;
 }
 
-export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
+interface BackendOrgDogWithStatus {
+  id: string;
+  org_id: string;
+  dog_id: string;
+  parent_user_id?: string | null;
+  parent_name?: string | null;
+  group_tag?: string;
+  enrolled_at: string;
+  discharged_at?: string | null;
+  status: string;
+  dog_name?: string | null;
+  dog_breed?: string | null;
+  today_log_count?: number;
+  has_today_report?: boolean;
+  last_log_time?: string | null;
+  trainer_name?: string | null;
+}
+
+function mapBackendOrgDog(row: BackendOrgDogWithStatus): OrgDogWithStatus {
+  return {
+    id: row.id,
+    org_id: row.org_id,
+    dog_id: row.dog_id,
+    parent_user_id: row.parent_user_id ?? null,
+    parent_name: row.parent_name ?? null,
+    group_tag: row.group_tag ?? 'default',
+    enrolled_at: row.enrolled_at,
+    discharged_at: row.discharged_at ?? null,
+    status: row.status as OrgDog['status'],
+    dogs: {
+      name: row.dog_name ?? '',
+      breed: row.dog_breed ?? undefined,
+    },
+    today_log_count: row.today_log_count ?? 0,
+    has_today_report: row.has_today_report ?? false,
+    last_log_time: row.last_log_time ?? null,
+    trainer_name: row.trainer_name ?? null,
+  };
+}
+
+async function getOrgDogsFromSupabase(orgId: string): Promise<OrgDogWithStatus[]> {
   const today = new Date().toISOString().slice(0, 10);
   const todayStart = `${today}T00:00:00`;
   const todayEnd = `${today}T23:59:59`;
 
-  // 1) org_dogs + dogs JOIN
   const { data: orgDogs, error: dogsErr } = await supabase
     .from('org_dogs')
     .select('*, dogs(*)')
@@ -49,7 +89,6 @@ export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
 
   const dogIds = orgDogs.map((od: any) => od.dog_id as string);
 
-  // 2) 오늘 기록 집계 (behavior_logs)
   const { data: logCounts, error: logErr } = await supabase
     .from('behavior_logs')
     .select('dog_id, occurred_at')
@@ -67,7 +106,6 @@ export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
     logCountMap.set(log.dog_id, prev);
   }
 
-  // 3) 오늘 리포트 존재 여부 (daily_reports)
   const { data: todayReports, error: reportErr } = await supabase
     .from('daily_reports')
     .select('dog_id')
@@ -78,7 +116,6 @@ export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
 
   const reportedDogIds = new Set((todayReports ?? []).map((r: any) => r.dog_id as string));
 
-  // 4) 담당자 배정 (dog_assignments)
   const { data: assignments, error: assignErr } = await supabase
     .from('dog_assignments')
     .select('dog_id, trainer_user_id')
@@ -92,7 +129,6 @@ export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
     trainerMap.set(a.dog_id, a.trainer_user_id);
   }
 
-  // 5) 병합
   return orgDogs.map((od: any) => {
     const logInfo = logCountMap.get(od.dog_id) ?? { count: 0, lastTime: null };
     return {
@@ -103,6 +139,16 @@ export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
       trainer_name: trainerMap.get(od.dog_id) ?? null,
     } as OrgDogWithStatus;
   });
+}
+
+export async function getOrgDogs(orgId: string): Promise<OrgDogWithStatus[]> {
+  return withBackendFallback(
+    async () => {
+      const rows = await requestBackend<BackendOrgDogWithStatus[]>(`/api/v1/org/${orgId}/dogs`);
+      return rows.map(mapBackendOrgDog);
+    },
+    () => getOrgDogsFromSupabase(orgId),
+  );
 }
 
 /** 활성 강아지 수 카운트 */

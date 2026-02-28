@@ -25,7 +25,7 @@ export async function getDog(dogId: string): Promise<Dog> {
 
 /** 반려견 환경 조회 */
 export async function getDogEnv(dogId: string): Promise<DogEnv | null> {
-  const { data, error } = await supabase.from('dog_envs').select('*').eq('dog_id', dogId).single();
+  const { data, error } = await supabase.from('dog_env').select('*').eq('dog_id', dogId).single();
   if (error && error.code !== 'PGRST116') throw error;
   return data as DogEnv | null;
 }

@@ -68,7 +68,7 @@
 **남은 백엔드 작업**:
 - INFRA-2: Edge Function 배포 + Secrets 등록 (수동)
 - INFRA-3: 토스 콘솔 등록 + mTLS 인증서 (수동)
-- FE→BE 연결: `src/lib/api/backend.ts` HTTP 클라이언트 래퍼
+- FE→BE 연결: `src/lib/api/backend.ts` 추가 완료. 도메인별 전환은 `log/report/settings/subscription/notification` 완료, `dashboard/training` 잔여
 
 ---
 
@@ -79,8 +79,8 @@
 | AUTH-001 | 실패 케이스 400 증적 추가 (실기기) |
 | APP-001 | 실기기 라우팅 완전 검증 |
 | UI-001 | 실기기 비주얼 QA (17화면) |
-| LOG-001 | Supabase API 실 연동 |
-| AI-001 | ~~Backend/ 미존재~~ → BE-P5 완료. FastAPI 코칭 API FE 연결 필요 |
+| LOG-001 | FastAPI 로그 API 실기기 E2E 증적 |
+| AI-001 | ~~Backend/ 미존재~~ → BE-P5 완료. FastAPI 코칭 API backend-first 전환 완료, 실연동 E2E 증적 필요 |
 | IAP-001 | 결제 E2E (실제 결제) |
 | MSG-001 | Sandbox 실발송 검증 |
 | AD-001 | 실 Ad Group ID 교체, Sandbox 광고 검증 |
@@ -106,7 +106,7 @@
 
 | Function | 배포 | verify_jwt | 실연동 |
 |----------|------|-----------|--------|
-| login-with-toss | v11 ✅ | false | ✅ Sandbox 200 |
+| login-with-toss | v12 ✅ (배포) | false | ✅ Sandbox 200 / v12 재검증 필요 |
 | legal | ✅ | false | ✅ URL 접근 확인 |
 | toss-disconnect | ✅ | false | 콘솔 콜백 검증 대기 |
 | verify-iap-order | ⚠️ Mock | true | 미검증 |
@@ -136,19 +136,20 @@
 1. ~~Backend AI 코칭 엔진 (BE-P5)~~ → ✅ 완료
 2. ~~FastAPI 프로젝트 초기화 (BE-P1~P4)~~ → ✅ 완료
 3. **Edge Function Real mTLS (INFRA-3)** — 로그인 외 Toss API 호출 전부 (인증서 발급 필요)
-4. **FE→BE API 연결** — Backend 코드 존재하지만 FE에서 호출하는 HTTP 클라이언트 미구현
+4. **FE→BE API 연결 잔여 도메인** — backend.ts + coaching/org dogs + log/report/settings/subscription/notification 전환 완료, `dashboard/training` 전환 필요
+5. **AUTH 브릿지 실기기 재검증** — login-with-toss v12 배포 완료, Sandbox 증적 재수집 필요
 
 ### 🟠 HIGH (주요 기능 미완성)
 
-5. IAP E2E 테스트 (Sandbox 결제 플로우)
-6. B2B RPC 함수 (verify_parent_phone_last4)
-7. Ads 실 Ad Group ID 교체
+6. IAP E2E 테스트 (Sandbox 결제 플로우)
+7. B2B RPC 함수 (verify_parent_phone_last4)
+8. Ads 실 Ad Group ID 교체
 
 ### 🟡 MEDIUM (론칭 영향 없음)
 
-8. 세그먼트 + 리텐션 자동화 (Phase 2+)
-9. 공유 리워드 (Phase 2+)
-10. 트레이너 마켓플레이스 (Phase 2-3)
+9. 세그먼트 + 리텐션 자동화 (Phase 2+)
+10. 공유 리워드 (Phase 2+)
+11. 트레이너 마켓플레이스 (Phase 2-3)
 
 ---
 

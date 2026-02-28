@@ -3,6 +3,7 @@
  * Parity: IAP-001
  */
 import { supabase } from './supabase';
+import { requestBackend, withBackendFallback } from './backend';
 import type { Subscription, TossOrder, PurchaseRequest } from 'types/subscription';
 
 function toIdempotencyKey(request: PurchaseRequest): string {
@@ -21,15 +22,46 @@ function toProductId(request: PurchaseRequest): string {
   return request.productId ?? request.product_id;
 }
 
+interface BackendOrderHistory {
+  id: string;
+  product_id: string;
+  toss_status: TossOrder['toss_status'];
+  grant_status: TossOrder['grant_status'];
+  amount: number;
+  created_at: string;
+}
+
+function mapBackendOrder(userId: string, row: BackendOrderHistory): TossOrder {
+  return {
+    id: row.id,
+    user_id: userId,
+    product_id: row.product_id,
+    idempotency_key: '',
+    toss_status: row.toss_status,
+    grant_status: row.grant_status,
+    amount: row.amount,
+    toss_order_id: null,
+    error_code: null,
+    retry_count: 0,
+    created_at: row.created_at,
+    updated_at: row.created_at,
+  };
+}
+
 /** 현재 구독 상태 */
 export async function getSubscription(userId: string): Promise<Subscription | null> {
-  const { data, error } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-  if (error && error.code !== 'PGRST116') throw error;
-  return data as Subscription | null;
+  return withBackendFallback(
+    () => requestBackend<Subscription | null>('/api/v1/subscription'),
+    async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as Subscription | null;
+    },
+  );
 }
 
 /** IAP 구매 검증 (Edge Function) */
@@ -50,13 +82,21 @@ export async function verifyIAPOrder(request: PurchaseRequest): Promise<TossOrde
 
 /** 주문 이력 조회 */
 export async function getOrders(userId: string): Promise<TossOrder[]> {
-  const { data, error } = await supabase
-    .from('toss_orders')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data as TossOrder[];
+  return withBackendFallback(
+    async () => {
+      const rows = await requestBackend<BackendOrderHistory[]>('/api/v1/subscription/orders');
+      return rows.map((row) => mapBackendOrder(userId, row));
+    },
+    async () => {
+      const { data, error } = await supabase
+        .from('toss_orders')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as TossOrder[];
+    },
+  );
 }
 
 /** 구독 복원 — BLOCKED: Toss IAP 복원 API 미공개. 현재는 DB 조회로 대체. */
