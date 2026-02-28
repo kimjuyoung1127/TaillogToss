@@ -14,13 +14,16 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useAuth } from 'stores/AuthContext';
 import { useLogout } from 'lib/hooks/useAuth';
 import { useUserSettings, useUpdateSettings } from 'lib/hooks/useSettings';
 import { withdrawUser } from 'lib/api/auth';
+import { ErrorState } from 'components/tds-ext';
 import { DEFAULT_NOTIFICATION_PREF } from 'types/settings';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/settings', {
   component: SettingsPage,
@@ -31,7 +34,7 @@ function SettingsPage() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { logout } = useLogout();
-  const { data: settings } = useUserSettings(user?.id);
+  const { data: settings, isLoading, isError, refetch } = useUserSettings(user?.id);
   const updateSettings = useUpdateSettings();
 
   const notifPref = settings?.notification_pref ?? DEFAULT_NOTIFICATION_PREF;
@@ -84,6 +87,38 @@ function SettingsPage() {
   }, [user?.id]);
 
   if (!isReady) return null;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.navbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>{'←'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.navTitle}>설정</Text>
+          <View style={styles.backButton} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.navbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>{'←'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.navTitle}>설정</Text>
+          <View style={styles.backButton} />
+        </View>
+        <ErrorState onRetry={() => void refetch()} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -180,8 +215,8 @@ function SettingRow({
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: '#E5E8EB', true: '#0064FF' }}
-        thumbColor="#FFFFFF"
+        trackColor={{ false: colors.border, true: colors.primaryBlue }}
+        thumbColor={colors.white}
       />
     </View>
   );
@@ -198,34 +233,35 @@ function NavRow({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F2F4F6' },
+  safe: { flex: 1, backgroundColor: colors.surfaceTertiary },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: colors.surfaceTertiary,
   },
   backButton: { width: 40 },
-  backText: { fontSize: 20, color: '#191F28' },
-  navTitle: { fontSize: 17, fontWeight: '600', color: '#191F28' },
+  backText: { ...typography.sectionTitle, color: colors.grey950 },
+  navTitle: { ...typography.body, fontWeight: '600', color: colors.grey950 },
   scroll: { flex: 1 },
   sectionHeader: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 8,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#F2F4F6',
+    borderColor: colors.surfaceTertiary,
   },
   row: {
     flexDirection: 'row',
@@ -234,9 +270,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  rowLabel: { fontSize: 16, color: '#191F28' },
-  chevron: { fontSize: 20, color: '#8B95A1' },
-  divider: { height: 1, backgroundColor: '#F2F4F6', marginLeft: 20 },
+  rowLabel: { ...typography.label, color: colors.grey950 },
+  chevron: { ...typography.sectionTitle, color: colors.textSecondary },
+  divider: { height: 1, backgroundColor: colors.surfaceTertiary, marginLeft: 20 },
   dangerSection: {
     marginTop: 32,
     paddingHorizontal: 20,
@@ -246,12 +282,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   dangerText: {
-    fontSize: 15,
-    color: '#E5503C',
+    ...typography.bodySmall,
+    color: colors.red600,
   },
   versionText: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 32,
   },

@@ -4,6 +4,7 @@
  */
 import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../styles/tokens';
 
 export interface AccordionProps {
   title: string;
@@ -45,29 +46,29 @@ export function Accordion({ title, children, defaultExpanded = false }: Accordio
 const styles = StyleSheet.create({
   container: {
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E8EB',
+    borderBottomColor: colors.border,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 4,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xs,
   },
   title: {
-    fontSize: 16,
+    ...typography.label,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   icon: {
     fontSize: 12,
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   body: {
     overflow: 'hidden',
   },
   content: {
-    paddingBottom: 16,
-    paddingHorizontal: 4,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.xs,
   },
 });

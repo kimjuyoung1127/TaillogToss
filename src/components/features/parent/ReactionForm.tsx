@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 
 const EMOJI_OPTIONS = [
   { emoji: '\u2764\uFE0F', label: '좋아요' },
@@ -81,26 +82,26 @@ export function ReactionForm({ onSubmitReaction, onSubmitQuestion }: ReactionFor
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, borderTopWidth: 1, borderTopColor: '#E5E8EB' },
-  title: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 12 },
+  container: { padding: 20, borderTopWidth: 1, borderTopColor: colors.border },
+  title: { ...typography.bodySmall, fontWeight: '600', color: '#374151', marginBottom: 12 },
   emojiRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   emojiBtn: {
     alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 12, backgroundColor: '#F4F4F5',
+    borderRadius: 12, backgroundColor: colors.divider,
   },
-  emojiBtnSelected: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#0064FF' },
+  emojiBtnSelected: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: colors.primaryBlue },
   emoji: { fontSize: 24 },
-  emojiLabel: { fontSize: 11, color: '#6B7280', marginTop: 4 },
-  questionLink: { fontSize: 14, color: '#0064FF', fontWeight: '500' },
+  emojiLabel: { ...typography.badge, color: '#6B7280', marginTop: 4 },
+  questionLink: { ...typography.detail, color: colors.primaryBlue, fontWeight: '500' },
   questionForm: { gap: 8 },
   questionInput: {
-    borderWidth: 1, borderColor: '#E5E8EB', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, minHeight: 60,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 10, ...typography.detail, minHeight: 60,
     textAlignVertical: 'top',
   },
   sendBtn: {
-    backgroundColor: '#0064FF', borderRadius: 8, paddingVertical: 10, alignItems: 'center',
+    backgroundColor: colors.primaryBlue, borderRadius: 8, paddingVertical: 10, alignItems: 'center',
   },
   sendBtnDisabled: { opacity: 0.5 },
-  sendBtnText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  sendBtnText: { ...typography.detail, fontWeight: '600', color: colors.white },
 });

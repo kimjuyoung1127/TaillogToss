@@ -78,7 +78,7 @@
 |-----------|----------|
 | AUTH-001 | 실패 케이스 400 증적 추가 (실기기) |
 | APP-001 | 실기기 라우팅 완전 검증 |
-| UI-001 | 실기기 비주얼 QA (17화면) |
+| UI-001 | ~~토큰화/Lottie/상태UI/UX라이팅~~ → 완료. 실기기 비주얼 QA (23화면) |
 | LOG-001 | FastAPI 로그 API 실기기 E2E 증적 |
 | AI-001 | ~~Backend/ 미존재~~ → BE-P5 완료. FastAPI 코칭 API backend-first 전환 완료, 실연동 E2E 증적 필요 |
 | IAP-001 | 결제 E2E (실제 결제) |
@@ -122,7 +122,7 @@
 
 | 테스트 유형 | 상태 | 갭 |
 |-----------|------|-----|
-| FE 단위 테스트 | 완료 | Jest 69 tests (auth 7 + iap 8 + roleGuard 8 + ads 5 + training/dashboard API 포함) |
+| FE 단위 테스트 | 완료 | Jest 77 tests, 21 suites (auth 7 + iap 8 + roleGuard 8 + ads 5 + guards 8 + pageGuard 5 + postLogin 2 + training/dashboard API 포함) |
 | BE 단위 테스트 | 완료 | pytest 39 tests (health 3 + models 12 + schemas 14 + security 7 + routers 6) |
 | BE↔DB 통합 테스트 | 미구현 | FastAPI + 실 Supabase 연결 테스트 (DB 마이그레이션 완료, 연결만 미검증) |
 | E2E 테스트 | 부분 | 로그인 + Edge invoke smoke 검증, IAP/광고 happy-path 미검증 |

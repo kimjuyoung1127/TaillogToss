@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';
 import type { SurveyStep5 } from 'types/dog';
 
@@ -58,7 +59,7 @@ export function Step5History({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 18, fontWeight: '600', color: '#202632', marginBottom: 20 },
+  title: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, marginBottom: 20 },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -66,5 +67,5 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingVertical: 8,
   },
-  switchLabel: { fontSize: 15, color: '#333D4B', flex: 1, marginRight: 12 },
+  switchLabel: { ...typography.bodySmall, color: colors.textDark, flex: 1, marginRight: 12 },
 });

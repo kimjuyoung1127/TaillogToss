@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { PresetChipGrid } from './PresetChipGrid';
 import type { PresetOption } from 'lib/data/presets';
 import type { OpsItem } from './OpsListItem';
@@ -97,7 +98,7 @@ export function RecordModal({ item, onSave, onSaveAndNext, onClose }: RecordModa
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -106,24 +107,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E8EB',
+    borderBottomColor: colors.border,
   },
   headerInfo: {
     flex: 1,
   },
   dogName: {
-    fontSize: 18,
+    ...typography.subtitle,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   parentName: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
-    fontSize: 20,
-    color: '#8B95A1',
+    ...typography.sectionTitle,
+    color: colors.textSecondary,
     padding: 4,
   },
   body: {
@@ -134,19 +135,19 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   memoLabel: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textDark,
     marginBottom: 8,
   },
   memoInput: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 14,
-    color: '#202632',
+    ...typography.detail,
+    color: colors.textPrimary,
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -156,11 +157,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#E5E8EB',
+    borderTopColor: colors.border,
   },
   saveBtn: {
     flex: 1,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
@@ -169,20 +170,20 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   saveBtnText: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textDark,
   },
   saveNextBtn: {
     flex: 1,
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
   },
   saveNextBtnText: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

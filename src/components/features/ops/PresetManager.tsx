@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { PRESET_CATEGORIES, PRESET_OPTIONS, type PresetOption } from 'lib/data/presets';
 
 interface PresetManagerProps {
@@ -61,15 +62,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 12,
   },
-  title: { fontSize: 16, fontWeight: '700', color: '#202632' },
-  addBtn: { fontSize: 14, fontWeight: '600', color: '#0064FF' },
+  title: { ...typography.label, fontWeight: '700', color: colors.textPrimary },
+  addBtn: { ...typography.detail, fontWeight: '600', color: colors.primaryBlue },
   categorySection: { paddingHorizontal: 20, paddingTop: 12 },
-  categoryTitle: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  categoryTitle: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginBottom: 8 },
   presetRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F2F3F5',
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
-  presetLabel: { flex: 1, fontSize: 14, color: '#202632' },
-  presetIntensity: { fontSize: 12, color: '#8B95A1', marginRight: 12 },
-  removeBtn: { fontSize: 12, color: '#DC2626', fontWeight: '600' },
+  presetLabel: { flex: 1, ...typography.detail, color: colors.textPrimary },
+  presetIntensity: { fontSize: 12, color: colors.textSecondary, marginRight: 12 },
+  removeBtn: { fontSize: 12, color: colors.red600, fontWeight: '600' },
 });

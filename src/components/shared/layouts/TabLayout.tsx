@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface TabItem {
   key: string;
@@ -49,31 +50,31 @@ export function TabLayout({ title, tabs, defaultTab, headerRight }: TabLayoutPro
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.lg,
   },
-  title: { fontSize: 20, fontWeight: '700', color: '#202632' },
+  title: { ...typography.sectionTitle, fontWeight: '700', color: colors.textPrimary },
   tabBar: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E8EB',
-    paddingHorizontal: 20,
+    borderBottomColor: colors.border,
+    paddingHorizontal: spacing.screenHorizontal,
   },
   tab: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginRight: 4,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginRight: spacing.xs,
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#0064FF',
+    borderBottomColor: colors.primaryBlue,
   },
-  tabText: { fontSize: 15, color: '#8B95A1' },
-  tabTextActive: { color: '#0064FF', fontWeight: '600' },
+  tabText: { ...typography.bodySmall, color: colors.textSecondary },
+  tabTextActive: { color: colors.primaryBlue, fontWeight: '600' },
   content: { flex: 1 },
 });

@@ -5,6 +5,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { createRoute } from '@granite-js/react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useReportByShareToken, useCreateInteraction } from 'lib/hooks/useReport';
@@ -65,7 +66,7 @@ function ShareTokenReportPage() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
         </View>
       </SafeAreaView>
     );
@@ -147,25 +148,25 @@ function ShareTokenReportPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  errorIcon: { fontSize: 48, marginBottom: 16 },
-  errorTitle: { fontSize: 18, fontWeight: '700', color: '#202632', marginBottom: 8 },
-  errorDesc: { fontSize: 14, color: '#8B95A1', textAlign: 'center' },
+  errorIcon: { ...typography.emoji, marginBottom: 16 },
+  errorTitle: { ...typography.subtitle, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
+  errorDesc: { ...typography.detail, color: colors.textSecondary, textAlign: 'center' },
   verifyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  verifyIcon: { fontSize: 48, marginBottom: 16 },
-  verifyTitle: { fontSize: 20, fontWeight: '700', color: '#202632', marginBottom: 8 },
-  verifyDesc: { fontSize: 14, color: '#8B95A1', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
+  verifyIcon: { ...typography.emoji, marginBottom: 16 },
+  verifyTitle: { ...typography.sectionTitle, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
+  verifyDesc: { ...typography.detail, color: colors.textSecondary, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
   phoneInput: {
-    width: 160, height: 56, borderWidth: 2, borderColor: '#E5E8EB', borderRadius: 12,
-    fontSize: 24, fontWeight: '700', textAlign: 'center', color: '#202632',
+    width: 160, height: 56, borderWidth: 2, borderColor: colors.border, borderRadius: 12,
+    fontSize: 24, fontWeight: '700', textAlign: 'center', color: colors.textPrimary,
     letterSpacing: 8,
   },
-  verifyError: { fontSize: 13, color: '#DC2626', marginTop: 8 },
+  verifyError: { ...typography.caption, color: '#DC2626', marginTop: 8 },
   verifyBtn: {
-    width: 160, height: 48, backgroundColor: '#0064FF', borderRadius: 10,
+    width: 160, height: 48, backgroundColor: colors.primaryBlue, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center', marginTop: 20,
   },
   verifyBtnDisabled: { backgroundColor: '#D1D5DB' },
-  verifyBtnText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  verifyBtnText: { ...typography.label, fontWeight: '600', color: colors.white },
 });

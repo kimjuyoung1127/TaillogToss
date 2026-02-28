@@ -8,6 +8,7 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useCreateQuickLog, useCreateDetailedLog } from 'lib/hooks/useLogs';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
@@ -100,7 +101,7 @@ function QuickLogPage() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -110,13 +111,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   back: {
-    fontSize: 22,
-    color: '#202632',
+    ...typography.pageTitle,
+    color: colors.textPrimary,
   },
   title: {
-    fontSize: 17,
+    ...typography.body,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   placeholder: {
     width: 22,
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   segmented: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 10,
     padding: 3,
   },
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -143,12 +144,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   segmentText: {
-    fontSize: 14,
-    color: '#8B95A1',
+    ...typography.detail,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   segmentTextActive: {
-    color: '#202632',
+    color: colors.textPrimary,
     fontWeight: '600',
   },
   content: {

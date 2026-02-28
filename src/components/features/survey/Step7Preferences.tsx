@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';
 import type { SurveyStep7 } from 'types/dog';
 
@@ -72,9 +73,9 @@ export function Step7Preferences({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 18, fontWeight: '600', color: '#202632', marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333D4B', marginBottom: 4 },
-  description: { fontSize: 13, color: '#8B95A1', marginBottom: 12 },
+  title: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, marginBottom: 20 },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginBottom: 4 },
+  description: { ...typography.caption, color: colors.textSecondary, marginBottom: 12 },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -82,9 +83,9 @@ const styles = StyleSheet.create({
     marginTop: 32,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E8EB',
+    borderTopColor: colors.border,
   },
   switchTextWrap: { flex: 1, marginRight: 12 },
-  switchLabel: { fontSize: 15, fontWeight: '600', color: '#333D4B' },
-  switchDesc: { fontSize: 13, color: '#8B95A1', marginTop: 2 },
+  switchLabel: { ...typography.bodySmall, fontWeight: '600', color: colors.textDark },
+  switchDesc: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
 });

@@ -18,10 +18,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Accordion } from 'components/tds-ext/Accordion';
+import { ErrorState } from 'components/tds-ext/ErrorState';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useDogDetail, useDogEnv, useUpdateDog, useDeleteDog } from 'lib/hooks/useDogs';
 import type { DogSex, HouseholdInfo } from 'types/dog';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/dog/profile', {
   component: DogProfilePage,
@@ -51,7 +53,7 @@ function DogProfilePage() {
   const { isReady } = usePageGuard({ currentPath: '/dog/profile' });
   const { activeDog } = useActiveDog();
 
-  const { data: dog, isLoading } = useDogDetail(activeDog?.id);
+  const { data: dog, isLoading, isError, refetch } = useDogDetail(activeDog?.id);
   const { data: dogEnv } = useDogEnv(activeDog?.id);
   const updateDog = useUpdateDog();
   const deleteDogMutation = useDeleteDog();
@@ -132,12 +134,21 @@ function DogProfilePage() {
 
   if (!isReady) return null;
 
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Navbar onBack={() => navigation.goBack()} />
+        <ErrorState onRetry={() => void refetch()} />
+      </SafeAreaView>
+    );
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
         <Navbar onBack={() => navigation.goBack()} />
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
         </View>
       </SafeAreaView>
     );
@@ -172,8 +183,8 @@ function DogProfilePage() {
           <Switch
             value={isNeutered}
             onValueChange={setIsNeutered}
-            trackColor={{ false: '#E5E8EB', true: '#0064FF' }}
-            thumbColor="#FFFFFF"
+            trackColor={{ false: colors.border, true: colors.primaryBlue }}
+            thumbColor={colors.white}
           />
         </View>
 
@@ -299,7 +310,7 @@ function LabeledInput({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
         keyboardType={keyboardType}
         multiline={multiline}
       />
@@ -312,7 +323,7 @@ function LabeledInput({
 // ──────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -320,11 +331,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: colors.surfaceTertiary,
   },
   backButton: { width: 40 },
-  backText: { fontSize: 20, color: '#191F28' },
-  navTitle: { fontSize: 17, fontWeight: '600', color: '#191F28' },
+  backText: { ...typography.sectionTitle, color: colors.grey950 },
+  navTitle: { ...typography.body, fontWeight: '600', color: colors.grey950 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 },
@@ -335,28 +346,28 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEmoji: { fontSize: 36 },
+  avatarEmoji: { ...typography.display },
 
   // Form inputs
   inputGroup: { marginBottom: 16 },
   fieldLabel: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 16,
-    color: '#191F28',
+    ...typography.label,
+    color: colors.grey950,
   },
   textInputMultiline: { height: 80, textAlignVertical: 'top' },
 
@@ -367,9 +378,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 14,
   },
-  switchLabel: { fontSize: 16, color: '#191F28' },
+  switchLabel: { ...typography.label, color: colors.grey950 },
 
-  divider: { height: 1, backgroundColor: '#F2F4F6', marginVertical: 8 },
+  divider: { height: 1, backgroundColor: colors.surfaceTertiary, marginVertical: 8 },
 
   // Living type chips
   livingTypeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
@@ -378,12 +389,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E8EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    backgroundColor: colors.white,
   },
-  livingTypeSelected: { borderColor: '#0064FF', backgroundColor: '#E8F3FF' },
-  livingTypeText: { fontSize: 14, color: '#6B7684' },
-  livingTypeTextSelected: { color: '#0064FF', fontWeight: '600' },
+  livingTypeSelected: { borderColor: colors.primaryBlue, backgroundColor: colors.blue50 },
+  livingTypeText: { ...typography.detail, color: colors.grey600 },
+  livingTypeTextSelected: { color: colors.primaryBlue, fontWeight: '600' },
 
   // Trigger chips
   chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -392,16 +403,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E8EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    backgroundColor: colors.white,
   },
-  chipSelected: { borderColor: '#0064FF', backgroundColor: '#E8F3FF' },
-  chipText: { fontSize: 14, color: '#6B7684' },
-  chipTextSelected: { color: '#0064FF', fontWeight: '600' },
+  chipSelected: { borderColor: colors.primaryBlue, backgroundColor: colors.blue50 },
+  chipText: { ...typography.detail, color: colors.grey600 },
+  chipTextSelected: { color: colors.primaryBlue, fontWeight: '600' },
 
   // Delete
   deleteButton: { marginTop: 32, paddingVertical: 8 },
-  deleteText: { fontSize: 15, color: '#E5503C' },
+  deleteText: { ...typography.bodySmall, color: colors.red600 },
 
   bottomSpacer: { height: 80 },
 
@@ -410,15 +421,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F2F4F6',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.surfaceTertiary,
+    backgroundColor: colors.white,
   },
   saveButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  saveDisabled: { backgroundColor: '#B0B8C1' },
-  saveText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
+  saveDisabled: { backgroundColor: colors.placeholder },
+  saveText: { ...typography.body, fontWeight: '700', color: colors.white },
 });

@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../styles/tokens';
 
 export interface ChipProps {
   label: string;
@@ -54,25 +55,25 @@ export function ChipGroup({ items, selectedKeys, onSelect, multiSelect: _multiSe
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderRadius: 20,
-    backgroundColor: '#F4F4F5',
-    marginRight: 8,
-    marginBottom: 8,
+    backgroundColor: colors.divider,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
   },
   chipSelected: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   chipDisabled: {
     opacity: 0.4,
   },
   chipText: {
-    fontSize: 14,
-    color: '#4E5968',
+    ...typography.detail,
+    color: colors.grey700,
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontWeight: '600',
   },
   group: {

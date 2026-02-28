@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { Next7DaysBlock, RiskSignalsBlock, ConsultationQuestionsBlock } from 'types/coaching';
+import { colors, typography } from 'styles/tokens';
 
 const BLOCK_META: Record<string, { label: string; icon: string; teaser: string }> = {
   next_7_days: {
@@ -93,10 +94,10 @@ export function Next7DaysView({ data }: { data: Next7DaysBlock }) {
 }
 
 const SEVERITY_COLOR: Record<string, string> = {
-  low: '#00C471',
-  medium: '#FF9500',
-  high: '#FF4B4B',
-  critical: '#D91A1A',
+  low: colors.green500,
+  medium: colors.orange500,
+  high: colors.red500,
+  critical: colors.red700,
 };
 
 export function RiskSignalsView({ data }: { data: RiskSignalsBlock }) {
@@ -149,17 +150,17 @@ export function ConsultationView({ data }: { data: ConsultationQuestionsBlock })
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F4F4F5',
+    borderColor: colors.divider,
   },
   blockLabel: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   lockOverlay: {
@@ -171,14 +172,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   lockTitle: {
-    fontSize: 16,
+    ...typography.label,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   lockTeaser: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -189,25 +190,25 @@ const styles = StyleSheet.create({
   },
   skeleton: {
     height: 14,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 7,
   },
   blurOverlay: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   blurIcon: {
-    fontSize: 14,
+    ...typography.detail,
     marginRight: 6,
   },
   blurText: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   // Day plan styles
   dayRow: {
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dayBadge: {
-    backgroundColor: '#0064FF1A',
+    backgroundColor: colors.primaryBlueLight,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -225,21 +226,21 @@ const styles = StyleSheet.create({
   dayNumber: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   dayContent: {
     flex: 1,
   },
   dayFocus: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#333D4B',
+    color: colors.textDark,
     marginBottom: 4,
   },
   dayTask: {
-    fontSize: 13,
+    ...typography.caption,
     lineHeight: 20,
-    color: '#6B7684',
+    color: colors.grey600,
   },
   // Risk styles
   riskOverall: {
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   riskOverallText: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '700',
   },
   signalRow: {
@@ -267,25 +268,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   signalType: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#333D4B',
+    color: colors.textDark,
     marginBottom: 2,
   },
   signalDesc: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: '#6B7684',
+    ...typography.caption,
+    color: colors.grey600,
     marginBottom: 4,
   },
   signalRec: {
-    fontSize: 13,
-    color: '#0064FF',
+    ...typography.caption,
+    color: colors.primaryBlue,
     fontWeight: '500',
   },
   // Consultation styles
   specialistBadge: {
-    backgroundColor: '#0064FF1A',
+    backgroundColor: colors.primaryBlueLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -293,9 +293,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   specialistText: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   questionRow: {
     flexDirection: 'row',
@@ -305,18 +305,18 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     textAlign: 'center',
+    ...typography.caption,
     lineHeight: 24,
-    fontSize: 13,
     fontWeight: '700',
-    color: '#6B7684',
+    color: colors.grey600,
     marginRight: 10,
   },
   questionText: {
     flex: 1,
-    fontSize: 14,
+    ...typography.detail,
     lineHeight: 21,
-    color: '#333D4B',
+    color: colors.textDark,
   },
 });

@@ -6,6 +6,7 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { DetailLayout } from 'components/shared/layouts/DetailLayout';
 import { CoachingBlockList } from 'components/features/coaching/CoachingBlockList';
 import { EmptyState } from 'components/tds-ext/EmptyState';
@@ -70,7 +71,7 @@ function CoachingResultPage() {
     return (
       <DetailLayout title="AI 행동 진단" onBack={handleBack}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
           <Text style={styles.loadingText}>코칭 결과를 불러오는 중...</Text>
         </View>
       </DetailLayout>
@@ -182,8 +183,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
-    color: '#8B95A1',
+    ...typography.detail,
+    color: colors.textSecondary,
   },
   dateHeader: {
     flexDirection: 'row',
@@ -192,9 +193,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dateLabel: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#0064FF',
+    color: colors.primaryBlue,
     backgroundColor: '#0064FF1A',
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -202,20 +203,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   dateText: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   feedbackSection: {
     alignItems: 'center',
     paddingVertical: 24,
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
+    borderTopColor: colors.divider,
   },
   feedbackTitle: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#333D4B',
+    color: colors.textDark,
     marginBottom: 12,
   },
   feedbackStars: {
@@ -223,8 +224,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   star: {
-    fontSize: 28,
-    color: '#D1D6DB',
+    ...typography.heroTitle,
+    color: colors.grey300,
   },
   starSelected: {
     color: '#FFB800',

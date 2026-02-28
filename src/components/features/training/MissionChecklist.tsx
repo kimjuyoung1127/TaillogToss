@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { TrainingStep, PlanVariant } from 'types/training';
+import { colors, typography } from 'styles/tokens';
 
 interface MissionChecklistProps {
   steps: TrainingStep[];
@@ -106,10 +107,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stepCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#F4F4F5',
+    borderColor: colors.divider,
     overflow: 'hidden',
   },
   stepHeader: {
@@ -122,33 +123,32 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#D1D6DB',
+    borderColor: colors.grey300,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     marginTop: 2,
   },
   checkboxDone: {
-    backgroundColor: '#0064FF',
-    borderColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
+    borderColor: colors.primaryBlue,
   },
   checkmark: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: colors.white,
+    ...typography.detail,
     fontWeight: '700',
   },
   stepContent: {
     flex: 1,
   },
   stepInstruction: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#333D4B',
+    ...typography.bodySmall,
+    color: colors.textDark,
     marginBottom: 8,
   },
   stepDone: {
     textDecorationLine: 'line-through',
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   stepMeta: {
     flexDirection: 'row',
@@ -156,31 +156,31 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   duration: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   variantTag: {
-    backgroundColor: '#0064FF1A',
+    backgroundColor: colors.primaryBlueLight,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
   },
   variantTagText: {
-    fontSize: 11,
+    ...typography.badge,
     fontWeight: '600',
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   tipsSection: {
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
+    borderTopColor: colors.divider,
   },
   tipsToggle: {
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
   tipsToggleText: {
-    fontSize: 13,
-    color: '#0064FF',
+    ...typography.caption,
+    color: colors.primaryBlue,
     fontWeight: '500',
   },
   tipsList: {
@@ -193,13 +193,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   tipIcon: {
-    fontSize: 14,
+    ...typography.detail,
     marginRight: 8,
   },
   tipText: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
-    color: '#6B7684',
+    ...typography.caption,
+    color: colors.grey600,
   },
 });

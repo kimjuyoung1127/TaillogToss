@@ -4,6 +4,7 @@
  */
 import React, { useCallback } from 'react';
 import { FlatList, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { colors } from 'styles/tokens';
 import { OpsListItem, type OpsItem } from './OpsListItem';
 
 const ITEM_HEIGHT = 69; // row height (14+40+14 padding + 1 border)
@@ -51,7 +52,7 @@ export function OpsList({
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0064FF" />
+        <ActivityIndicator size="large" color={colors.primaryBlue} />
       </View>
     );
   }

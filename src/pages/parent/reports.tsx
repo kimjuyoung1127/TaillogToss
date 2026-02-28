@@ -3,8 +3,10 @@
  * Parity: B2B-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { createRoute, useNavigation } from '@granite-js/react-native';
+import { ErrorState } from 'components/tds-ext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useAuth } from 'stores/AuthContext';
 import { useActiveDog } from 'stores/ActiveDogContext';
@@ -20,12 +22,44 @@ function ParentReportsPage() {
   const { user } = useAuth();
   const { activeDog } = useActiveDog();
   const navigation = useNavigation();
-  const { data: reports } = useDogReports(activeDog?.id);
+  const { data: reports, isLoading, isError, refetch } = useDogReports(activeDog?.id);
   const createInteraction = useCreateInteraction();
 
   const latestReport = reports?.[0];
 
   if (!isReady) return null;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={styles.backBtn}>{'\u2190'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>리포트</Text>
+          <View style={styles.spacer} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={styles.backBtn}>{'\u2190'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>리포트</Text>
+          <View style={styles.spacer} />
+        </View>
+        <ErrorState onRetry={() => void refetch()} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -71,15 +105,16 @@ function ParentReportsPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E5E8EB',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  backBtn: { fontSize: 20, color: '#202632', paddingRight: 12 },
-  title: { fontSize: 17, fontWeight: '700', color: '#202632', flex: 1 },
+  backBtn: { ...typography.sectionTitle, color: colors.textPrimary, paddingRight: 12 },
+  title: { ...typography.body, fontWeight: '700', color: colors.textPrimary, flex: 1 },
   spacer: { width: 32 },
   body: { flex: 1 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { fontSize: 15, color: '#8B95A1' },
+  emptyText: { ...typography.bodySmall, color: colors.textSecondary },
 });

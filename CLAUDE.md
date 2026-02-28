@@ -38,6 +38,12 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 6. 코드 중복보다 기존 타입/훅/함수 재사용 우선.
 7. 코드 파일 상단 1~3줄 기능 요약 주석 유지.
 8. 반복되는 실행/검증 절차가 확인되면 기존 스킬 업데이트 또는 신규 스킬로 즉시 지침화한다.
+9. **새 폴더 생성 시 `CLAUDE.md` 필수 포함.** 아래 내용을 명시한다:
+   - 폴더의 역할과 책임 범위
+   - 포함된 파일 목록과 각 용도
+   - 참조할 스킬 (`Skill("스킬명")`)
+   - import 규칙 (의존 가능/금지 대상)
+10. 디자인 토큰은 `styles/tokens` import 필수 — `#hex` / `fontSize:` 하드코딩 금지.
 
 ## 스택/아키텍처 요약
 
@@ -105,7 +111,7 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 | IAP | ⚠️ mock 동작 | ❌ fresh authCode → 실결제 E2E 필요 |
 | MSG | ⚠️ invoke smoke만 | ❌ Sandbox 실발송 미검증 |
 | AD | ⚠️ mock SDK | ❌ 실 Ad Group ID 교체 + 실노출 미검증 |
-| UI | ⚠️ 빌드/tsc 통과 | ❌ 비주얼 QA + UX 폴리시 미완 |
+| UI | ✅ 토큰화+Lottie+상태UI 완료 | ❌ 실기기 비주얼 QA 잔여 |
 | Edge 7종 | ✅ 배포+smoke+우회차단 | ⚠️ happy-path payload 실검증 잔여 |
 | BE (FastAPI) | ✅ P1~P8 완료 | — |
 | DB (INFRA-1) | ✅ 38테이블+RLS | — |
@@ -113,11 +119,14 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 
 ## 다음 우선순위 (Single Source)
 
-### 1. UI 폴리시 + UX 개선 (원격 가능, UI-001)
-- 23개 화면 비주얼 일관성 점검 (DogCoach 원본 참조: `C:\Users\gmdqn\DogCoach`)
-- 로딩/빈상태/에러 상태 누락 화면 보강
-- 컴포넌트 간격/정렬/타이포 일관성
-- 참조: `Skill("toss_wireframes")`, `Skill("toss_journey")`
+### 1. UI 비주얼 QA (실기기 필요, UI-001)
+- ✅ `src/styles/tokens.ts` 디자인 토큰 중앙화 + 70+ 파일 적용 완료
+- ✅ Lottie 3종 적용 (welcome/dashboard-loading/empty-state)
+- ✅ 로딩/빈상태/에러 상태 8개 화면 보강 완료
+- ✅ UX 라이팅 해요체 + 긍정적 말하기 적용
+- ✅ 22개 폴더 CLAUDE.md 생성 (구조/스킬 참조 명시)
+- ❌ 실기기에서 23개 화면 비주얼 QA (토큰 색상/간격 시각 확인)
+- 참조: `Skill("toss_wireframes")` QA 체크리스트, `Skill("toss_apps")` 디자인 토큰
 
 ### 2. Phase 13 E2E 증적 확보 (실기기 필요)
 - AUTH 실패400 증적 1건

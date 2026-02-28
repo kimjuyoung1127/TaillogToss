@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { InsightBlock, ActionPlanBlock, DogVoiceBlock } from 'types/coaching';
 import { SpeechBubble } from 'components/tds-ext/SpeechBubble';
+import { colors, typography } from 'styles/tokens';
 
 // ──────────────────────────────────────
 // Block ①: 행동 분석 인사이트
@@ -18,9 +19,9 @@ const TREND_LABEL: Record<string, string> = {
 };
 
 const TREND_COLOR: Record<string, string> = {
-  improving: '#00C471',
-  stable: '#8B95A1',
-  worsening: '#FF4B4B',
+  improving: colors.green500,
+  stable: colors.textSecondary,
+  worsening: colors.red500,
 };
 
 export function InsightBlockView({ data }: { data: InsightBlock }) {
@@ -55,9 +56,9 @@ export function InsightBlockView({ data }: { data: InsightBlock }) {
 // ──────────────────────────────────────
 
 const PRIORITY_COLOR: Record<string, string> = {
-  high: '#FF4B4B',
-  medium: '#FF9500',
-  low: '#00C471',
+  high: colors.red500,
+  medium: colors.orange500,
+  low: colors.green500,
 };
 
 const PRIORITY_LABEL: Record<string, string> = {
@@ -120,12 +121,12 @@ export function DogVoiceBlockView({ data }: { data: DogVoiceBlock }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#F4F4F5',
+    borderColor: colors.divider,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -134,21 +135,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   blockLabel: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   cardTitle: {
-    fontSize: 17,
+    ...typography.body,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   cardBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#4E5968',
+    ...typography.bodySmall,
+    color: colors.grey700,
   },
   trendBadge: {
     paddingHorizontal: 10,
@@ -168,15 +168,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   patternDot: {
-    fontSize: 14,
-    color: '#0064FF',
+    ...typography.detail,
+    color: colors.primaryBlue,
     marginRight: 8,
-    lineHeight: 20,
   },
   patternText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#4E5968',
+    ...typography.detail,
+    color: colors.grey700,
     flex: 1,
   },
   actionItem: {
@@ -184,24 +182,23 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: colors.divider,
   },
   checkbox: {
-    fontSize: 18,
+    ...typography.subtitle,
     marginRight: 12,
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   actionContent: {
     flex: 1,
   },
   actionText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#333D4B',
+    ...typography.bodySmall,
+    color: colors.textDark,
   },
   completed: {
     textDecorationLine: 'line-through',
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   priorityBadge: {
     alignSelf: 'flex-start',

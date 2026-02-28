@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import {
   PRESET_CATEGORIES,
   PRESET_OPTIONS,
@@ -80,23 +81,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     marginRight: 8,
   },
   categoryActive: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   categoryIcon: {
-    fontSize: 14,
+    ...typography.detail,
     marginRight: 4,
   },
   categoryLabel: {
-    fontSize: 13,
-    color: '#6B7280',
+    ...typography.caption,
+    color: colors.grey600,
     fontWeight: '500',
   },
   categoryLabelActive: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   chipGrid: {
     flexDirection: 'row',
@@ -108,20 +109,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
   },
   chipSelected: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#0064FF',
+    backgroundColor: colors.primaryBlueLight,
+    borderColor: colors.primaryBlue,
   },
   chipText: {
-    fontSize: 13,
-    color: '#374151',
+    ...typography.caption,
+    color: colors.textDark,
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
 });

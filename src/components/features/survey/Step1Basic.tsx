@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';
 import type { SurveyStep1, DogSex } from 'types/dog';
 
@@ -34,7 +35,7 @@ export function Step1Basic({ value, onChange }: Props) {
         value={current.name}
         onChangeText={(name) => update({ name })}
         placeholder="이름을 입력해주세요"
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
       />
 
       <Text style={styles.label}>품종</Text>
@@ -43,7 +44,7 @@ export function Step1Basic({ value, onChange }: Props) {
         value={current.breed}
         onChangeText={(breed) => update({ breed })}
         placeholder="품종을 입력해주세요"
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
       />
 
       <Text style={styles.label}>나이 (개월)</Text>
@@ -53,7 +54,7 @@ export function Step1Basic({ value, onChange }: Props) {
         onChangeText={(t) => update({ age_months: parseInt(t, 10) || 0 })}
         placeholder="개월 수"
         keyboardType="numeric"
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
       />
 
       <Text style={styles.label}>성별</Text>
@@ -67,14 +68,14 @@ export function Step1Basic({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 14, fontWeight: '600', color: '#333D4B', marginTop: 20, marginBottom: 8 },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginTop: 20, marginBottom: 8 },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 15,
-    color: '#202632',
+    ...typography.bodySmall,
+    color: colors.textPrimary,
   },
 });

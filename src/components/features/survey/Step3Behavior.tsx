@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';
 import type { SurveyStep3, BehaviorType } from 'types/dog';
 
@@ -70,8 +71,8 @@ export function Step3Behavior({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 18, fontWeight: '600', color: '#202632', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#8B95A1', marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333D4B', marginTop: 16 },
-  selectedSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#E5E8EB' },
+  title: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, marginBottom: 4 },
+  subtitle: { ...typography.detail, color: colors.textSecondary, marginBottom: 20 },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginTop: 16 },
+  selectedSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border },
 });

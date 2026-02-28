@@ -7,6 +7,7 @@ import { appLogin } from '@apps-in-toss/framework';
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import * as authApi from 'lib/api/auth';
 import { useAuth } from 'stores/AuthContext';
 import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
@@ -163,7 +164,7 @@ function LoginPage() {
             activeOpacity={0.8}
           >
             {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.tossButtonText}>토스로 시작하기</Text>
             )}
@@ -185,7 +186,7 @@ function LoginPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   container: {
     flex: 1,
     justifyContent: 'space-between',
@@ -201,21 +202,21 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 24,
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
-  logoIcon: { fontSize: 36 },
+  logoIcon: { ...typography.display },
   appName: {
-    fontSize: 28,
+    ...typography.heroTitle,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   tagline: {
-    fontSize: 16,
-    color: '#8B95A1',
+    ...typography.label,
+    color: colors.textSecondary,
   },
   ctaSection: {
     paddingTop: 20,
@@ -228,22 +229,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   errorText: {
-    fontSize: 14,
+    ...typography.detail,
     color: '#DC2626',
     textAlign: 'center',
   },
   tossButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   tossButtonDisabled: {
-    backgroundColor: '#D1D6DB',
+    backgroundColor: colors.grey300,
   },
   tossButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
+    color: colors.white,
+    ...typography.body,
     fontWeight: '700',
   },
   termsRow: {
@@ -253,13 +254,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   termsLink: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     textDecorationLine: 'underline',
   },
   termsDot: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     marginHorizontal: 8,
   },
 });

@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import type { BehaviorType, SurveyResult } from 'types/dog';
 
 /** 행동 유형 → 표시 정보 */
@@ -99,23 +100,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
-  label: { fontSize: 14, fontWeight: '600', color: '#333D4B' },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark },
   badge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
-  badgeText: { fontSize: 14, fontWeight: '700' },
+  badgeText: { ...typography.detail, fontWeight: '700' },
   riskRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  riskLabel: { fontSize: 14, fontWeight: '600' },
+  riskLabel: { ...typography.detail, fontWeight: '600' },
   progressTrack: {
     height: 8,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: colors.border,
     borderRadius: 4,
     overflow: 'hidden',
   },

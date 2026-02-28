@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface ListLayoutProps {
   title: string;
@@ -36,20 +37,20 @@ export function ListLayout({ title, headerRight, onBack, children }: ListLayoutP
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: colors.divider,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  backButton: { paddingRight: 4 },
-  backText: { fontSize: 20, color: '#191F28' },
-  title: { fontSize: 20, fontWeight: '700', color: '#202632' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  backButton: { paddingRight: spacing.xs },
+  backText: { ...typography.sectionTitle, color: colors.grey950 },
+  title: { ...typography.sectionTitle, fontWeight: '700', color: colors.textPrimary },
   body: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32 },
+  content: { paddingHorizontal: spacing.screenHorizontal, paddingTop: spacing.lg, paddingBottom: spacing.xxxl },
 });

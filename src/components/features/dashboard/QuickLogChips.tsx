@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Chip } from 'components/tds-ext/Chip';
 import type { QuickLogCategory, DailyActivityCategory } from 'types/log';
+import { colors, typography } from 'styles/tokens';
 
 /** 행동 카테고리 라벨 매핑 */
 const BEHAVIOR_CHIPS: { key: QuickLogCategory; label: string }[] = [
@@ -73,9 +74,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   sectionLabel: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 8,
     marginTop: 16,
   },

@@ -8,6 +8,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 
 import { QuickLogChips } from 'components/features/dashboard/QuickLogChips';
 import { DateTimePicker } from 'components/tds-ext/DateTimePicker';
 import type { QuickLogCategory, DailyActivityCategory, IntensityLevel, QuickLogInput } from 'types/log';
+import { colors, typography } from 'styles/tokens';
 
 export interface QuickLogFormProps {
   dogId: string;
@@ -82,7 +83,7 @@ export function QuickLogForm({ dogId, onSubmit, isLoading = false }: QuickLogFor
           placeholder="메모 (선택)"
           value={memo}
           onChangeText={setMemo}
-          placeholderTextColor="#B0B8C1"
+          placeholderTextColor={colors.placeholder}
           multiline
         />
       </View>
@@ -108,9 +109,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   sectionLabel: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#4E5968',
+    color: colors.grey700,
     marginBottom: 8,
   },
   intensityRow: {
@@ -121,20 +122,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
   intensityActive: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   intensityText: {
-    fontSize: 14,
-    color: '#4E5968',
+    ...typography.detail,
+    color: colors.grey700,
     fontWeight: '500',
   },
   intensityTextActive: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   timeRow: {
     flexDirection: 'row',
@@ -142,23 +143,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   changeText: {
-    fontSize: 13,
-    color: '#0064FF',
+    ...typography.caption,
+    color: colors.primaryBlue,
     fontWeight: '500',
   },
   memoInput: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 14,
-    color: '#202632',
+    ...typography.detail,
+    color: colors.textPrimary,
     backgroundColor: '#FAFBFC',
     minHeight: 60,
   },
   submitButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -166,11 +167,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   submitDisabled: {
-    backgroundColor: '#B0B8C1',
+    backgroundColor: colors.placeholder,
   },
   submitText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: colors.white,
+    ...typography.label,
     fontWeight: '600',
   },
 });

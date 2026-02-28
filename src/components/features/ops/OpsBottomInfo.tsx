@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 
 interface OpsBottomInfoProps {
   totalCount: number;
@@ -27,12 +28,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E8EB',
-    backgroundColor: '#FAFAFA',
+    borderTopColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
   },
   text: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 });

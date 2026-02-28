@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Dog } from 'types/dog';
+import { colors, typography } from 'styles/tokens';
 
 type DashboardDog = Pick<Dog, 'id' | 'name' | 'breed'>;
 
@@ -42,13 +43,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E8EB',
+    borderBottomColor: colors.border,
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -64,18 +65,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   name: {
-    fontSize: 17,
+    ...typography.body,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   arrow: {
-    fontSize: 14,
-    color: '#8B95A1',
+    ...typography.detail,
+    color: colors.textSecondary,
     marginLeft: 4,
   },
   breed: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   badge: {
@@ -85,8 +86,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   badgeText: {
-    fontSize: 13,
-    color: '#0064FF',
+    ...typography.caption,
+    color: colors.primaryBlue,
     fontWeight: '600',
   },
 });

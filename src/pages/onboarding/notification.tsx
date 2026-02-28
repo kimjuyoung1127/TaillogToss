@@ -12,6 +12,7 @@ import { tracker } from 'lib/analytics/tracker';
 import { useAuth } from 'stores/AuthContext';
 import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
 import { useSurvey } from 'stores/SurveyContext';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/notification', {
   component: NotificationPage,
@@ -180,7 +181,7 @@ function NotificationPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.white },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { flex: 1 },
   closeBtn: { padding: 8 },
-  closeIcon: { fontSize: 18, color: '#8B95A1' },
+  closeIcon: { ...typography.subtitle, color: colors.textSecondary },
   container: {
     flex: 1,
     paddingHorizontal: 20,
@@ -212,23 +213,23 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 34,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#8B95A1',
+    ...typography.bodySmall,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: colors.border,
     marginBottom: 20,
   },
   optionList: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 16,
     paddingHorizontal: 16,
   },
@@ -239,11 +240,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   optionText: { flex: 1, marginRight: 12 },
-  optionTitle: { fontSize: 15, fontWeight: '600', color: '#333D4B' },
-  optionDesc: { fontSize: 13, color: '#8B95A1', marginTop: 2 },
+  optionTitle: { ...typography.bodySmall, fontWeight: '600', color: colors.textDark },
+  optionDesc: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   optionDivider: {
     height: 1,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: colors.border,
   },
   bottomSection: {
     paddingHorizontal: 20,
@@ -251,19 +252,19 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   ctaButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  ctaText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700' },
+  ctaText: { color: colors.white, ...typography.body, fontWeight: '700' },
   skipBtn: {
     paddingVertical: 12,
     alignItems: 'center',
   },
   skipText: {
-    fontSize: 15,
-    color: '#8B95A1',
+    ...typography.bodySmall,
+    color: colors.textSecondary,
     textDecorationLine: 'underline',
   },
 });

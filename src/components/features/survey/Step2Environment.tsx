@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, Switch } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';
 import type { SurveyStep2 } from 'types/dog';
 
@@ -42,7 +43,7 @@ export function Step2Environment({ value, onChange }: Props) {
         onChangeText={(t) => updateHousehold({ members_count: parseInt(t, 10) || 1 })}
         keyboardType="numeric"
         placeholder="1"
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
       />
 
       <Text style={styles.label}>주거 형태</Text>
@@ -75,22 +76,22 @@ export function Step2Environment({ value, onChange }: Props) {
         onChangeText={(t) => update({ daily_alone_hours: parseInt(t, 10) || 0 })}
         keyboardType="numeric"
         placeholder="0"
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 14, fontWeight: '600', color: '#333D4B', marginTop: 20, marginBottom: 8 },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginTop: 20, marginBottom: 8 },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 15,
-    color: '#202632',
+    ...typography.bodySmall,
+    color: colors.textPrimary,
   },
   switchRow: {
     flexDirection: 'row',
@@ -99,5 +100,5 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 8,
   },
-  switchLabel: { fontSize: 15, color: '#333D4B' },
+  switchLabel: { ...typography.bodySmall, color: colors.textDark },
 });

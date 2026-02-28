@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import type { DailyReport, ReportStatus } from 'types/b2b';
 
 interface ReportCardProps {
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F3F5',
+    borderBottomColor: colors.divider,
   },
   header: {
     flexDirection: 'row',
@@ -52,9 +53,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dogName: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   badge: {
     paddingHorizontal: 8,
@@ -62,18 +63,17 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   badgeText: {
-    fontSize: 11,
+    ...typography.badge,
     fontWeight: '600',
   },
   date: {
     fontSize: 12,
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   summary: {
-    fontSize: 13,
-    color: '#6B7280',
+    ...typography.caption,
+    color: colors.grey600,
     marginTop: 6,
-    lineHeight: 18,
   },
 });

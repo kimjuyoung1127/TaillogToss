@@ -5,6 +5,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import type { DailyReport } from 'types/b2b';
+import { colors, typography } from 'styles/tokens';
 
 interface ReportViewerProps {
   report: DailyReport;
@@ -53,18 +54,18 @@ export function ReportViewer({ report, dogName }: ReportViewerProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: colors.white },
   content: { padding: 20 },
   header: { marginBottom: 24 },
-  title: { fontSize: 22, fontWeight: '700', color: '#202632' },
-  date: { fontSize: 14, color: '#8B95A1', marginTop: 4 },
+  title: { ...typography.pageTitle, fontWeight: '700', color: colors.textPrimary },
+  date: { ...typography.detail, color: colors.textSecondary, marginTop: 4 },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 8 },
-  text: { fontSize: 14, color: '#4B5563', lineHeight: 22 },
+  sectionTitle: { ...typography.bodySmall, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  text: { ...typography.detail, color: '#4B5563', lineHeight: 22 },
   aiSection: {
     marginBottom: 20, backgroundColor: '#F0F9FF', borderRadius: 12, padding: 16,
-    borderLeftWidth: 3, borderLeftColor: '#0064FF',
+    borderLeftWidth: 3, borderLeftColor: colors.primaryBlue,
   },
-  aiText: { fontSize: 14, color: '#1E40AF', lineHeight: 20 },
-  photoPlaceholder: { fontSize: 13, color: '#8B95A1' },
+  aiText: { ...typography.detail, color: '#1E40AF' },
+  photoPlaceholder: { ...typography.caption, color: colors.textSecondary },
 });

@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import type { PlanVariant } from 'types/training';
 import { ModalLayout } from 'components/shared/layouts/ModalLayout';
+import { colors, typography } from 'styles/tokens';
 
 interface PlanSelectorProps {
   visible: boolean;
@@ -75,20 +76,19 @@ export function PlanSelector({
 
 const styles = StyleSheet.create({
   desc: {
-    fontSize: 14,
-    color: '#6B7684',
-    lineHeight: 20,
+    ...typography.detail,
+    color: colors.grey600,
     marginBottom: 16,
   },
   option: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
   },
   optionSelected: {
-    borderColor: '#0064FF',
+    borderColor: colors.primaryBlue,
     backgroundColor: '#0064FF08',
   },
   optionHeader: {
@@ -101,46 +101,45 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D6DB',
+    borderColor: colors.grey300,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   radioSelected: {
-    borderColor: '#0064FF',
+    borderColor: colors.primaryBlue,
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   optionLabel: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#333D4B',
+    color: colors.textDark,
   },
   optionLabelSelected: {
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   optionLocked: {
     opacity: 0.5,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
   },
   optionLabelLocked: {
-    color: '#B0B8C1',
+    color: colors.placeholder,
   },
   lockIcon: {
     fontSize: 12,
     marginLeft: 4,
   },
   optionNote: {
-    fontSize: 13,
-    color: '#8B95A1',
-    lineHeight: 19,
+    ...typography.caption,
+    color: colors.textSecondary,
     marginLeft: 30,
   },
   optionNoteLocked: {
-    color: '#B0B8C1',
+    color: colors.placeholder,
   },
 });

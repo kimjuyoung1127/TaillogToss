@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import type { DailyReport } from 'types/b2b';
 
 /** 토스 미니앱 공유 링크 생성 (getTossShareLink 래퍼) */
@@ -128,41 +129,41 @@ export function ReportPreviewSheet({ report, dogName, onSend, onUpdate, onClose 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: colors.white },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
-    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E8EB',
+    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#202632' },
-  date: { fontSize: 13, color: '#8B95A1', marginTop: 2 },
-  closeBtn: { fontSize: 20, color: '#8B95A1', padding: 4 },
+  title: { ...typography.subtitle, fontWeight: '700', color: colors.textPrimary },
+  date: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  closeBtn: { ...typography.sectionTitle, color: colors.textSecondary, padding: 4 },
   body: { flex: 1 },
   section: { paddingHorizontal: 20, paddingTop: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginBottom: 8 },
   input: {
-    borderWidth: 1, borderColor: '#E5E8EB', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#202632',
+    borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 10, ...typography.detail, color: colors.textPrimary,
     minHeight: 80, textAlignVertical: 'top',
   },
   aiBox: {
-    backgroundColor: '#F0F9FF', borderRadius: 8, padding: 12, borderLeftWidth: 3, borderLeftColor: '#0064FF',
+    backgroundColor: '#F0F9FF', borderRadius: 8, padding: 12, borderLeftWidth: 3, borderLeftColor: colors.primaryBlue,
   },
-  aiText: { fontSize: 14, color: '#1E40AF', lineHeight: 20 },
+  aiText: { ...typography.detail, color: '#1E40AF' },
   shareRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  shareLabel: { fontSize: 12, color: '#8B95A1', width: 80 },
-  shareLink: { flex: 1, fontSize: 13, color: '#0064FF' },
+  shareLabel: { fontSize: 12, color: colors.textSecondary, width: 80 },
+  shareLink: { flex: 1, ...typography.caption, color: colors.primaryBlue },
   footer: {
     flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 16,
-    gap: 8, borderTopWidth: 1, borderTopColor: '#E5E8EB',
+    gap: 8, borderTopWidth: 1, borderTopColor: colors.border,
   },
   saveBtn: {
-    flex: 1, backgroundColor: '#F4F4F5', borderRadius: 10, paddingVertical: 14, alignItems: 'center',
+    flex: 1, backgroundColor: colors.divider, borderRadius: 10, paddingVertical: 14, alignItems: 'center',
   },
-  saveBtnText: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  saveBtnText: { ...typography.bodySmall, fontWeight: '600', color: colors.textDark },
   sendBtn: {
-    flex: 1, backgroundColor: '#0064FF', borderRadius: 10, paddingVertical: 14, alignItems: 'center',
+    flex: 1, backgroundColor: colors.primaryBlue, borderRadius: 10, paddingVertical: 14, alignItems: 'center',
   },
-  sendBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
+  sendBtnText: { ...typography.bodySmall, fontWeight: '600', color: colors.white },
   sentNotice: { flex: 1, alignItems: 'center' },
-  sentText: { fontSize: 14, color: '#059669', fontWeight: '600' },
+  sentText: { ...typography.detail, color: colors.green500, fontWeight: '600' },
 });

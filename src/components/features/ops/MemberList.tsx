@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import type { OrgMember } from 'types/b2b';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -59,14 +60,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 12,
   },
-  title: { fontSize: 16, fontWeight: '700', color: '#202632' },
-  inviteBtn: { fontSize: 14, fontWeight: '600', color: '#0064FF' },
+  title: { ...typography.label, fontWeight: '700', color: colors.textPrimary },
+  inviteBtn: { ...typography.detail, fontWeight: '600', color: colors.primaryBlue },
   row: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F2F3F5',
+    paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
   info: { flex: 1 },
-  userId: { fontSize: 14, color: '#202632', fontWeight: '500' },
-  role: { fontSize: 12, color: '#8B95A1', marginTop: 2 },
+  userId: { ...typography.detail, color: colors.textPrimary, fontWeight: '500' },
+  role: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   status: { fontSize: 12, fontWeight: '600' },
 });

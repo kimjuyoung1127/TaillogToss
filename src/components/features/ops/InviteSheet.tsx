@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import type { OrgMemberRole } from 'types/b2b';
 
 const ROLE_OPTIONS: { key: OrgMemberRole; label: string }[] = [
@@ -78,31 +79,31 @@ export function InviteSheet({ onInvite, onClose }: InviteSheetProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: colors.white },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E8EB',
+    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#202632' },
-  closeBtn: { fontSize: 20, color: '#8B95A1', padding: 4 },
+  title: { ...typography.subtitle, fontWeight: '700', color: colors.textPrimary },
+  closeBtn: { ...typography.sectionTitle, color: colors.textSecondary, padding: 4 },
   body: { padding: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  label: { ...typography.detail, fontWeight: '600', color: colors.textDark, marginBottom: 8 },
   input: {
-    borderWidth: 1, borderColor: '#E5E8EB', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, marginBottom: 20,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 10, ...typography.detail, marginBottom: 20,
   },
   roleRow: { flexDirection: 'row', gap: 8 },
   roleChip: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8,
-    backgroundColor: '#F4F4F5', borderWidth: 1, borderColor: '#E5E8EB',
+    backgroundColor: colors.divider, borderWidth: 1, borderColor: colors.border,
   },
-  roleChipActive: { backgroundColor: '#EFF6FF', borderColor: '#0064FF' },
-  roleText: { fontSize: 14, color: '#6B7280' },
-  roleTextActive: { color: '#0064FF', fontWeight: '600' },
+  roleChipActive: { backgroundColor: colors.primaryBlueLight, borderColor: colors.primaryBlue },
+  roleText: { ...typography.detail, color: colors.grey600 },
+  roleTextActive: { color: colors.primaryBlue, fontWeight: '600' },
   footer: { padding: 20 },
   inviteBtn: {
-    backgroundColor: '#0064FF', borderRadius: 10, paddingVertical: 14, alignItems: 'center',
+    backgroundColor: colors.primaryBlue, borderRadius: 10, paddingVertical: 14, alignItems: 'center',
   },
   inviteBtnDisabled: { opacity: 0.5 },
-  inviteBtnText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
+  inviteBtnText: { ...typography.bodySmall, fontWeight: '600', color: colors.white },
 });

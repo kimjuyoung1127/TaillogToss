@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@granite-js/react-native';
 import { useAuth } from 'stores/AuthContext';
+import { colors, typography } from 'styles/tokens';
 
 const DEV_ROUTES = [
   { path: '/login', label: 'Login', group: 'Auth' },
@@ -41,11 +42,11 @@ const DEV_ROUTES = [
 ] as const;
 
 const GROUP_COLORS: Record<string, string> = {
-  Auth: '#E5503C',
+  Auth: colors.red600,
   Onboarding: '#FF8800',
-  Main: '#0064FF',
+  Main: colors.primaryBlue,
   Training: '#00B386',
-  Dog: '#8B5CF6',
+  Dog: colors.purple500,
   Settings: '#6B7280',
   Legal: '#9CA3AF',
   B2B: '#EC4899',
@@ -137,20 +138,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     zIndex: 9999,
   },
-  fabText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
-  modal: { flex: 1, backgroundColor: '#F8F9FA' },
+  fabText: { color: colors.white, ...typography.badge, fontWeight: '800' },
+  modal: { flex: 1, backgroundColor: colors.surfaceSecondary },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E8EB',
+    borderBottomColor: colors.border,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#191F28' },
-  close: { fontSize: 18, fontWeight: '600', color: '#8B95A1', padding: 4 },
+  title: { ...typography.subtitle, fontWeight: '700', color: colors.grey950 },
+  close: { ...typography.subtitle, fontWeight: '600', color: colors.textSecondary, padding: 4 },
   userInfo: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -163,9 +164,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: colors.surfaceTertiary,
   },
   badge: {
     paddingHorizontal: 8,
@@ -175,9 +176,9 @@ const styles = StyleSheet.create({
     minWidth: 60,
     alignItems: 'center',
   },
-  badgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
+  badgeText: { color: colors.white, fontSize: 10, fontWeight: '700' },
   itemContent: { flex: 1 },
-  itemLabel: { fontSize: 15, fontWeight: '600', color: '#191F28' },
-  itemPath: { fontSize: 12, color: '#8B95A1', marginTop: 2 },
-  chevron: { fontSize: 16, color: '#8B95A1' },
+  itemLabel: { ...typography.bodySmall, fontWeight: '600', color: colors.grey950 },
+  itemPath: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  chevron: { ...typography.label, color: colors.textSecondary },
 });

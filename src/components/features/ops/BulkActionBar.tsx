@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 
 interface BulkActionBarProps {
   selectedCount: number;
@@ -34,29 +35,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.primaryBlueLight,
     borderBottomWidth: 1,
     borderBottomColor: '#BFDBFE',
   },
   cancelText: {
-    fontSize: 14,
-    color: '#6B7280',
+    ...typography.detail,
+    color: colors.grey600,
     fontWeight: '500',
   },
   countText: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   bulkBtn: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   bulkBtnText: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

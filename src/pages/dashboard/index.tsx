@@ -7,7 +7,7 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import { isB2BRole } from 'stores/OrgContext';
@@ -20,6 +20,8 @@ import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { TabLayout } from 'components/shared/layouts/TabLayout';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { LottieAnimation } from 'components/shared/LottieAnimation';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/dashboard', {
   component: DashboardPage,
@@ -70,7 +72,7 @@ function DashboardPage() {
 
       {dashboardLoading && (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <LottieAnimation asset="jackie" size={120} />
         </View>
       )}
 
@@ -80,9 +82,9 @@ function DashboardPage() {
 
       {!dashboardLoading && !dashboardError && totalLogs === 0 && (
         <EmptyState
-          title="아직 기록이 없어요"
-          description="아래 버튼으로 첫 기록을 남겨보세요"
-          icon={'\uD83D\uDCDD'}
+          title="첫 기록을 남겨보세요"
+          description="아래 버튼으로 간단하게 시작해요"
+          lottie="long-dog"
         />
       )}
 
@@ -170,7 +172,7 @@ function DashboardPage() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   container: {
     flex: 1,
@@ -193,48 +195,48 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   logListTitle: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   analysisLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 12,
   },
   analysisIcon: {
-    fontSize: 20,
+    ...typography.sectionTitle,
     marginRight: 8,
   },
   analysisText: {
-    fontSize: 16,
+    ...typography.label,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     flex: 1,
   },
   analysisArrow: {
-    fontSize: 18,
-    color: '#8B95A1',
+    ...typography.subtitle,
+    color: colors.textSecondary,
   },
   bottomCTA: {
     paddingHorizontal: 20,
     paddingBottom: 24,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E8EB',
+    borderTopColor: colors.border,
   },
   ctaButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   ctaText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: colors.white,
+    ...typography.label,
     fontWeight: '600',
   },
 });

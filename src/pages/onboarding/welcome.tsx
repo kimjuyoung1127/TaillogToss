@@ -6,6 +6,8 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
+import { LottieAnimation } from 'components/shared/LottieAnimation';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 
 export const Route = createRoute('/onboarding/welcome', {
@@ -31,7 +33,7 @@ function WelcomePage() {
         {/* Lottie 영역 (placeholder) */}
         <View style={styles.heroSection}>
           <View style={styles.lottieArea}>
-            <Text style={styles.lottieEmoji}>🐕</Text>
+            <LottieAnimation asset="cute-doggie" size={120} />
           </View>
 
           <Text style={styles.heading}>반려견 행동,{'\n'}90초면 기록 끝</Text>
@@ -69,7 +71,7 @@ function WelcomePage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   container: {
     flex: 1,
     justifyContent: 'space-between',
@@ -93,14 +95,14 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 36,
     marginBottom: 12,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#8B95A1',
+    ...typography.label,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 36,
@@ -112,28 +114,28 @@ const styles = StyleSheet.create({
   featureCard: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 8,
   },
   featureIcon: { fontSize: 24, marginBottom: 8 },
-  featureTitle: { fontSize: 13, fontWeight: '700', color: '#333D4B', marginBottom: 4 },
-  featureDesc: { fontSize: 11, color: '#8B95A1', textAlign: 'center' },
+  featureTitle: { ...typography.caption, fontWeight: '700', color: colors.textDark, marginBottom: 4 },
+  featureDesc: { fontSize: 11, color: colors.textSecondary, textAlign: 'center' },
   bottomSection: {
     paddingHorizontal: 20,
     paddingVertical: 12,
     paddingBottom: 24,
   },
   ctaButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   ctaText: {
-    color: '#FFFFFF',
-    fontSize: 17,
+    color: colors.white,
+    ...typography.body,
     fontWeight: '700',
   },
 });

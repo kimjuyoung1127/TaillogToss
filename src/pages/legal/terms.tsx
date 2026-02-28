@@ -5,6 +5,7 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/legal/terms', {
   component: LegalTermsPage,
@@ -103,7 +104,7 @@ function LegalTermsPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -111,15 +112,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: colors.surfaceTertiary,
   },
   backButton: { width: 40 },
-  backText: { fontSize: 20, color: '#191F28' },
-  navTitle: { fontSize: 17, fontWeight: '600', color: '#191F28' },
+  backText: { ...typography.sectionTitle, color: colors.grey950 },
+  navTitle: { ...typography.body, fontWeight: '600', color: colors.grey950 },
   scroll: { flex: 1 },
   content: { padding: 20, paddingBottom: 48 },
-  meta: { fontSize: 13, color: '#8B95A1', marginBottom: 24 },
-  h2: { fontSize: 17, fontWeight: '600', color: '#191F28', marginTop: 24, marginBottom: 8 },
-  p: { fontSize: 15, lineHeight: 24, color: '#333D4B' },
+  meta: { ...typography.caption, color: colors.textSecondary, marginBottom: 24 },
+  h2: { ...typography.body, fontWeight: '600', color: colors.grey950, marginTop: 24, marginBottom: 8 },
+  p: { ...typography.bodySmall, lineHeight: 24, color: colors.textDark },
   spacer: { height: 40 },
 });

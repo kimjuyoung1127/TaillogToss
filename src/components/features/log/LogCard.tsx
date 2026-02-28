@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { BehaviorLog } from 'types/log';
+import { colors, typography } from 'styles/tokens';
 
 /** 카테고리 한글 라벨 */
 const CATEGORY_LABELS: Record<string, string> = {
@@ -69,27 +70,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: colors.divider,
   },
   left: {
     flex: 1,
   },
   label: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '500',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   sub: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   right: {
     alignItems: 'flex-end',
   },
   time: {
-    fontSize: 13,
-    color: '#8B95A1',
+    ...typography.caption,
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   badge: {

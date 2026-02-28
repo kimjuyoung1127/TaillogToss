@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import type { OrgAnalyticsDaily } from 'types/b2b';
 
 interface OrgStatsSheetProps {
@@ -53,21 +54,21 @@ function StatRow({ label, value, highlight }: { label: string; value: string; hi
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: colors.white },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E8EB',
+    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#202632' },
-  closeBtn: { fontSize: 20, color: '#8B95A1', padding: 4 },
+  title: { ...typography.subtitle, fontWeight: '700', color: colors.textPrimary },
+  closeBtn: { ...typography.sectionTitle, color: colors.textSecondary, padding: 4 },
   body: { flex: 1 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 48 },
-  emptyText: { fontSize: 15, color: '#8B95A1' },
+  emptyText: { ...typography.bodySmall, color: colors.textSecondary },
   statRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F2F3F5',
+    paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
-  statLabel: { fontSize: 14, color: '#6B7280' },
-  statValue: { fontSize: 16, fontWeight: '700', color: '#202632' },
-  statHighlight: { color: '#DC2626' },
+  statLabel: { ...typography.detail, color: colors.grey600 },
+  statValue: { ...typography.label, fontWeight: '700', color: colors.textPrimary },
+  statHighlight: { color: colors.red600 },
 });

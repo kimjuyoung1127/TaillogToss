@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { Curriculum, CurriculumStatus } from 'types/training';
 import { CURRICULUM_ICONS } from 'lib/data/curriculum';
+import { colors, typography } from 'styles/tokens';
 
 type BadgeStatus = 'recommended' | CurriculumStatus | 'locked';
 
@@ -21,10 +22,10 @@ interface CurriculumCardProps {
 }
 
 const BADGE_CONFIG: Record<BadgeStatus, { label: string; bg: string; color: string }> = {
-  recommended: { label: '추천', bg: '#0064FF1A', color: '#0064FF' },
-  in_progress: { label: '진행중', bg: '#00C4711A', color: '#00C471' },
-  completed: { label: '완료', bg: '#00C4711A', color: '#00C471' },
-  not_started: { label: '미시작', bg: '#F4F4F5', color: '#8B95A1' },
+  recommended: { label: '추천', bg: `${colors.primaryBlue}1A`, color: colors.primaryBlue },
+  in_progress: { label: '진행중', bg: `${colors.green500}1A`, color: colors.green500 },
+  completed: { label: '완료', bg: `${colors.green500}1A`, color: colors.green500 },
+  not_started: { label: '미시작', bg: colors.divider, color: colors.textSecondary },
   locked: { label: 'PRO', bg: '#FF6B351A', color: '#FF6B35' },
 };
 
@@ -83,11 +84,11 @@ export function CurriculumCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F4F4F5',
+    borderColor: colors.divider,
     flex: 1,
     minHeight: 180,
   },
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -114,22 +115,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   badgeText: {
-    fontSize: 11,
+    ...typography.badge,
     fontWeight: '700',
   },
   title: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 4,
-    lineHeight: 20,
   },
   textLocked: {
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   difficulty: {
     fontSize: 12,
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 10,
   },
   progressContainer: {
@@ -140,19 +140,19 @@ const styles = StyleSheet.create({
   progressTrack: {
     flex: 1,
     height: 4,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 2,
     marginRight: 8,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 2,
   },
   progressText: {
-    fontSize: 11,
-    color: '#8B95A1',
+    ...typography.badge,
+    color: colors.textSecondary,
     fontWeight: '600',
     minWidth: 30,
     textAlign: 'right',

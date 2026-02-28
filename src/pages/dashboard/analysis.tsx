@@ -18,6 +18,7 @@ import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import type { ChartPeriod } from 'types/chart';
 import type { BehaviorLog } from 'types/log';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/dashboard/analysis', {
   component: AnalysisPage,
@@ -95,7 +96,7 @@ function AnalysisPage() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
         </View>
       </SafeAreaView>
     );
@@ -186,7 +187,7 @@ function AnalysisPage() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   center: {
     flex: 1,
@@ -201,13 +202,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   back: {
-    fontSize: 22,
-    color: '#202632',
+    ...typography.pageTitle,
+    color: colors.textPrimary,
   },
   title: {
-    fontSize: 17,
+    ...typography.body,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   placeholder: {
     width: 22,
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
   segmented: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 10,
     padding: 3,
     marginBottom: 8,
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -235,12 +236,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   segmentText: {
-    fontSize: 14,
-    color: '#8B95A1',
+    ...typography.detail,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   segmentTextActive: {
-    color: '#202632',
+    color: colors.textPrimary,
     fontWeight: '600',
   },
   scroll: {
@@ -251,14 +252,14 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   chartTitle: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: colors.border,
     marginHorizontal: 20,
     marginTop: 20,
   },
@@ -267,9 +268,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   freqTitle: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   freqRow: {
@@ -278,15 +279,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: colors.divider,
   },
   freqLabel: {
-    fontSize: 15,
-    color: '#202632',
+    ...typography.bodySmall,
+    color: colors.textPrimary,
   },
   freqCount: {
-    fontSize: 15,
-    color: '#4E5968',
+    ...typography.bodySmall,
+    color: colors.grey700,
     fontWeight: '500',
   },
   adSection: {

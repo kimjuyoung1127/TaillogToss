@@ -1,21 +1,32 @@
 /**
  * EmptyState — TDS Result 래퍼, 데이터 없음 상태 표시
- * 대시보드 0건, 훈련 미시작 등에 사용
+ * 대시보드 0건, 훈련 미시작 등에 사용. lottie prop으로 Lottie 애니메이션 대체 가능.
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../styles/tokens';
+import { LottieAnimation, type LottieAssetKey } from '../shared/LottieAnimation';
 
 export interface EmptyStateProps {
   title: string;
   description?: string;
+  /** 이모지 아이콘 (lottie 미지정 시 표시) */
   icon?: string;
+  /** Lottie 에셋 키 — 지정 시 이모지 대신 애니메이션 표시 */
+  lottie?: LottieAssetKey;
   action?: React.ReactNode;
 }
 
-export function EmptyState({ title, description, icon = '\uD83D\uDCED', action }: EmptyStateProps) {
+export function EmptyState({ title, description, icon = '\uD83D\uDCED', lottie, action }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
+      {lottie ? (
+        <View style={styles.lottieWrap}>
+          <LottieAnimation asset={lottie} size={140} />
+        </View>
+      ) : (
+        <Text style={styles.icon}>{icon}</Text>
+      )}
       <Text style={styles.title}>{title}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
       {action && <View style={styles.action}>{action}</View>}
@@ -28,27 +39,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xxxl,
     paddingVertical: 48,
   },
+  lottieWrap: {
+    marginBottom: spacing.lg,
+  },
   icon: {
-    fontSize: 48,
-    marginBottom: 16,
+    ...typography.emoji,
+    marginBottom: spacing.lg,
   },
   title: {
-    fontSize: 18,
+    ...typography.subtitle,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   description: {
-    fontSize: 14,
-    color: '#8B95A1',
+    ...typography.detail,
+    color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
   },
   action: {
-    marginTop: 24,
+    marginTop: spacing.xxl,
   },
 });

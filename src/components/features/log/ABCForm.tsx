@@ -8,6 +8,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 
 import { Accordion } from 'components/tds-ext/Accordion';
 import { DateTimePicker } from 'components/tds-ext/DateTimePicker';
 import type { DetailedLogInput, IntensityLevel } from 'types/log';
+import { colors, typography } from 'styles/tokens';
 
 export interface ABCFormProps {
   dogId: string;
@@ -49,7 +50,7 @@ export function ABCForm({ dogId, onSubmit, isLoading = false }: ABCFormProps) {
         placeholder="어떤 행동을 했나요?"
         value={behavior}
         onChangeText={setBehavior}
-        placeholderTextColor="#B0B8C1"
+        placeholderTextColor={colors.placeholder}
       />
 
       <Accordion title="선행(A)">
@@ -58,7 +59,7 @@ export function ABCForm({ dogId, onSubmit, isLoading = false }: ABCFormProps) {
           placeholder="행동 직전에 어떤 상황이었나요?"
           value={antecedent}
           onChangeText={setAntecedent}
-          placeholderTextColor="#B0B8C1"
+          placeholderTextColor={colors.placeholder}
           multiline
         />
       </Accordion>
@@ -69,7 +70,7 @@ export function ABCForm({ dogId, onSubmit, isLoading = false }: ABCFormProps) {
           placeholder="행동 후 어떤 결과가 있었나요?"
           value={consequence}
           onChangeText={setConsequence}
-          placeholderTextColor="#B0B8C1"
+          placeholderTextColor={colors.placeholder}
           multiline
         />
       </Accordion>
@@ -97,14 +98,14 @@ export function ABCForm({ dogId, onSubmit, isLoading = false }: ABCFormProps) {
           placeholder="장소 (선택)"
           value={location}
           onChangeText={setLocation}
-          placeholderTextColor="#B0B8C1"
+          placeholderTextColor={colors.placeholder}
         />
         <TextInput
           style={[styles.input, { marginTop: 8 }]}
           placeholder="메모 (선택)"
           value={memo}
           onChangeText={setMemo}
-          placeholderTextColor="#B0B8C1"
+          placeholderTextColor={colors.placeholder}
           multiline
         />
       </Accordion>
@@ -127,25 +128,25 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   label: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   subLabel: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '500',
-    color: '#4E5968',
+    color: colors.grey700,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 15,
-    color: '#202632',
+    ...typography.bodySmall,
+    color: colors.textPrimary,
     backgroundColor: '#FAFBFC',
   },
   intensityRow: {
@@ -156,23 +157,23 @@ const styles = StyleSheet.create({
     width: 40,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
   intensityActive: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   intensityText: {
-    fontSize: 14,
-    color: '#4E5968',
+    ...typography.detail,
+    color: colors.grey700,
     fontWeight: '500',
   },
   intensityTextActive: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   submitButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -180,11 +181,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   submitDisabled: {
-    backgroundColor: '#B0B8C1',
+    backgroundColor: colors.placeholder,
   },
   submitText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: colors.white,
+    ...typography.label,
     fontWeight: '600',
   },
 });

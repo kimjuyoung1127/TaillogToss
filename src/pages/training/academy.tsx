@@ -8,6 +8,7 @@ import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ListLayout } from 'components/shared/layouts/ListLayout';
 import { CurriculumCard } from 'components/features/training/CurriculumCard';
+import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { CURRICULUMS } from 'lib/data/curriculum';
 import { useTrainingProgress } from 'lib/hooks/useTraining';
@@ -16,6 +17,7 @@ import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import type { Curriculum, CurriculumId, CurriculumStatus, TrainingProgress } from 'types/training';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/training/academy', {
   component: TrainingAcademyPage,
@@ -73,8 +75,13 @@ function TrainingAcademyPage() {
     <ListLayout title="훈련 아카데미" onBack={() => navigation.goBack()}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
         </View>
+      ) : CURRICULUMS.length === 0 ? (
+        <EmptyState
+          title="준비 중인 커리큘럼이에요"
+          description="곧 새로운 훈련 과정이 열려요"
+        />
       ) : (
         <>
           {/* 오늘의 훈련 카드 (현재 진행 중 커리큘럼 하이라이트) */}
@@ -178,9 +185,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 17,
+    ...typography.body,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     marginTop: 24,
     marginBottom: 12,
   },
@@ -203,18 +210,17 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   proHintIcon: {
-    fontSize: 20,
+    ...typography.sectionTitle,
     marginRight: 10,
   },
   proHintText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#6B7684',
+    ...typography.detail,
+    color: colors.grey600,
   },
   // Today card
   todayCard: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 16,
     padding: 20,
     marginBottom: 8,
@@ -226,24 +232,24 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   todayLabel: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
     color: '#FFFFFF99',
   },
   todayDay: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '700',
-    color: '#FFFFFF',
-    backgroundColor: '#FFFFFF33',
+    color: colors.white,
+    backgroundColor: `${colors.white}33`,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
     overflow: 'hidden',
   },
   todayTitle: {
-    fontSize: 18,
+    ...typography.subtitle,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.white,
     marginBottom: 12,
   },
   todayProgress: {
@@ -254,27 +260,27 @@ const styles = StyleSheet.create({
   todayProgressTrack: {
     flex: 1,
     height: 6,
-    backgroundColor: '#FFFFFF33',
+    backgroundColor: `${colors.white}33`,
     borderRadius: 3,
     marginRight: 10,
     overflow: 'hidden',
   },
   todayProgressFill: {
     height: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 3,
   },
   todayProgressText: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.white,
   },
   todayCTA: {
     alignItems: 'flex-end',
   },
   todayCTAText: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

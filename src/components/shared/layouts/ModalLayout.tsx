@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface ModalLayoutProps {
   title: string;
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '85%',
@@ -55,34 +56,34 @@ const styles = StyleSheet.create({
   handle: {
     width: 36,
     height: 4,
-    backgroundColor: '#D1D6DB',
+    backgroundColor: colors.grey300,
     borderRadius: 2,
     alignSelf: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.lg,
   },
-  title: { fontSize: 18, fontWeight: '600', color: '#202632' },
-  closeBtn: { padding: 4 },
-  closeIcon: { fontSize: 16, color: '#8B95A1' },
+  title: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary },
+  closeBtn: { padding: spacing.xs },
+  closeIcon: { ...typography.label, color: colors.textSecondary },
   body: { flex: 0 },
-  content: { paddingHorizontal: 20, paddingBottom: 24 },
+  content: { paddingHorizontal: spacing.screenHorizontal, paddingBottom: spacing.xxl },
   bottomBar: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
+    borderTopColor: colors.divider,
   },
   ctaButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
-  ctaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  ctaText: { color: colors.white, ...typography.label, fontWeight: '700' },
 });

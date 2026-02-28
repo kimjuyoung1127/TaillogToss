@@ -3,8 +3,10 @@
  * Parity: B2B-001
  */
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { createRoute, useNavigation } from '@granite-js/react-native';
+import { ErrorState } from 'components/tds-ext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useOrg } from 'stores/OrgContext';
 import { useOrgMembers, useInviteMember, useOrgTodayStats } from 'lib/hooks/useOrg';
@@ -24,8 +26,12 @@ function OpsSettingsPage() {
   });
   const navigation = useNavigation();
   const { org } = useOrg();
-  const { data: members } = useOrgMembers(org?.id);
-  const { data: todayStats } = useOrgTodayStats(org?.id);
+  const { data: members, isLoading: membersLoading, isError: membersError, refetch: refetchMembers } = useOrgMembers(org?.id);
+  const { data: todayStats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useOrgTodayStats(org?.id);
+
+  const isLoading = membersLoading || statsLoading;
+  const isError = membersError || statsError;
+  const refetchAll = useCallback(() => { void refetchMembers(); void refetchStats(); }, [refetchMembers, refetchStats]);
   const entitlement = useOrgEntitlement(org?.id);
   const inviteMember = useInviteMember(entitlement.maxStaff);
 
@@ -39,6 +45,38 @@ function OpsSettingsPage() {
   }, [org, inviteMember]);
 
   if (!isReady) return null;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.navbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={styles.backBtn}>{'\u2190'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.navTitle}>운영 설정</Text>
+          <View style={styles.navSpacer} />
+        </View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.navbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={styles.backBtn}>{'\u2190'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.navTitle}>운영 설정</Text>
+          <View style={styles.navSpacer} />
+        </View>
+        <ErrorState onRetry={refetchAll} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -101,26 +139,27 @@ function OpsSettingsPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   navbar: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F4F4F5',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
-  backBtn: { fontSize: 22, color: '#202632', paddingRight: 8 },
-  navTitle: { flex: 1, fontSize: 18, fontWeight: '600', color: '#202632', textAlign: 'center' },
+  backBtn: { ...typography.pageTitle, color: colors.textPrimary, paddingRight: 8 },
+  navTitle: { flex: 1, ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
   navSpacer: { width: 30 },
   body: { flex: 1 },
   section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#202632', marginBottom: 12 },
+  sectionTitle: { ...typography.label, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
   infoRow: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F2F3F5',
   },
-  infoLabel: { fontSize: 14, color: '#6B7280' },
-  infoValue: { fontSize: 14, fontWeight: '600', color: '#202632' },
+  infoLabel: { ...typography.detail, color: '#6B7280' },
+  infoValue: { ...typography.detail, fontWeight: '600', color: colors.textPrimary },
   statsBtn: {
     marginHorizontal: 20, marginVertical: 16,
-    backgroundColor: '#F4F4F5', borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+    backgroundColor: colors.divider, borderRadius: 12, paddingVertical: 14, alignItems: 'center',
   },
-  statsBtnText: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  statsBtnText: { ...typography.bodySmall, fontWeight: '600', color: '#374151' },
 });

@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../styles/tokens';
 
 export interface ErrorStateProps {
   title?: string;
@@ -13,7 +14,7 @@ export interface ErrorStateProps {
 
 export function ErrorState({
   title = '문제가 발생했어요',
-  description = '잠시 후 다시 시도해 주세요',
+  description = '잠시 후 다시 시도해주세요',
   onRetry,
 }: ErrorStateProps) {
   return (
@@ -35,36 +36,35 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xxxl,
     paddingVertical: 48,
   },
   icon: {
-    fontSize: 48,
-    marginBottom: 16,
+    ...typography.emoji,
+    marginBottom: spacing.lg,
   },
   title: {
-    fontSize: 18,
+    ...typography.subtitle,
     fontWeight: '600',
-    color: '#202632',
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   description: {
-    fontSize: 14,
-    color: '#8B95A1',
+    ...typography.detail,
+    color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
   },
   button: {
-    marginTop: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#0064FF',
+    marginTop: spacing.xxl,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primaryBlue,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
+    color: colors.white,
+    ...typography.bodySmall,
     fontWeight: '600',
   },
 });

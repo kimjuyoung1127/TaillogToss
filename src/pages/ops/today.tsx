@@ -17,6 +17,7 @@ import { BulkActionBar } from 'components/features/ops/BulkActionBar';
 import { RecordModal } from 'components/features/ops/RecordModal';
 import { BulkPresetSheet } from 'components/features/ops/BulkPresetSheet';
 import { EmptyState } from 'components/tds-ext/EmptyState';
+import { ErrorState } from 'components/tds-ext/ErrorState';
 import { TabLayout } from 'components/shared/layouts/TabLayout';
 import { PRESET_OPTIONS } from 'lib/data/presets';
 import type { OpsItem } from 'components/features/ops/OpsListItem';
@@ -30,7 +31,7 @@ function OpsTodayPage() {
     requireFeature: 'b2bOnly',
   });
   const { org } = useOrg();
-  const { data: orgDogs, isLoading } = useOrgDogs(org?.id);
+  const { data: orgDogs, isLoading, isError, refetch } = useOrgDogs(org?.id);
   const createQuickLog = useCreateQuickLog();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -199,6 +200,14 @@ function OpsTodayPage() {
   ]);
 
   if (!isReady) return null;
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ErrorState onRetry={() => void refetch()} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>

@@ -21,6 +21,7 @@ import { useAuth } from 'stores/AuthContext';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useCreateDogFromSurvey } from 'lib/hooks/useDogs';
 import type { DogSex, SurveyData } from 'types/dog';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/dog/add', {
   component: DogAddPage,
@@ -119,7 +120,7 @@ function DogAddPage() {
             value={name}
             onChangeText={setName}
             placeholder="반려견 이름"
-            placeholderTextColor="#B0B8C1"
+            placeholderTextColor={colors.placeholder}
             autoFocus
           />
         </View>
@@ -134,7 +135,7 @@ function DogAddPage() {
             value={breed}
             onChangeText={setBreed}
             placeholder="품종 (예: 비숑, 골든리트리버)"
-            placeholderTextColor="#B0B8C1"
+            placeholderTextColor={colors.placeholder}
           />
         </View>
 
@@ -173,7 +174,7 @@ function DogAddPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -181,11 +182,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: colors.surfaceTertiary,
   },
   backButton: { width: 40 },
-  backText: { fontSize: 20, color: '#191F28' },
-  navTitle: { fontSize: 17, fontWeight: '600', color: '#191F28' },
+  backText: { ...typography.sectionTitle, color: colors.grey950 },
+  navTitle: { ...typography.body, fontWeight: '600', color: colors.grey950 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32 },
 
@@ -195,26 +196,26 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  avatarEmoji: { fontSize: 36 },
-  avatarHint: { fontSize: 14, color: '#8B95A1' },
+  avatarEmoji: { ...typography.display },
+  avatarHint: { ...typography.detail, color: colors.textSecondary },
 
   // Inputs
   inputGroup: { marginBottom: 20 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#8B95A1', marginBottom: 6 },
-  required: { color: '#E5503C' },
+  fieldLabel: { ...typography.caption, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
+  required: { color: colors.red600 },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 16,
-    color: '#191F28',
+    ...typography.label,
+    color: colors.grey950,
   },
 
   // Sex chips
@@ -224,27 +225,27 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E8EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    backgroundColor: colors.white,
   },
-  sexChipSelected: { borderColor: '#0064FF', backgroundColor: '#E8F3FF' },
-  sexText: { fontSize: 14, color: '#6B7684' },
-  sexTextSelected: { color: '#0064FF', fontWeight: '600' },
+  sexChipSelected: { borderColor: colors.primaryBlue, backgroundColor: colors.blue50 },
+  sexText: { ...typography.detail, color: colors.grey600 },
+  sexTextSelected: { color: colors.primaryBlue, fontWeight: '600' },
 
   // Bottom CTA
   bottomCTA: {
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F2F4F6',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.surfaceTertiary,
+    backgroundColor: colors.white,
   },
   saveButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  saveDisabled: { backgroundColor: '#B0B8C1' },
-  saveText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
+  saveDisabled: { backgroundColor: colors.placeholder },
+  saveText: { ...typography.body, fontWeight: '700', color: colors.white },
 });

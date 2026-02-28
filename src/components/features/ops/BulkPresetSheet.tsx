@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { colors, typography } from 'styles/tokens';
 import { PresetChipGrid } from './PresetChipGrid';
 import type { PresetOption } from 'lib/data/presets';
 
@@ -64,7 +65,7 @@ export function BulkPresetSheet({ selectedDogNames, onSave, onClose }: BulkPrese
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -73,26 +74,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E8EB',
+    borderBottomColor: colors.border,
   },
   title: {
-    fontSize: 18,
+    ...typography.subtitle,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
   },
   closeBtn: {
-    fontSize: 20,
-    color: '#8B95A1',
+    ...typography.sectionTitle,
+    color: colors.textSecondary,
     padding: 4,
   },
   selectedInfo: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.surfaceSecondary,
   },
   selectedText: {
-    fontSize: 13,
-    color: '#6B7280',
+    ...typography.caption,
+    color: colors.grey600,
   },
   body: {
     flex: 1,
@@ -101,10 +102,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E8EB',
+    borderTopColor: colors.border,
   },
   saveBtn: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
@@ -113,8 +114,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   saveBtnText: {
-    fontSize: 15,
+    ...typography.bodySmall,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

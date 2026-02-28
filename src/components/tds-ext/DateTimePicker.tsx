@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { colors, typography, spacing } from '../../styles/tokens';
 
 export interface DateTimePickerProps {
   value: Date;
@@ -91,22 +92,22 @@ export function DateTimePicker({ value, onChange, mode = 'datetime' }: DateTimeP
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8,
+    padding: spacing.sm,
   },
   quickRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   quickChip: {
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#F4F4F5',
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.divider,
     borderRadius: 16,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   quickText: {
-    fontSize: 13,
-    color: '#4E5968',
+    ...typography.caption,
+    color: colors.grey700,
   },
   pickerRow: {
     flexDirection: 'row',
@@ -124,20 +125,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   cellSelected: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   cellText: {
-    fontSize: 14,
-    color: '#4E5968',
+    ...typography.detail,
+    color: colors.grey700,
   },
   cellTextSelected: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontWeight: '600',
   },
   separator: {
-    fontSize: 18,
+    ...typography.subtitle,
     fontWeight: '600',
-    color: '#333D4B',
-    marginHorizontal: 4,
+    color: colors.textDark,
+    marginHorizontal: spacing.xs,
   },
 });

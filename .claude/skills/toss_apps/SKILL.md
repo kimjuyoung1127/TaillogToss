@@ -39,8 +39,50 @@ The `AppsInToss` SDK (likely available globally or via the framework) provides:
 ## 3. Toss Design System (TDS) — React Native 전체 컴포넌트 카탈로그
 
 ### Foundation
-- **Colors (v5)**: Perceptually uniform color space. Uses hierarchy tokens for dark/light mode consistency.
-- **Typography**: Dynamic sizing and line height tokens (accessibility-friendly).
+
+#### Colors (`@toss/tds-react-native` → `colors.*`)
+Perceptually uniform color space. `import { colors } from '@toss/tds-react-native'`
+
+| 카테고리 | 토큰 범위 | 용도 |
+|----------|----------|------|
+| Grey 50~900 | `#f9fafb` ~ `#191f28` | 중립 배경/텍스트 |
+| Blue 50~900 | `#e8f3ff` ~ `#194aa6` | 프라이머리 액션 |
+| Red 50~900 | `#ffeeee` ~ `#a51926` | 에러/경고 |
+| Orange/Yellow/Green/Teal/Purple | 각 10단계 | 보조 색상 |
+| Grey Opacity 50~900 | 반투명 | 오버레이/딤 |
+
+**Semantic 토큰** (하드코딩 금지 — 반드시 토큰 사용):
+- `background` → `#FFFFFF` (기본 배경)
+- `greyBackground` → 중립 서피스
+- `layeredBackground` → 오버레이 백
+- `floatedBackground` → 플로팅 요소
+
+**프로젝트 컬러 매핑** (현재 하드코딩 → 토큰 전환 대상):
+| 현재 하드코딩 | TDS 토큰 대체 |
+|--------------|--------------|
+| `#0064FF` | `colors.blue500` (Primary CTA) |
+| `#202632` | `colors.grey900` (텍스트 기본) |
+| `#333D4B` | `colors.grey800` (텍스트 보조) |
+| `#8B95A1` | `colors.grey500` (라벨/힌트) |
+| `#E5E8EB` | `colors.grey200` (보더) |
+| `#F4F4F5` | `colors.grey100` (디바이더) |
+| `#F8F9FA` | `colors.grey50` (서브 배경) |
+
+#### Typography (토큰 스케일 — 하드코딩 금지)
+동적 접근성 스케일링을 위해 반드시 토큰 사용. `fontSize` 직접 입력 금지.
+
+| 토큰 | 크기 | 행간 | 용도 |
+|------|------|------|------|
+| Typography 1 | 30px | 40px | 대형 헤딩 (survey-result 타이틀) |
+| Typography 2 | 26px | 35px | 페이지 헤딩 (Top 컴포넌트) |
+| Typography 3 | 22px | 31px | 섹션 헤딩 (ListHeader) |
+| Typography 4 | 20px | 29px | 소형 헤딩 (카드 타이틀) |
+| Typography 5 | 17px | 25.5px | 본문 기본 (ListRow 텍스트) |
+| Typography 6 | 15px | 22.5px | 본문 소형 (보조 설명) |
+| Typography 7 | 13px | 19.5px | 캡션/라벨 (Badge, 타임스탬프) |
+
+**접근성 스케일링**: iOS Large~A11y_xxxLarge (100%~310%), Android 연속 스케일.
+기저 토큰 F11~F42 (42단계) → 위 7개 Typography로 조합. 하드코딩 시 동적 스케일 불가.
 
 ### 3-1. UI 컨트롤 (13)
 | 컴포넌트 | 용도 | 핵심 Props |
@@ -171,6 +213,25 @@ Apps in Toss provides an **MCP (Model Context Protocol)** server for Cursor and 
 - 광고는 Sandbox 앱에서 테스트 불가. 토스 앱 QR 테스트로 별도 검증
 - `intoss-private://` 스킴 기반 사설 번들 테스트 활용
 - 릴리즈 전 UX Writing 가이드 필수 점검: [UX Writing Guide](https://developers-apps-in-toss.toss.im/design/ux-writing.html)
+
+### UX 라이팅 5원칙 (심사 필수)
+
+| # | 원칙 | ❌ 안 됨 | ✅ 올바름 |
+|---|------|---------|----------|
+| 1 | **해요체 통일** | "입력하세요", "~합니다" | "입력해주세요", "~해요" |
+| 2 | **능동적 말하기** | "저장됐어요", "등록되었어요" | "저장했어요", "등록했어요" |
+| 3 | **긍정적 말하기** | "기록이 없어요" | "첫 기록을 남겨보세요" |
+| 4 | **캐주얼 경어** | "확인하시겠어요?", "계시다" | "확인할까요?", "있다" |
+| 5 | **명사+명사 피하기** | "결제 정보 입력 완료" | "결제 정보를 입력했어요" |
+
+**예외 허용**: 서비스 종료/기간 만료, 사용자 영향 설명, 안심 문구에서는 수동형("~돼요") 허용.
+"되어요" → 모두 **"돼요"** 로 통일.
+
+**TaillogToss 주요 점검 문구**:
+- Toast: "~에 실패했어요. 다시 시도해주세요" (긍정형 전환 검토)
+- EmptyState: "아직 기록이 없어요" → "첫 기록을 남겨보세요"
+- Dialog 확인 버튼: "확인" / "취소" (간결체 유지)
+- BottomCTA: 동사형 ("기록하기", "시작하기", "저장하기")
 
 ## 7.5 TDS 컴포넌트 갭 및 대안
 
@@ -522,6 +583,27 @@ for (const order of pending) {
 ### 주의
 - `@apps-in-toss/framework` 패키지가 `@granite-js/react-native`에 포함인지 별도 설치인지 확인 필요
 - 현재 프로젝트 package.json에 미포함 — 확인 전까지 Edge Function 직통 방식 유지
+
+## 11.5 접근성 체크리스트
+
+| # | 항목 | 기준 | 구현 |
+|---|------|------|------|
+| 1 | **동적 텍스트** | iOS Large~xxxLarge, Android 연속 스케일 지원 | Typography 토큰 사용 (fontSize 하드코딩 금지) |
+| 2 | **VoiceOver 라벨** | 모든 인터랙티브 요소에 `accessibilityLabel` | IconButton, Chip, 커스텀 터치 영역 |
+| 3 | **VoiceOver 역할** | `accessibilityRole` 지정 | button, checkbox, tab, header, link |
+| 4 | **최소 터치 영역** | 44×44pt 이상 | `hitSlop` 또는 패딩으로 보정 |
+| 5 | **줄바꿈** | 음절(character) 단위 줄바꿈 | 한글 텍스트는 word-break 대신 character-break |
+
+## 11.6 디자인 퀄리티 원칙 (토스 기준)
+
+| 원칙 | 설명 | TaillogToss 적용 |
+|------|------|-----------------|
+| **Worst-case 먼저** | 모든 옵션 최대 사용 상태를 먼저 확인 | 긴 강아지이름, 8개 행동칩 전체 선택, 긴 코칭 텍스트 |
+| **블러/투명도** | 오버레이에 blur 효과로 가벼운 시각 | BottomSheet dimmed 배경, ModalLayout |
+| **애니메이션 일관성** | 진입 300ms ease-out, 퇴장 200ms ease-in | Accordion, BottomSheet, 화면 전환 |
+| **스크롤 인디케이터** | 긴 목록에 스크롤 여부 시각 힌트 | Dashboard 기록 목록, 설정 목록 |
+| **빈 상태 ≠ 에러** | EmptyState(안내+CTA) vs ErrorState(재시도) 명확 분리 | 기록 0건 vs 네트워크 에러 |
+| **Skeleton 즉시 표시** | 데이터 로딩 시 2초 이내 Skeleton 또는 Loader | 모든 API 호출 화면 |
 
 ## 12. 심사 체크리스트 (공식 Review Requirements)
 

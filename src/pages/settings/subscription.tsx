@@ -17,10 +17,12 @@ import {
 import { useAuth } from 'stores/AuthContext';
 import { isB2BRole } from 'stores/OrgContext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { ErrorState } from 'components/tds-ext';
 import { useCurrentSubscription, useIsPro, usePurchaseIAP, useRestoreSubscription } from 'lib/hooks/useSubscription';
 import { IAP_PRODUCTS, DOG_LIMITS } from 'types/subscription';
 import { B2B_IAP_PRODUCTS } from 'types/b2b';
 import type { IAPProduct } from 'types/subscription';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/settings/subscription', {
   component: SubscriptionPage,
@@ -46,7 +48,7 @@ function SubscriptionPage() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { isReady } = usePageGuard({ currentPath: '/settings/subscription' });
-  const { data: subscription, isLoading } = useCurrentSubscription(user?.id);
+  const { data: subscription, isLoading, isError, refetch } = useCurrentSubscription(user?.id);
   const isPro = useIsPro(user?.id);
   const purchaseMutation = usePurchaseIAP();
   const restoreMutation = useRestoreSubscription();
@@ -75,6 +77,21 @@ function SubscriptionPage() {
   }, [user?.id, restoreMutation]);
 
   if (!isReady) return null;
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.navbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+            <Text style={styles.backButton}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.navTitle}>구독 관리</Text>
+          <View style={styles.navSpacer} />
+        </View>
+        <ErrorState onRetry={() => void refetch()} />
+      </SafeAreaView>
+    );
+  }
 
   const proProduct = IAP_PRODUCTS.PRO_MONTHLY as IAPProduct;
   const token10 = IAP_PRODUCTS.AI_TOKEN_10 as IAPProduct;
@@ -237,39 +254,39 @@ function SubscriptionPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: colors.divider,
   },
-  backButton: { fontSize: 22, color: '#202632', paddingRight: 8 },
-  navTitle: { flex: 1, fontSize: 18, fontWeight: '600', color: '#202632', textAlign: 'center' },
+  backButton: { ...typography.t3, color: colors.textPrimary, paddingRight: 8 },
+  navTitle: { flex: 1, ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
   navSpacer: { width: 30 },
   body: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
 
   /* 현재 상태 카드 */
   statusCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
   },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  statusLabel: { fontSize: 16, fontWeight: '600', color: '#333D4B' },
+  statusLabel: { ...typography.label, fontWeight: '600', color: colors.textDark },
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  badgePro: { backgroundColor: '#0064FF' },
-  badgeFree: { backgroundColor: '#E5E8EB' },
-  badgeText: { fontSize: 13, fontWeight: '700' },
-  badgeTextPro: { color: '#FFFFFF' },
+  badgePro: { backgroundColor: colors.primaryBlue },
+  badgeFree: { backgroundColor: colors.border },
+  badgeText: { ...typography.caption, fontWeight: '700' },
+  badgeTextPro: { color: colors.white },
   badgeTextFree: { color: '#6B7280' },
-  billingDate: { fontSize: 13, color: '#6B7280', marginTop: 8 },
-  tokenInfo: { fontSize: 13, color: '#0064FF', marginTop: 8 },
-  loadingText: { fontSize: 13, color: '#9CA3AF', marginTop: 8 },
+  billingDate: { ...typography.caption, color: '#6B7280', marginTop: 8 },
+  tokenInfo: { ...typography.caption, color: colors.primaryBlue, marginTop: 8 },
+  loadingText: { ...typography.caption, color: '#9CA3AF', marginTop: 8 },
 
   /* PRO 플랜 카드 */
   planCard: {
@@ -278,44 +295,44 @@ const styles = StyleSheet.create({
     padding: 24,
     marginBottom: 28,
     borderWidth: 1,
-    borderColor: '#0064FF20',
+    borderColor: colors.primaryBlueLight,
   },
   planHeader: { marginBottom: 16 },
-  planTitle: { fontSize: 18, fontWeight: '700', color: '#0064FF' },
-  planPrice: { fontSize: 28, fontWeight: '800', color: '#202632', marginTop: 4 },
-  planPeriod: { fontSize: 14, fontWeight: '400', color: '#6B7280' },
+  planTitle: { ...typography.subtitle, fontWeight: '700', color: colors.primaryBlue },
+  planPrice: { ...typography.heroTitle, fontWeight: '800', color: colors.textPrimary, marginTop: 4 },
+  planPeriod: { ...typography.detail, fontWeight: '400', color: '#6B7280' },
   featureList: { marginBottom: 20 },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  featureIcon: { fontSize: 16, marginRight: 10 },
-  featureLabel: { fontSize: 15, color: '#333D4B' },
+  featureIcon: { ...typography.label, marginRight: 10 },
+  featureLabel: { ...typography.bodySmall, color: colors.textDark },
   purchaseButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  purchaseButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  purchaseButtonText: { color: colors.white, ...typography.label, fontWeight: '700' },
 
   /* 토큰 팩 */
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#333D4B', marginBottom: 12 },
+  sectionTitle: { ...typography.label, fontWeight: '700', color: colors.textDark, marginBottom: 12 },
   tokenRow: { flexDirection: 'row', gap: 12, marginBottom: 28 },
   tokenCard: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
   },
   bestValueBadge: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: colors.orange700,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginBottom: 8,
   },
-  bestValueText: { fontSize: 11, fontWeight: '700', color: '#FFFFFF' },
-  tokenAmount: { fontSize: 20, fontWeight: '800', color: '#202632', marginBottom: 4 },
-  tokenPrice: { fontSize: 16, fontWeight: '600', color: '#333D4B' },
+  bestValueText: { ...typography.badge, fontWeight: '700', color: colors.white },
+  tokenAmount: { ...typography.sectionTitle, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
+  tokenPrice: { ...typography.label, fontWeight: '600', color: colors.textDark },
   tokenUnit: { fontSize: 12, color: '#9CA3AF', marginTop: 2, marginBottom: 12 },
   tokenButton: {
     borderWidth: 1,
@@ -325,50 +342,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   tokenButtonHighlight: {
-    backgroundColor: '#0064FF',
-    borderColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
+    borderColor: colors.primaryBlue,
   },
-  tokenButtonText: { fontSize: 14, fontWeight: '600', color: '#333D4B' },
-  tokenButtonTextHighlight: { color: '#FFFFFF' },
+  tokenButtonText: { ...typography.detail, fontWeight: '600', color: colors.textDark },
+  tokenButtonTextHighlight: { color: colors.white },
 
   /* 비교 테이블 */
   compareTable: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E8EB',
+    borderColor: colors.border,
     overflow: 'hidden',
     marginBottom: 24,
   },
   compareHeader: {
     flexDirection: 'row',
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     paddingVertical: 10,
   },
   compareRow: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
+    borderTopColor: colors.divider,
     paddingVertical: 10,
   },
-  compareCell: { paddingHorizontal: 12, fontSize: 13 },
-  compareLabelCell: { flex: 2, fontWeight: '600', color: '#333D4B' },
+  compareCell: { paddingHorizontal: 12, ...typography.caption },
+  compareLabelCell: { flex: 2, fontWeight: '600', color: colors.textDark },
   compareValueCell: { flex: 2, color: '#6B7280', textAlign: 'center' },
-  compareProCell: { color: '#0064FF', fontWeight: '600' },
-  compareProValue: { color: '#0064FF' },
+  compareProCell: { color: colors.primaryBlue, fontWeight: '600' },
+  compareProValue: { color: colors.primaryBlue },
 
   /* 복원 */
   restoreButton: { alignItems: 'center', paddingVertical: 12 },
-  restoreText: { fontSize: 14, color: '#9CA3AF', textDecorationLine: 'underline' },
+  restoreText: { ...typography.detail, color: '#9CA3AF', textDecorationLine: 'underline' },
 
   /* B2B */
   b2bGrid: { gap: 12, marginBottom: 28 },
   b2bCard: {
-    backgroundColor: '#F0FDF4', borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: '#BBF7D0',
+    backgroundColor: colors.green50, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: colors.green100,
   },
-  b2bName: { fontSize: 16, fontWeight: '700', color: '#166534', marginBottom: 4 },
-  b2bPrice: { fontSize: 20, fontWeight: '800', color: '#202632', marginBottom: 4 },
-  b2bDesc: { fontSize: 13, color: '#6B7280', marginBottom: 12 },
+  b2bName: { ...typography.label, fontWeight: '700', color: colors.green700, marginBottom: 4 },
+  b2bPrice: { ...typography.sectionTitle, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
+  b2bDesc: { ...typography.caption, color: '#6B7280', marginBottom: 12 },
 
   /* 공통 */
   buttonDisabled: { opacity: 0.5 },

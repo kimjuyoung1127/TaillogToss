@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { typography } from 'styles/tokens';
 
 export type OpsStatus = 'urgent' | 'warning' | 'normal' | 'pending' | 'done';
 
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   text: {
-    fontSize: 11,
+    ...typography.badge,
     fontWeight: '600',
   },
 });

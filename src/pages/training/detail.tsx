@@ -20,6 +20,7 @@ import { tracker } from 'lib/analytics/tracker';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import type { CurriculumId, PlanVariant, TrainingProgress } from 'types/training';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/training/detail', {
   validateParams: (params) => params as { curriculum_id: CurriculumId },
@@ -154,7 +155,7 @@ function TrainingDetailPage() {
     return (
       <DetailLayout title={curriculum.title} onBack={handleBack}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0064FF" />
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
         </View>
       </DetailLayout>
     );
@@ -289,20 +290,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dayIndicatorText: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   dayProgress: {
     height: 4,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 2,
     overflow: 'hidden',
   },
   dayProgressFill: {
     height: '100%',
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 2,
   },
   dayTabs: {
@@ -314,29 +315,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
   },
   dayTabActive: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
   },
   dayTabText: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   dayTabTextActive: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   dayTitle: {
-    fontSize: 20,
+    ...typography.sectionTitle,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   dayDescription: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#4E5968',
+    ...typography.bodySmall,
+    color: colors.grey700,
     marginBottom: 20,
   },
   difficultyLink: {
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   difficultyLinkText: {
-    fontSize: 14,
-    color: '#0064FF',
+    ...typography.detail,
+    color: colors.primaryBlue,
     fontWeight: '500',
   },
   celebrationOverlay: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   celebrationCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
@@ -365,24 +365,23 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   celebrationEmoji: {
-    fontSize: 48,
+    ...typography.emoji,
     marginBottom: 16,
   },
   celebrationTitle: {
-    fontSize: 22,
+    ...typography.pageTitle,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   celebrationDescription: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#4E5968',
+    ...typography.bodySmall,
+    color: colors.grey700,
     textAlign: 'center',
     marginBottom: 24,
   },
   celebrationButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -390,8 +389,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   celebrationButtonText: {
-    fontSize: 16,
+    ...typography.label,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

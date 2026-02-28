@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { BehaviorLog } from 'types/log';
+import { colors, typography } from 'styles/tokens';
 
 export interface StreakBannerProps {
   logs: BehaviorLog[];
@@ -64,12 +65,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   emoji: {
-    fontSize: 18,
+    ...typography.subtitle,
     marginRight: 8,
   },
   text: {
-    fontSize: 14,
-    color: '#4E5968',
+    ...typography.detail,
+    color: colors.grey700,
   },
   count: {
     fontWeight: '700',

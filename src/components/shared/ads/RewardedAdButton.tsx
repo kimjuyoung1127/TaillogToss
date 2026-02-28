@@ -8,6 +8,7 @@ import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet, ActivityIndicator } from 'react-native';
 import type { AdPlacement } from 'types/ads';
 import { useRewardedAd } from 'lib/hooks/useRewardedAd';
+import { colors, typography } from 'styles/tokens';
 
 export interface RewardedAdButtonProps {
   placement: AdPlacement;
@@ -38,7 +39,7 @@ export function RewardedAdButton({
       activeOpacity={0.8}
     >
       {isLoading ? (
-        <ActivityIndicator color="#FFFFFF" size="small" />
+        <ActivityIndicator color={colors.white} size="small" />
       ) : (
         <View style={styles.inner}>
           <Text style={styles.icon}>{'\uD83C\uDFAC'}</Text>
@@ -63,12 +64,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    fontSize: 16,
+    ...typography.label,
     marginRight: 8,
   },
   label: {
-    color: '#FFFFFF',
-    fontSize: 15,
+    color: colors.white,
+    ...typography.bodySmall,
     fontWeight: '600',
   },
 });

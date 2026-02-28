@@ -15,6 +15,7 @@ import { RewardedAdButton } from 'components/shared/ads/RewardedAdButton';
 import type { BehaviorType } from 'types/dog';
 import { useSurvey } from 'stores/SurveyContext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/survey-result', {
   component: SurveyResultPage,
@@ -132,15 +133,15 @@ function SurveyResultPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4F4F5',
+    borderBottomColor: colors.divider,
     alignItems: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#202632' },
+  headerTitle: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary },
   body: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 100 },
   aiHeader: {
@@ -156,56 +157,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  aiEmoji: { fontSize: 28 },
+  aiEmoji: { ...typography.heroTitle },
   resultTitle: {
-    fontSize: 22,
+    ...typography.pageTitle,
     fontWeight: '700',
-    color: '#202632',
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 32,
   },
   card: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 16,
     padding: 20,
   },
   summaryText: {
-    fontSize: 14,
+    ...typography.detail,
     color: '#6B7280',
     lineHeight: 22,
     marginTop: 12,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: colors.border,
     marginVertical: 24,
   },
   detailSection: {},
   detailHeader: {
-    fontSize: 16,
+    ...typography.label,
     fontWeight: '700',
-    color: '#333D4B',
+    color: colors.textDark,
     marginBottom: 16,
   },
   unlockedContent: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 12,
     padding: 16,
   },
   detailText: {
-    fontSize: 14,
+    ...typography.detail,
     color: '#4B5563',
     lineHeight: 22,
     marginBottom: 12,
   },
   lockedContent: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 12,
     padding: 20,
   },
   skeletonLine: {
     height: 14,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: colors.border,
     borderRadius: 4,
     marginBottom: 10,
     width: '100%',
@@ -214,14 +215,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.divider,
+    backgroundColor: colors.white,
   },
   ctaButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  ctaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  ctaText: { color: colors.white, ...typography.label, fontWeight: '700' },
 });

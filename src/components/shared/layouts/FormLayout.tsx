@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface FormLayoutProps {
   title: string;
@@ -50,43 +51,43 @@ export function FormLayout({ title, step, onBack, children, bottomCTA }: FormLay
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.md,
   },
-  backBtn: { paddingRight: 12 },
-  backIcon: { fontSize: 20, color: '#333D4B' },
-  title: { fontSize: 18, fontWeight: '600', color: '#202632', flex: 1 },
-  stepText: { fontSize: 14, color: '#8B95A1' },
+  backBtn: { paddingRight: spacing.md },
+  backIcon: { ...typography.sectionTitle, color: colors.textDark },
+  title: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, flex: 1 },
+  stepText: { ...typography.detail, color: colors.textSecondary },
   progressBar: {
     height: 3,
-    backgroundColor: '#E5E8EB',
-    marginHorizontal: 20,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.screenHorizontal,
     borderRadius: 2,
   },
   progressFill: {
     height: 3,
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 2,
   },
   body: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 100 },
+  content: { paddingHorizontal: spacing.screenHorizontal, paddingTop: spacing.xxl, paddingBottom: 100 },
   bottomBar: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#F4F4F5',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.divider,
+    backgroundColor: colors.background,
   },
   ctaButton: {
-    backgroundColor: '#0064FF',
+    backgroundColor: colors.primaryBlue,
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
-  ctaDisabled: { backgroundColor: '#D1D6DB' },
-  ctaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  ctaDisabled: { backgroundColor: colors.grey300 },
+  ctaText: { color: colors.white, ...typography.label, fontWeight: '700' },
 });

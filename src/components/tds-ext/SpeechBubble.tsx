@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../styles/tokens';
 
 export interface SpeechBubbleProps {
   message: string;
@@ -33,13 +34,13 @@ export function SpeechBubble({ message, emotion = 'happy' }: SpeechBubbleProps) 
 const styles = StyleSheet.create({
   container: {
     alignItems: 'flex-start',
-    marginVertical: 8,
+    marginVertical: spacing.sm,
   },
   bubble: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: 16,
     borderTopLeftRadius: 4,
-    padding: 16,
+    padding: spacing.lg,
     maxWidth: '85%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -49,19 +50,18 @@ const styles = StyleSheet.create({
   },
   emoji: {
     fontSize: 24,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   message: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#333D4B',
+    ...typography.bodySmall,
+    color: colors.textDark,
   },
   tail: {
     width: 12,
     height: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceSecondary,
     transform: [{ rotate: '45deg' }],
     marginTop: -6,
-    marginLeft: 16,
+    marginLeft: spacing.lg,
   },
 });
