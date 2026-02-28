@@ -217,11 +217,12 @@ Backend/             # FastAPI + Alembic
 - typecheck 0 에러 달성
 - `login-with-toss` v12 배포 완료 (MCP), FE API backend-first 전환(log/report/settings/subscription/notification) 반영
 - FE API backend-first 전환 완료: `dashboard`, `training` 추가 반영 + app test 보강(2026-02-28)
+- Edge Function `generate-report` v1 배포 완료 (`verify_jwt=true`, mock AI)
 
 ### 다음 우선순위 (Single Source — 다른 문서는 이 섹션 참조)
 
 **코드 레벨 (실기기 불필요)**:
-1. INFRA-2: Edge Function 나머지 6종 배포 + Secrets 등록 — `supabase functions deploy` + 환경변수
+1. INFRA-2: Edge Function Secrets 등록/점검 + 함수별 invoke 검증 — 환경변수/권한 점검
 2. Phase 13 E2E 테스트 프레임워크 — Toss Auth mock + IAP 시뮬레이션 + FE↔BE 통합
 3. training 모델 정합 후속 — FE `training_progress` ↔ BE `user_training_status` 매핑 검증/정리
 

@@ -66,7 +66,7 @@
 - `20260228020042_b2b_tables_and_extensions` — B2B 10개 테이블 + ALTER 3개 + RLS 헬퍼 3함수 + PII 함수 + RLS 30+정책
 
 **남은 백엔드 작업**:
-- INFRA-2: Edge Function 배포 + Secrets 등록 (수동)
+- INFRA-2: Edge Function Secrets 등록 + 실연동 검증 (수동) — 7종 배포 완료
 - INFRA-3: 토스 콘솔 등록 + mTLS 인증서 (수동)
 - FE→BE 연결: `src/lib/api/backend.ts` 추가 완료. 도메인별 전환은 `coaching/org dogs/log/report/settings/subscription/notification/dashboard/training` 완료
 
@@ -94,7 +94,7 @@
 |------|------|------|----------|
 | Ads SDK | `src/lib/ads/config.ts` | mock SDK | 실 Ad Group ID 교체 |
 | IAP | `src/lib/api/iap.ts` | 래퍼 구현 완료 | 실 SDK 교체 |
-| generate-report | `supabase/functions/generate-report/` | mock AI 응답 | OpenAI 연동 (BE-P7) |
+| generate-report | `supabase/functions/generate-report/` | 배포 완료(v1), mock AI 응답 | OpenAI 연동 (BE-P7) |
 | verify-iap-order | `supabase/functions/verify-iap-order/` | mock mTLS | real mTLS 전환 |
 | send-smart-message | `supabase/functions/send-smart-message/` | mock mTLS | real mTLS 전환 |
 | grant-toss-points | `supabase/functions/grant-toss-points/` | mock mTLS | real mTLS 전환 |
@@ -112,7 +112,7 @@
 | verify-iap-order | ⚠️ Mock | true | 미검증 |
 | send-smart-message | ⚠️ Mock | true | 미검증 |
 | grant-toss-points | ⚠️ Mock | true | 미검증 |
-| generate-report | ⚠️ Mock AI | true | 미검증 |
+| generate-report | ✅ v1 (mock AI) | true | 미검증 |
 
 ---
 
