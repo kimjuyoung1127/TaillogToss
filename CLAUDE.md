@@ -218,11 +218,12 @@ Backend/             # FastAPI + Alembic
 - `login-with-toss` v12 배포 완료 (MCP), FE API backend-first 전환(log/report/settings/subscription/notification) 반영
 - FE API backend-first 전환 완료: `dashboard`, `training` 추가 반영 + app test 보강(2026-02-28)
 - Edge Function `generate-report` v1 배포 완료 (`verify_jwt=true`, mock AI)
+- Edge Function 7종 invoke/auth-policy smoke 검증 완료 (2026-02-28 14:05 KST, GET/POST expected 2xx/4xx 응답 + Edge 로그 확인)
 
 ### 다음 우선순위 (Single Source — 다른 문서는 이 섹션 참조)
 
 **코드 레벨 (실기기 불필요)**:
-1. INFRA-2: Edge Function Secrets 등록/점검 + 함수별 invoke 검증 — 환경변수/권한 점검
+1. INFRA-2 후속: Edge Function happy-path payload 검증 + secrets drift 점검 (invoke/auth-policy smoke는 완료)
 2. Phase 13 E2E 테스트 프레임워크 — Toss Auth mock + IAP 시뮬레이션 + FE↔BE 통합
 3. training 모델 정합 후속 — FE `training_progress` ↔ BE `user_training_status` 매핑 검증/정리
 
@@ -238,6 +239,7 @@ Backend/             # FastAPI + Alembic
 - ~~Jest 테스트 보강~~ → app 43 + edge 30 tests 통과
 - ~~AUTH uuid user_id 블로커~~ → `login-with-toss` v12 배포 + auth bridge 정렬 완료
 - ~~FE→BE dashboard/training 잔여~~ → backend-first + fallback 전환 완료, API 단위테스트 추가
+- ~~INFRA-2 함수 invoke/auth-policy 점검~~ → 7종 스모크 검증 완료(2026-02-28, Edge Logs 기준)
 
 ## 참고 문서
 

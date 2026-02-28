@@ -66,7 +66,7 @@
 - `20260228020042_b2b_tables_and_extensions` — B2B 10개 테이블 + ALTER 3개 + RLS 헬퍼 3함수 + PII 함수 + RLS 30+정책
 
 **남은 백엔드 작업**:
-- INFRA-2: Edge Function Secrets 등록 + 실연동 검증 (수동) — 7종 배포 완료
+- INFRA-2: Edge Function Secrets 등록 + 실연동 검증 (수동) — 7종 배포 + invoke/auth-policy smoke 검증 완료(2026-02-28, MCP+HTTP). 잔여: happy-path payload 검증, secrets drift 점검
 - INFRA-3: 토스 콘솔 등록 + mTLS 인증서 (수동)
 - FE→BE 연결: `src/lib/api/backend.ts` 추가 완료. 도메인별 전환은 `coaching/org dogs/log/report/settings/subscription/notification/dashboard/training` 완료
 
@@ -102,17 +102,19 @@
 
 ---
 
-## 5. Edge Function 배포 상태
+## 5. Edge Function 배포/호출 상태
 
 | Function | 배포 | verify_jwt | 실연동 |
 |----------|------|-----------|--------|
-| login-with-toss | v12 ✅ (배포) | false | ✅ Sandbox 200 / v12 재검증 필요 |
-| legal | ✅ | false | ✅ URL 접근 확인 |
-| toss-disconnect | ✅ | false | 콘솔 콜백 검증 대기 |
-| verify-iap-order | ⚠️ Mock | true | 미검증 |
-| send-smart-message | ⚠️ Mock | true | 미검증 |
-| grant-toss-points | ⚠️ Mock | true | 미검증 |
-| generate-report | ✅ v1 (mock AI) | true | 미검증 |
+| login-with-toss | v12 ✅ (배포) | false | ✅ Sandbox 200(v11) + invoke smoke(v12: GET 405 / POST 400) |
+| legal | ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
+| toss-disconnect | ✅ | false | ✅ invoke smoke(GET/POST 401, 인증정책 동작) / 콘솔 콜백 대기 |
+| verify-iap-order | ⚠️ Mock | true | ⚠️ invoke smoke(GET 401 / POST 400), happy-path 미검증 |
+| send-smart-message | ⚠️ Mock | true | ⚠️ invoke smoke(GET 401 / POST 403), Sandbox 실발송 미검증 |
+| grant-toss-points | ⚠️ Mock | true | ⚠️ invoke smoke(GET 401 / POST 403), happy-path 미검증 |
+| generate-report | ✅ v1 (mock AI) | true | ⚠️ invoke smoke(GET 401 / POST 400), OpenAI 실연동 미검증 |
+
+기준: 2026-02-28 14:05 KST (Supabase Edge Logs + HTTP 직접 호출)
 
 ---
 
@@ -123,7 +125,7 @@
 | FE 단위 테스트 | 완료 | Jest 69 tests (auth 7 + iap 8 + roleGuard 8 + ads 5 + training/dashboard API 포함) |
 | BE 단위 테스트 | 완료 | pytest 39 tests (health 3 + models 12 + schemas 14 + security 7 + routers 6) |
 | BE↔DB 통합 테스트 | 미구현 | FastAPI + 실 Supabase 연결 테스트 (DB 마이그레이션 완료, 연결만 미검증) |
-| E2E 테스트 | 부분 | 로그인만 검증, IAP/광고 미검증 |
+| E2E 테스트 | 부분 | 로그인 + Edge invoke smoke 검증, IAP/광고 happy-path 미검증 |
 | 성능 테스트 | 미구현 | 40마리 FlatList, API p95 < 300ms |
 | 보안 테스트 | 부분 | mTLS real mode, PII 암호화 단위만 |
 
