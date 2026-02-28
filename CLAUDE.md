@@ -15,6 +15,17 @@ DogCoach(Next.js PWA) → Toss 미니앱(React Native) 마이그레이션.
 | 2 | `docs/11-FEATURE-PARITY-MATRIX.md` | Parity ID별 체크리스트 — 작업 전 현재 상태 파악 | ✅ |
 | 3 | `docs/BACKEND-PLAN.md` | BE 구조 + FE↔BE API 매핑 60+ endpoints | ✅ |
 | 4 | `docs/MISSING-AND-UNIMPLEMENTED.md` | 잔여 작업 + 블로커 + Mock 목록 + Edge Function 상태 | ✅ |
+| 5 | `docs/2-28/PHASE13-FE-BE-ROLLING-MIGRATION.md` | 현재 전환 진행상태 + 체크리스트 + 롤백 포인트 | ✅ |
+
+### 자동 참조 번들 (MUST)
+
+`CLAUDE.md`만 주어져도 아래 번들을 자동 참조한다.
+
+1. 기본 번들(항상): `11-FEATURE-PARITY-MATRIX` → `BACKEND-PLAN` → `MISSING-AND-UNIMPLEMENTED` → `2-28/PHASE13-FE-BE-ROLLING-MIGRATION`
+2. DB/마이그레이션 작업: `SCHEMA-B2B.md` 추가
+3. 실기기/Sandbox 검증: `2-27/PHASE13-E2E-SANDBOX-PLAYBOOK.md` 추가
+4. 화면/플로우 구현: `Skill("toss_wireframes")` + `Skill("toss_journey")` 추가
+5. 정책/요건 확인: `PRD-TailLog-Toss.md`, `PRD-TailLog-B2B.md` 추가
 
 **작업별 추가 참조**:
 - DB/마이그레이션 작업 → `docs/SCHEMA-B2B.md`
@@ -175,7 +186,7 @@ Backend/             # FastAPI + Alembic
 | Phase | 내용 | 상태 | 비고 |
 |-------|------|------|------|
 | 1~10 | 초기화 → 인증 가드 | Done | FE 전체 완료 |
-| 11 | 보안 (PII가드, rate-limit) | Done | mTLS 실연동 + `login-with-toss` v11 200 증적 확보 |
+| 11 | 보안 (PII가드, rate-limit) | Done | mTLS 실연동 + `login-with-toss` v12 배포 완료 |
 | 12 | 광고 (Toss Ads SDK R1/R2/R3) | Done | mock SDK. 실 Ad Group ID 반영/검증 대기 |
 | 13 | E2E 테스트 + 배포 준비 | In progress | Sandbox 실기기 로그인 성공(Edge 200)까지 확보, IAP/광고 E2E 잔여 |
 | B2B | B2B 확장 (P1~P7) + 정합성 수정 | Done | 코드+문서정합성 완료. 성능/실기기 검증 대기 |
@@ -188,7 +199,7 @@ Backend/             # FastAPI + Alembic
 ### 현재 Mock/대기 항목
 - **mTLS 인증서**: `supabase/functions/_shared/mTLSClient.ts` — RealMTLSClient + `TOSS_MTLS_MODE` 반영 완료. cert/key secret 등록 + digest 검증 완료
 - **Ad Group ID**: `src/lib/ads/config.ts` — 공식 SDK ver2 시그니처 적용 완료, 테스트 ID 사용 중 (실 ID 교체/검증 대기)
-- **Supabase 실 연동**: Edge Function `login-with-toss` v11 배포 + Sandbox 실기기 `POST 200` 증적 확보 (request id: `f52019d7-0162-48bf-b021-de8bc80539de`, `92de76c2-abaa-4d8c-81cc-3e7329fe6d21`)
+- **Supabase 실 연동**: Edge Function `login-with-toss` v12 배포 완료 + Sandbox 실기기 `POST 200` 증적 확보 (request id: `f52019d7-0162-48bf-b021-de8bc80539de`, `92de76c2-abaa-4d8c-81cc-3e7329fe6d21`)
 - **ChartWebView**: `@granite-js/native` WebView 실제 연결 대기
 - **IAP SDK**: `lib/api/iap.ts` 래퍼 구현 완료 (createOneTimePurchaseOrder + getPendingOrders). `@apps-in-toss/framework` 확인 후 실 SDK 교체
 
@@ -196,20 +207,21 @@ Backend/             # FastAPI + Alembic
 - 사업자등록 완료 (사용자 보고)
 - 토스 앱 배포 완료 (사용자 보고)
 - Sandbox 실기기+Metro 연결 및 라우팅 로그 확인 (`/_404 -> /login -> /onboarding/welcome -> /onboarding/survey`)
-- Sandbox 실기기 로그인 성공 확인 (`/login -> /onboarding/welcome`, `appLogin referrer=SANDBOX`, Edge `login-with-toss` v11 `POST 200`)
+- Sandbox 실기기 로그인 성공 확인 (`/login -> /onboarding/welcome`, `appLogin referrer=SANDBOX`, Edge `login-with-toss` `POST 200`)
 - 남은 리스크는 외부 승인 이슈가 아니라 **실연동 증적 확보** 영역(로그인/IAP/광고)임
 
 ### 상태 업데이트 (2026-02-28)
 - Backend FastAPI 전체 구현 완료 (BE-P1~P8: 48파일, 12모듈, 60+ endpoints, 27모델, pytest 39 tests)
 - Supabase INFRA-1 DB 마이그레이션 적용 완료 (26→38 테이블, enum 마이그레이션, B2B 10테이블+RLS)
-- FE Jest 테스트 보강: auth 7 + iap 8 + roleGuard 8 + ads 5 = 66 tests 전체 통과
+- FE/Edge Jest 검증: app 43 tests + edge 30 tests 통과
 - typecheck 0 에러 달성
+- `login-with-toss` v12 배포 완료 (MCP), FE API backend-first 전환(log/report/settings/subscription/notification) 반영
 
 ### 다음 우선순위 (Single Source — 다른 문서는 이 섹션 참조)
 
 **코드 레벨 (실기기 불필요)**:
-1. FE→BE API 연결 — `src/lib/api/backend.ts` HTTP 클라이언트 래퍼. 복잡 쿼리(coaching, dashboard, B2B org dogs)를 FastAPI로 전환
-2. INFRA-2: Edge Function 7종 배포 + Secrets 등록 — `supabase functions deploy` + 환경변수
+1. FE→BE API 연결 잔여 도메인 — `dashboard`, `training` 전환 설계/구현 + 회귀 검증
+2. INFRA-2: Edge Function 나머지 6종 배포 + Secrets 등록 — `supabase functions deploy` + 환경변수
 3. Phase 13 E2E 테스트 프레임워크 — Toss Auth mock + IAP 시뮬레이션 + FE↔BE 통합
 
 **외부/실기기 필요**:
@@ -221,7 +233,8 @@ Backend/             # FastAPI + Alembic
 - ~~B2B IAP 공식 패턴 정렬~~ → usePurchaseB2BIAP + usePendingOrderRecoveryB2B 구현 완료
 - ~~typecheck 에러~~ → 0 에러 (tsconfig supabase exclude + Granite 전환 + iap/404 수정)
 - ~~useRewardedAd 테스트 실패~~ → mock 메서드명 교정, 5/5 통과
-- ~~Jest 테스트 보강~~ → auth 7 + iap 8 + roleGuard 8 = 23케이스 추가 (총 66 tests, 0 fail)
+- ~~Jest 테스트 보강~~ → app 43 + edge 30 tests 통과
+- ~~AUTH uuid user_id 블로커~~ → `login-with-toss` v12 배포 + auth bridge 정렬 완료
 
 ## 참고 문서
 
@@ -235,6 +248,7 @@ Backend/             # FastAPI + Alembic
 | 마이그레이션 웨이브 | `docs/12-MIGRATION-WAVES-AND-GATES.md` |
 | Phase 11 런타임 증적 | `docs/2-27/PHASE11-RUNTIME-EVIDENCE.md` |
 | Phase 13 E2E/Sandbox 플레이북 | `docs/2-27/PHASE13-E2E-SANDBOX-PLAYBOOK.md` |
+| Phase 13 FE-BE 롤링 마이그레이션 | `docs/2-28/PHASE13-FE-BE-ROLLING-MIGRATION.md` |
 | Backend 구현 플랜 | `docs/BACKEND-PLAN.md` |
 | 누락/미구현 목록 | `docs/MISSING-AND-UNIMPLEMENTED.md` |
 | 원본 DogCoach (읽기 전용) | `C:\Users\gmdqn\DogCoach` |

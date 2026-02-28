@@ -6,8 +6,8 @@
 
 ## Baseline
 - typecheck: pass (2026-02-28)
-- app tests (auth/iap/roleGuard/useRewardedAd): pass (28/28)
-- edge tests (login-with-toss/verify-iap-order 포함): pass (23/23)
+- app tests (jest app): pass (43/43)
+- edge tests (jest edge): pass (30/30)
 
 ## Work Plan
 1. AUTH/온보딩 블로커 해소

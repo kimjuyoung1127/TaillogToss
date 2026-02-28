@@ -1,6 +1,6 @@
 # TaillogToss 누락 플랜 + 미구현 목록
 
-> 작성일: 2026-02-28 | 최종 업데이트: 2026-02-28 | 기준: commit `31dc7b6` (INFRA-1 DB 마이그레이션 이후)
+> 작성일: 2026-02-28 | 최종 업데이트: 2026-02-28 | 기준: commit `94a6b26` (Phase13 FE-BE rolling migration 반영 이후)
 
 ## 1. PRD 미구현 기능 (Phase 2+ Deferred)
 
