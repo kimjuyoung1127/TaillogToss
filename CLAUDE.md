@@ -96,25 +96,39 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 | BE | Done | BE-P1~P8 완료 |
 | INFRA-1 | Done | DB 26->38 + RLS 적용 |
 
-## 현재 핵심 리스크 (요약)
-- IAP/MSG/AD 실기기 E2E 증적 부족
-- Real mTLS 전환(인증서/콘솔) 후속 필요
-- Ad Group ID 실 교체 대기
-- 일부 도메인 happy-path payload 실검증 필요
-- ~~backend-first 실기기 연결 불안정~~ **해결(2026-02-28)**: LAN IP direct 전환 완료 (상세: `docs/2-28/PHASE13-FE-BE-ROLLING-MIGRATION.md`)
+## 현재 상태 (Last Updated: 2026-02-28)
 
-## 상태 업데이트 (2026-02-28)
-- FE API backend-first 전환: `dashboard`, `training` 포함 완료
-- Edge invoke/auth-policy 7종 스모크 검증 완료
-- `send-smart-message` v8, `grant-toss-points` v8, `verify-iap-order` v8, `generate-report` v3 배포 완료
-- 위조 `x-user-role` 우회 재시도 차단 확인(8건 모두 403)
-- IAP happy-path 실증은 fresh Sandbox `authorization_code` 필요(`login-with-toss` stale code 호출 시 502 invalid_grant 확인)
-- **실기기 backend-first LAN IP direct 연결 성공(2026-02-28)**: `backend.ts` `DEV_LAN_BACKEND_URL` 적용, 기기(172.30.1.51)→PC(172.30.1.1:8000) 직통 확인, 307 trailing slash 수정 완료
+| 도메인 | 상태 | 남은 것 |
+|--------|------|---------|
+| FE→BE 연결 | ✅ 완료 | LAN IP direct 성공, 307 trailing slash 수정 |
+| AUTH | ✅ 로그인 성공 증적 확보 | ❌ 실패400 증적 미확보 |
+| IAP | ⚠️ mock 동작 | ❌ fresh authCode → 실결제 E2E 필요 |
+| MSG | ⚠️ invoke smoke만 | ❌ Sandbox 실발송 미검증 |
+| AD | ⚠️ mock SDK | ❌ 실 Ad Group ID 교체 + 실노출 미검증 |
+| UI | ⚠️ 빌드/tsc 통과 | ❌ 비주얼 QA + UX 폴리시 미완 |
+| Edge 7종 | ✅ 배포+smoke+우회차단 | ⚠️ happy-path payload 실검증 잔여 |
+| BE (FastAPI) | ✅ P1~P8 완료 | — |
+| DB (INFRA-1) | ✅ 38테이블+RLS | — |
+| mTLS | ⚠️ mock mode | ❌ real 인증서/콘솔 등록 필요 |
 
 ## 다음 우선순위 (Single Source)
-1. INFRA-2 후속: Edge happy-path payload 검증 + secrets drift 점검
-2. Phase 13 E2E: AUTH 실패400, IAP 복구, MSG 실발송, AD 실노출 증적 확보
-3. INFRA-3: Real mTLS 인증서/토스 콘솔 등록 마무리
+
+### 1. UI 폴리시 + UX 개선 (원격 가능, UI-001)
+- 23개 화면 비주얼 일관성 점검 (DogCoach 원본 참조: `C:\Users\gmdqn\DogCoach`)
+- 로딩/빈상태/에러 상태 누락 화면 보강
+- 컴포넌트 간격/정렬/타이포 일관성
+- 참조: `Skill("toss_wireframes")`, `Skill("toss_journey")`
+
+### 2. Phase 13 E2E 증적 확보 (실기기 필요)
+- AUTH 실패400 증적 1건
+- IAP 구매 → verify-iap-order 200 (fresh authCode 선행)
+- MSG 실발송 → noti_history row 확인
+- AD R1/R2/R3 실노출 (실 Ad Group ID 교체 선행)
+- 참조: `docs/2-27/PHASE13-E2E-SANDBOX-PLAYBOOK.md`
+
+### 3. INFRA-2~3 마무리 (콘솔/인프라)
+- Edge happy-path payload 검증 + secrets drift 점검
+- Real mTLS 인증서 발급 + 토스 콘솔 등록
 
 ## 참고 문서 인덱스
 - `docs/PRD-TailLog-Toss.md`
