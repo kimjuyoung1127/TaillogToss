@@ -15,9 +15,9 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: '초대 대기', color: '#D97706' },
-  active: { label: '활성', color: '#059669' },
-  deactivated: { label: '비활성', color: '#DC2626' },
+  pending: { label: '초대 대기', color: colors.badgeAmber },
+  active: { label: '활성', color: colors.badgeGreen },
+  deactivated: { label: '비활성', color: colors.badgeRed },
 };
 
 interface MemberListProps {
@@ -36,7 +36,7 @@ export function MemberList({ members, onInvite }: MemberListProps) {
       </View>
 
       {members.map((member) => {
-        const fallback = { label: '초대 대기', color: '#D97706' };
+        const fallback = { label: '초대 대기', color: colors.badgeAmber };
         const statusConfig = STATUS_LABELS[member.status] ?? fallback;
         return (
           <View key={member.id} style={styles.row}>

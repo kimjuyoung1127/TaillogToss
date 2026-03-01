@@ -61,6 +61,23 @@ export const colors = {
   primaryBlue: '#0064FF',
   primaryBlueLight: '#0064FF20',
   placeholder: '#B0B8C1',
+
+  // Badge semantic colors (행동 유형 뱃지 / 위험도 전용)
+  badgeAmber: '#D97706',
+  badgeAmberBg: '#FEF3C7',
+  badgeRed: '#DC2626',
+  badgeRedBg: '#FEE2E2',
+  badgeRedDark: '#991B1B',
+  badgeBlue: '#2563EB',
+  badgeBlueBg: '#DBEAFE',
+  badgePurple: '#7C3AED',
+  badgePurpleBg: '#EDE9FE',
+  badgeGreen: '#059669',
+  badgeGreenBg: '#D1FAE5',
+  badgePink: '#BE185D',
+  badgePinkBg: '#FCE7F3',
+  badgeGrey: '#6B7280',
+  badgeGreyBg: '#F3F4F6',
 } as const;
 
 // ─── Typography ───────────────────────────────────────────

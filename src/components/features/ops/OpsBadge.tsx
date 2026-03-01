@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { typography } from 'styles/tokens';
+import { colors, typography } from 'styles/tokens';
 
 export type OpsStatus = 'urgent' | 'warning' | 'normal' | 'pending' | 'done';
 
@@ -13,11 +13,11 @@ interface OpsBadgeProps {
 }
 
 const STATUS_CONFIG: Record<OpsStatus, { label: string; bg: string; color: string }> = {
-  urgent: { label: '긴급', bg: '#FEE2E2', color: '#DC2626' },
-  warning: { label: '주의', bg: '#FEF3C7', color: '#D97706' },
-  normal: { label: '일반', bg: '#DBEAFE', color: '#2563EB' },
-  pending: { label: '대기', bg: '#F3F4F6', color: '#6B7280' },
-  done: { label: '완료', bg: '#D1FAE5', color: '#059669' },
+  urgent: { label: '긴급', bg: colors.badgeRedBg, color: colors.badgeRed },
+  warning: { label: '주의', bg: colors.badgeAmberBg, color: colors.badgeAmber },
+  normal: { label: '일반', bg: colors.badgeBlueBg, color: colors.badgeBlue },
+  pending: { label: '대기', bg: colors.badgeGreyBg, color: colors.badgeGrey },
+  done: { label: '완료', bg: colors.badgeGreenBg, color: colors.badgeGreen },
 };
 
 export function OpsBadge({ status }: OpsBadgeProps) {

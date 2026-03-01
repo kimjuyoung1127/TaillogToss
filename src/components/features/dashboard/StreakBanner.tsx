@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.surfaceTertiary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginHorizontal: 20,
@@ -74,6 +74,6 @@ const styles = StyleSheet.create({
   },
   count: {
     fontWeight: '700',
-    color: '#FF6B35',
+    color: colors.orange700,
   },
 });

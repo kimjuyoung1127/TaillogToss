@@ -9,24 +9,24 @@ import { colors, typography } from 'styles/tokens';
 import type { BehaviorType, SurveyResult } from 'types/dog';
 
 /** 행동 유형 → 표시 정보 */
-const DEFAULT_BADGE = { label: '일반형', color: '#6B7280', bgColor: '#F3F4F6' };
+const DEFAULT_BADGE = { label: '일반형', color: colors.badgeGrey, bgColor: colors.badgeGreyBg };
 
 const BADGE_MAP: Record<string, { label: string; color: string; bgColor: string }> = {
-  anxiety: { label: '불안형', color: '#D97706', bgColor: '#FEF3C7' },
-  dominance: { label: '주도형', color: '#DC2626', bgColor: '#FEE2E2' },
-  energy: { label: '에너지 과잉형', color: '#2563EB', bgColor: '#DBEAFE' },
-  separation: { label: '분리불안형', color: '#7C3AED', bgColor: '#EDE9FE' },
-  environmental: { label: '환경적응형', color: '#059669', bgColor: '#D1FAE5' },
-  complex: { label: '복합형', color: '#BE185D', bgColor: '#FCE7F3' },
-  other: { label: '일반형', color: '#6B7280', bgColor: '#F3F4F6' },
+  anxiety: { label: '불안형', color: colors.badgeAmber, bgColor: colors.badgeAmberBg },
+  dominance: { label: '주도형', color: colors.badgeRed, bgColor: colors.badgeRedBg },
+  energy: { label: '에너지 과잉형', color: colors.badgeBlue, bgColor: colors.badgeBlueBg },
+  separation: { label: '분리불안형', color: colors.badgePurple, bgColor: colors.badgePurpleBg },
+  environmental: { label: '환경적응형', color: colors.badgeGreen, bgColor: colors.badgeGreenBg },
+  complex: { label: '복합형', color: colors.badgePink, bgColor: colors.badgePinkBg },
+  other: { label: '일반형', color: colors.badgeGrey, bgColor: colors.badgeGreyBg },
 };
 
 /** 위험도 → 표시 정보 */
 const RISK_MAP: Record<SurveyResult['risk_level'], { label: string; color: string }> = {
-  low: { label: '낮음', color: '#059669' },
-  medium: { label: '중간', color: '#D97706' },
-  high: { label: '높음', color: '#DC2626' },
-  critical: { label: '심각', color: '#991B1B' },
+  low: { label: '낮음', color: colors.badgeGreen },
+  medium: { label: '중간', color: colors.badgeAmber },
+  high: { label: '높음', color: colors.badgeRed },
+  critical: { label: '심각', color: colors.badgeRedDark },
 };
 
 /**

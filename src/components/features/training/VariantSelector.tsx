@@ -5,6 +5,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { PlanVariant } from 'types/training';
+import { colors, typography } from 'styles/tokens';
 
 interface VariantSelectorProps {
   current: PlanVariant;
@@ -62,14 +63,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 13,
+    ...typography.caption,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   segmented: {
     flexDirection: 'row',
-    backgroundColor: '#F4F4F5',
+    backgroundColor: colors.divider,
     borderRadius: 10,
     padding: 2,
   },
@@ -83,8 +84,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   segmentActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
+    backgroundColor: colors.white,
+    shadowColor: colors.grey950,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -94,17 +95,17 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   segmentText: {
-    fontSize: 14,
+    ...typography.detail,
     fontWeight: '600',
-    color: '#8B95A1',
+    color: colors.textSecondary,
   },
   segmentTextActive: {
-    color: '#0064FF',
+    color: colors.primaryBlue,
   },
   segmentTextDisabled: {
-    color: '#B0B8C1',
+    color: colors.textTertiary,
   },
   lockIcon: {
-    fontSize: 12,
+    ...typography.badge,
   },
 });
