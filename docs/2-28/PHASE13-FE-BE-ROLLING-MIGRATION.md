@@ -75,20 +75,24 @@
 - 부족한 점: training `changeVariant`는 미사용 경로라 backend 전환 범위에서 제외되어 추후 정리 필요
 - 남은 공백: 실기기 E2E(설문 완료→대시보드) 증적 확보 및 IAP/MSG/AD 시나리오 검증
 
-## Next Execution Plan (2026-02-28 21:30 KST)
+## Next Execution Plan (2026-02-28 22:34 KST)
 
 Scope: `IAP-001`, `MSG-001`, `AD-001` (Phase13 게이트 마감)
 
 1. IAP-001 증적 마감 (진행 중)
-- [x] 서버 증적 고정: `verify-iap-order v12` `POST 200` 2건 (`606b960d-729a-49aa-a425-77867e7eadd5`, `e9edb63f-d893-483d-9a45-93bd94833afa`)
-- [x] DB 반영 고정: `public.toss_orders` `order_count=2`, `latest_order_at=2026-02-28 21:17:26 KST`
+- [x] 서버 증적 고정: `verify-iap-order v12` `POST 200` 누적 5건 (`606b960d-729a-49aa-a425-77867e7eadd5`, `e9edb63f-d893-483d-9a45-93bd94833afa`, `2af98cee-4c5d-488a-b9f2-252ad69d2005`, `868dd7a9-1f02-4f32-b22a-5a8fd8684c86`, `52192480-adc5-45a6-931f-c94cfe499231`)
+- [x] DB 반영 고정: `public.toss_orders` `order_count=5`, `latest_order_at=2026-02-28 22:31:22 KST`
+- [x] 복구 재확인: `GET /api/v1/subscription` 200 유지 구간에서 `verify-iap-order` 최신 `POST 200` 확인
 - [ ] 앱 UI 증적 3종 수집: 구매 성공 / 복구 / 실패 (스크린샷 + 앱 로그 + request id 매핑)
 - [ ] 게이트 판정 업데이트: IAP `PARTIAL -> PASS` 또는 차단사유 명시
 
 2. MSG-001 실발송 증적 (대기)
 - [x] 기준선 확보: `public.noti_history` `noti_count=2`, `latest_noti_at=2026-02-28 00:52:11 KST`
 - [x] 자동 호출 시도 기록: Codex 실행환경 DNS 제한으로 `https://kvknerzsqgmmdmyxlorl.supabase.co` 해석 실패(`curl: Could not resolve host`)
-- [ ] Sandbox 실발송 1건 성공: `send-smart-message` `POST 200`
+- [x] 사전조건 확인: Smart Message 신청/승인 완료 전 실발송 게이트는 `PARTIAL` 유지
+- [x] 실시간 차단 증적: `send-smart-message` `HTTP 429` (`RATE_LIMITED: QUIET_HOURS`, `retryAfterSeconds=36000`)
+- [ ] Smart Message 신청/승인 완료
+- [ ] Sandbox 실발송 1건 성공: `send-smart-message` `POST 200` (승인 후)
 - [ ] DB 증가 확인: `noti_history` 카운트 증가 + 최신 row `error_code is null`
 - [ ] 실패 케이스 403(권한 없음) 1건 재증적
 
@@ -98,7 +102,7 @@ Scope: `IAP-001`, `MSG-001`, `AD-001` (Phase13 게이트 마감)
 - [ ] R1/R2/R3 노출 + 보상/폴백(no-fill) 증적 수집
 
 4. 종료 조건
-- [ ] `docs/PROJECT-STATUS.md`, `docs/11-FEATURE-PARITY-MATRIX.md`, `docs/MISSING-AND-UNIMPLEMENTED.md` 동기화
+- [x] `docs/PROJECT-STATUS.md`, `docs/11-FEATURE-PARITY-MATRIX.md`, `docs/MISSING-AND-UNIMPLEMENTED.md` 동기화
 - [ ] Gate Summary 작성: `AUTH/IAP/MSG/AD`를 `PASS / PARTIAL / BLOCKED`로 확정
 
 ## Windows PowerShell Runbook (즉시 실행)

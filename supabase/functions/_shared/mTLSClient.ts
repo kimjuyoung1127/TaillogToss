@@ -12,7 +12,7 @@ interface StatusError extends Error {
 
 import type { TossEncryptedField } from './tossPiiDecrypt.ts';
 
-type TossGenerateTokenReferrer = 'DEFAULT' | 'sandbox' | string;
+type TossGenerateTokenReferrer = 'DEFAULT' | 'SANDBOX';
 
 function readEnv(name: string): string | undefined {
   const fromNode = (globalThis as { process?: { env?: Record<string, string | undefined> } })

@@ -26,6 +26,15 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 10. 디자인 토큰은 `styles/tokens` import 필수, `#hex`/`fontSize:` 하드코딩 금지.
 11. `CLAUDE.md`는 항상 슬림 유지: 완료 항목/상세 로그/긴 표는 기록 문서로 이동하고 여기엔 링크만 남긴다.
 
+## 자동화 에이전트 규칙 (MUST)
+
+| 자동화 | 주기 | 내용 |
+|--------|------|------|
+| CLAUDE.md 슬림화 | 매일 08:00 | 완료 Parity ID 제거, 문서 테이블 갱신, Last Updated 갱신 |
+| docs/ 정리·압축 | 매일 22:00 | ref/status/daily 구조 유지, 7일+ daily 폴더 weekly/로 압축 |
+
+⚠️ 우선순위는 자동화가 매일 갱신함 — 에이전트가 수동으로 건드리지 말 것.
+
 ## 스택/아키텍처 요약
 
 | 레이어 | 기술 |
@@ -59,22 +68,27 @@ DogCoach(Next.js PWA) -> Toss 미니앱(React Native) 마이그레이션.
 | Sandbox Metro 실기기 연결 | `Skill("toss-sandbox-metro")` |
 
 ## 현재 우선순위 (Last Updated: 2026-02-28)
-1. IAP-001: Sandbox 결제 E2E (구매/복구/실패 3시나리오) 증적 확보
-2. MSG-001: Smart Message 실발송 + `noti_history` 영속 확인
-3. AD-001: 실 Ad Group ID 적용 후 R1/R2/R3 실노출 검증
-4. INFRA-3: Edge 3종(`verify-iap-order`, `send-smart-message`, `grant-toss-points`) real mTLS 전환
+1. UIUX-001: 대시보드 분석/훈련 페이지에서 데이터 없을 때도 구조(스켈레톤/빈상태 레이아웃) 먼저 고정하고, 데이터 생성 시 즉시 표시되도록 준비
+2. UIUX-002: 훈련 아카데미 커리큘럼을 기존 웹앱 방향처럼 "AI가 그때그때 생성해주는 느낌"의 UI/UX로 재구성
+3. UIUX-003: 전체 커리큘럼 한눈에 보기 개선(현재 2개만 잘 보이고 나머지 가시성 낮음) + 페이지 이동 화살표 터치 영역 확대 + Toss 인앱 스와이프 가능 여부 확인 후 네비게이션 방식 확정
+4. UIUX-004: Survey 화면을 기존 웹앱 내용 기준으로 정합화(목업 데이터처럼 보이는 현재 상태 해소)
+5. UIUX-005: `coachingresult`, `trainingdetail` 완성도 보강(준비 미흡 항목 우선 정리)
+6. UIUX-006: `dogprofile` 실데이터 표시 복구 + `dogswitcher` UI 도입
+7. 보류: IAP/MSG/AD/INFRA 실행 플랜은 위 UI/UX 개선 목표 정리/반영 이후 다음 세션에서 재개
 
 ## 상세 상태/기록 문서 (Source of Truth)
 
+docs/ 구조: `ref/`(영구참조) · `status/`(상태판) · `daily/`(작업로그, 자동압축) · `weekly/`(주간압축본)
+
 | 문서 | 용도 |
 |------|------|
-| `docs/PROJECT-STATUS.md` | 최신 상태판, Parity/Phase/블로커/테스트/Mock 항목 |
-| `docs/11-FEATURE-PARITY-MATRIX.md` | Parity ID별 상세 Notes/검증 로그 |
-| `docs/MISSING-AND-UNIMPLEMENTED.md` | 미구현 상세 + V2 후보 |
-| `docs/2-27/PHASE13-E2E-SANDBOX-PLAYBOOK.md` | Sandbox 실기기 테스트 플레이북 |
-| `docs/2-28/PHASE13-FE-BE-ROLLING-MIGRATION.md` | FE<->BE 롤링 마이그레이션 작업 기록 |
-| `docs/BACKEND-PLAN.md` | Backend 구현 상세/엔드포인트 매핑 |
-| `docs/SCHEMA-B2B.md` | B2B 10테이블 스키마 상세 |
+| `docs/status/PROJECT-STATUS.md` | 최신 상태판, Parity/Phase/블로커/테스트/Mock 항목 |
+| `docs/status/11-FEATURE-PARITY-MATRIX.md` | Parity ID별 상세 Notes/검증 로그 |
+| `docs/status/MISSING-AND-UNIMPLEMENTED.md` | 미구현 상세 + V2 후보 |
+| `docs/ref/BACKEND-PLAN.md` | Backend 구현 상세/엔드포인트 매핑 |
+| `docs/ref/SCHEMA-B2B.md` | B2B 10테이블 스키마 상세 |
+| `docs/daily/` | 날짜별 작업 로그 — 매일 22:00 자동 압축 대상 |
+| `docs/weekly/` | 주간 압축본 — daily/ 7일+ 폴더 합산 결과 |
 
 ## 완료 포맷
 

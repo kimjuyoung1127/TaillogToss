@@ -10,11 +10,11 @@ import { safeLogPayload } from '../_shared/piiGuard.ts';
 import { loginRateLimiter, type InMemoryRateLimiter } from '../_shared/rateLimiter.ts';
 import { decryptTossPiiField, isTossEncryptedField } from '../_shared/tossPiiDecrypt.ts';
 
-type TossLoginReferrer = 'DEFAULT' | 'sandbox' | string;
+type TossLoginReferrer = 'DEFAULT' | 'SANDBOX';
 
 export interface LoginWithTossRequest {
   authorizationCode: string;
-  referrer?: TossLoginReferrer;
+  referrer?: string;
   nonce: string;
 }
 
@@ -374,9 +374,13 @@ function defaultLoginDeps(): LoginHandlerDeps {
 }
 
 function normalizeRequest(input: LoginWithTossRequest): LoginWithTossRequest {
+  const rawReferrer = input.referrer?.trim();
+  const normalizedReferrer = rawReferrer
+    ? (rawReferrer.toUpperCase() === 'SANDBOX' ? 'SANDBOX' : (rawReferrer.toUpperCase() === 'DEFAULT' ? 'DEFAULT' : undefined))
+    : undefined;
   return {
     authorizationCode: input.authorizationCode?.trim() ?? '',
-    referrer: input.referrer?.trim() ?? undefined,
+    referrer: normalizedReferrer,
     nonce: input.nonce?.trim() ?? '',
   };
 }
@@ -394,6 +398,10 @@ export function createLoginWithTossHandler(overrides?: Partial<LoginHandlerDeps>
 
     if (!request.authorizationCode) {
       return fail('VALIDATION_ERROR', 'authorizationCode is required', 400);
+    }
+
+    if (!request.referrer) {
+      return fail('VALIDATION_ERROR', 'referrer must be DEFAULT or SANDBOX', 400);
     }
 
     if (request.nonce.length < 8) {
@@ -419,7 +427,7 @@ export function createLoginWithTossHandler(overrides?: Partial<LoginHandlerDeps>
     try {
       const token = await deps.mTLSClient.exchangeAuthorizationCode(
         request.authorizationCode,
-        request.referrer ?? 'DEFAULT'
+        request.referrer
       );
       const profile = await deps.mTLSClient.fetchLoginProfile(token.accessToken);
       const encryptedPiiCount = [

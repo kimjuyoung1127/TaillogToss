@@ -82,7 +82,7 @@
 | LOG-001 | FastAPI 로그 API 실기기 E2E 증적 |
 | AI-001 | ~~Backend/ 미존재~~ → BE-P5 완료. FastAPI 코칭 API backend-first 전환 완료, 실연동 E2E 증적 필요 |
 | IAP-001 | 결제/복구/실패 3시나리오 앱 UI 증적 정리 |
-| MSG-001 | Sandbox 실발송 검증 |
+| MSG-001 | Smart Message 신청/승인 완료 후 Sandbox 실발송 검증 |
 | AD-001 | 실 Ad Group ID 교체, Sandbox 광고 검증 |
 | B2B-001 | 40마리 FlatList 성능, 공유 링크 실기기, B2C 회귀 테스트, verify_parent_phone_last4 RPC |
 
@@ -109,12 +109,12 @@
 | login-with-toss | v13 ✅ (ACTIVE) | false | ✅ Sandbox 200 + 실패 400 증적 / stale code 502(`invalid_grant`) 이력 |
 | legal | ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
 | toss-disconnect | ✅ | false | ✅ invoke smoke(GET/POST 401, 인증정책 동작) / 콘솔 콜백 대기 |
-| verify-iap-order | ⚠️ Mock mTLS (v12) | false | ✅ 실기기 `POST 200` 2건 + `toss_orders` 영속(`order_count=2`, `latest_order_at=2026-02-28 21:17:26 KST`) / 잔여: 앱 UI 3시나리오 증적 |
-| send-smart-message | ⚠️ Mock mTLS (v9) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403), Sandbox 실발송 미검증 |
+| verify-iap-order | ⚠️ Mock mTLS (v12) | false | ✅ 실기기 `POST 200` 누적 5건 + `toss_orders` 영속(`order_count=5`, `latest_order_at=2026-02-28 22:31:22 KST`) / 잔여: 앱 UI 3시나리오 증적 |
+| send-smart-message | ⚠️ Mock mTLS (v9) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403) + 429(`QUIET_HOURS`) 확인 / 신청·승인 완료 후 Sandbox 실발송 검증 |
 | grant-toss-points | ⚠️ Mock mTLS (v9) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403), happy-path 미검증 |
 | generate-report | ✅ v3 (mock/real switch) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403, v3), ⚠️ OpenAI 실키/실모드 미검증 |
 
-기준: 2026-02-28 21:17 KST (Supabase MCP Edge Logs + DB 집계)
+기준: 2026-02-28 22:31 KST (Supabase MCP Edge Logs + DB 집계)
 
 ---
 

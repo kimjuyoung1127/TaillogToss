@@ -22,10 +22,11 @@ function createClientNonce(): string {
   return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function normalizeReferrer(referrer?: TossLoginReferrer): string | undefined {
+function normalizeReferrer(referrer?: TossLoginReferrer): 'DEFAULT' | 'SANDBOX' {
   const raw = referrer?.trim();
-  if (!raw) return undefined;
-  return raw;
+  if (!raw) return 'DEFAULT';
+  if (raw.toUpperCase() === 'SANDBOX') return 'SANDBOX';
+  return 'DEFAULT';
 }
 
 /** Toss 로그인 (Edge Function 호출) */
