@@ -86,6 +86,7 @@ async def generate_coaching(
             )
             result = await openai_client.generate(
                 prompts.SYSTEM_PROMPT_6BLOCK, user_prompt,
+                model=settings.AI_COACHING_MODEL,
             )
 
             parsed = _parse_ai_response(result["content"])

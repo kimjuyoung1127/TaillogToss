@@ -35,6 +35,8 @@ class OpenAIClient:
         self,
         system_prompt: str,
         user_prompt: str,
+        *,
+        model: str | None = None,
     ) -> dict:
         """OpenAI 호출 → 비용 정보 포함 결과 반환
 
@@ -48,7 +50,7 @@ class OpenAIClient:
             "Content-Type": "application/json",
         }
         payload = {
-            "model": self.model,
+            "model": model or self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt[:settings.AI_MAX_INPUT_TOKENS]},

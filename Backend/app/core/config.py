@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # OpenAI (AI Coaching)
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
+    AI_COACHING_MODEL: str = "gpt-4o-mini"  # 코칭 전용 모델 (환경변수로 교체 가능)
 
     # AI Cost Control
     AI_DAILY_BUDGET_USD: float = 5.0
