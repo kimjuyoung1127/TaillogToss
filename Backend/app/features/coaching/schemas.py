@@ -111,6 +111,29 @@ class AIAnalysisResponse(BaseModel):
     cost_usd: float = 0.0
 
 
+# 액션 추적
+
+class ActionToggleRequest(BaseModel):
+    is_completed: bool
+
+
+class ActionTrackerResponse(BaseModel):
+    id: UUID
+    coaching_id: UUID
+    action_item_id: str
+    is_completed: bool
+    completed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# 일일 사용량
+
+class DailyUsageResponse(BaseModel):
+    used: int = 0
+    limit: int = 3
+
+
 # 비용 상태
 
 class CostStatusResponse(BaseModel):

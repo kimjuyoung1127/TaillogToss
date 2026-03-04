@@ -65,9 +65,17 @@ async def check_user_burst_limit(db: AsyncSession, user_id: str) -> bool:
     return count < settings.AI_USER_BURST_LIMIT
 
 
-async def check_user_daily_limit(db: AsyncSession, user_id: str) -> bool:
-    """사용자 일일 제한 확인"""
+async def check_user_daily_limit(db: AsyncSession, user_id: str) -> tuple[bool, int, int]:
+    """사용자 일일 제한 확인 — 구독 차등 적용.
+    Returns: (is_allowed, used_count, daily_limit)
+    FREE: 3회/일 (토큰팩 잔여 시 추가 가능)
+    PRO: 10회/일 (서버 비용 보호)
+    """
+    from app.shared.models import Subscription
+
     today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+
+    # 사용량 조회
     daily_q = (
         select(func.count())
         .select_from(AIRecommendationSnapshot)
@@ -78,7 +86,24 @@ async def check_user_daily_limit(db: AsyncSession, user_id: str) -> bool:
     )
     result = await db.execute(daily_q)
     count = result.scalar() or 0
-    return count < settings.AI_USER_DAILY_LIMIT
+
+    # 구독 상태 조회 → 제한 분기
+    sub_q = select(Subscription).where(Subscription.user_id == user_id)
+    sub_result = await db.execute(sub_q)
+    sub = sub_result.scalar_one_or_none()
+
+    is_pro = sub and sub.plan_type.value == "PRO_MONTHLY" and sub.is_active
+    has_tokens = sub and (sub.ai_tokens_remaining or 0) > 0
+
+    if is_pro:
+        daily_limit = 10
+    elif has_tokens:
+        # FREE + 토큰팩 보유: 기본 3 + 토큰 잔여 허용
+        daily_limit = 3 + min((sub.ai_tokens_remaining or 0), 7)
+    else:
+        daily_limit = 3
+
+    return count < daily_limit, count, daily_limit
 
 
 async def record_cost(

@@ -165,6 +165,47 @@ async def submit_feedback(
     return schemas.FeedbackResponse(coaching_id=coaching_id, feedback_score=score)
 
 
+async def toggle_action_item(
+    db: AsyncSession,
+    coaching_id: UUID,
+    action_item_id: str,
+    is_completed: bool,
+) -> schemas.ActionTrackerResponse:
+    """액션 아이템 완료 토글 (upsert)"""
+    from app.shared.models import ActionTracker
+
+    q = select(ActionTracker).where(
+        ActionTracker.coaching_id == coaching_id,
+        ActionTracker.action_item_id == action_item_id,
+    )
+    result = (await db.execute(q)).scalars().first()
+
+    now = datetime.now(timezone.utc)
+
+    if result:
+        result.is_completed = is_completed
+        result.completed_at = now if is_completed else None
+    else:
+        result = ActionTracker(
+            coaching_id=coaching_id,
+            action_item_id=action_item_id,
+            is_completed=is_completed,
+            completed_at=now if is_completed else None,
+        )
+        db.add(result)
+
+    await db.commit()
+    await db.refresh(result)
+
+    return schemas.ActionTrackerResponse(
+        id=result.id,
+        coaching_id=result.coaching_id,
+        action_item_id=result.action_item_id,
+        is_completed=result.is_completed,
+        completed_at=result.completed_at,
+    )
+
+
 async def get_cost_status(db: AsyncSession) -> schemas.CostStatusResponse:
     """AI 비용 현황"""
     from app.shared.models import AICostUsageDaily, AICostUsageMonthly
