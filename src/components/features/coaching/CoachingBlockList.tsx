@@ -20,11 +20,12 @@ interface CoachingBlockListProps {
   blocks: CoachingBlocks;
   isPro: boolean;
   onToggleActionItem?: (itemId: string) => void;
+  onNavigateToTraining?: () => void;
   dogName?: string;
   dogImageUrl?: string | null;
 }
 
-export function CoachingBlockList({ blocks, isPro, onToggleActionItem, dogName, dogImageUrl }: CoachingBlockListProps) {
+export function CoachingBlockList({ blocks, isPro, onToggleActionItem, onNavigateToTraining, dogName, dogImageUrl }: CoachingBlockListProps) {
   const [adUnlocked, setAdUnlocked] = useState(false);
   const isUnlocked = isPro || adUnlocked;
 
@@ -38,7 +39,7 @@ export function CoachingBlockList({ blocks, isPro, onToggleActionItem, dogName, 
       <InsightBlockView data={blocks.insight} />
 
       {/* Block ② 실행 계획 (무료) */}
-      <ActionPlanBlockView data={blocks.action_plan} onToggleItem={onToggleActionItem} />
+      <ActionPlanBlockView data={blocks.action_plan} onToggleItem={onToggleActionItem} onNavigateToTraining={onNavigateToTraining} />
 
       {/* Block ③ 강아지 시점 메시지 (무료) */}
       <DogVoiceBlockView data={blocks.dog_voice} dogName={dogName} dogImageUrl={dogImageUrl} />

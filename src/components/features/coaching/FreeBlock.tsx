@@ -137,9 +137,11 @@ function CheckboxItem({
 export function ActionPlanBlockView({
   data,
   onToggleItem,
+  onNavigateToTraining,
 }: {
   data: ActionPlanBlock;
   onToggleItem?: (itemId: string) => void;
+  onNavigateToTraining?: () => void;
 }) {
   const completedCount = data.items.filter((i) => i.is_completed).length;
   const totalCount = data.items.length;
@@ -177,6 +179,17 @@ export function ActionPlanBlockView({
           onToggle={() => onToggleItem?.(item.id)}
         />
       ))}
+
+      {/* 관련 훈련 시작 버튼 */}
+      {onNavigateToTraining && (
+        <TouchableOpacity
+          style={styles.trainingLink}
+          onPress={onNavigateToTraining}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.trainingLinkText}>🎯 관련 훈련 시작하기</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -405,5 +418,18 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontWeight: '500',
+  },
+  // Training link
+  trainingLink: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  trainingLinkText: {
+    ...typography.bodySmall,
+    color: colors.primaryBlue,
+    fontWeight: '600',
   },
 });

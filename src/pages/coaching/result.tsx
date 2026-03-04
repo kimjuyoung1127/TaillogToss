@@ -245,6 +245,7 @@ function CoachingResultPage() {
           isPro={isPro ?? false}
           activeDog={activeDog}
           onToggleActionItem={handleToggleActionItem}
+          onNavigateToTraining={handleNavigateToAcademy}
           onNavigateToAnalysis={handleNavigateToAnalysis}
           onStarPress={handleStarPress}
           selectedScore={selectedScore}
@@ -267,6 +268,7 @@ interface CoachingDetailContentProps {
   isPro: boolean;
   activeDog: { id: string; name: string; profile_image_url?: string | null } | null;
   onToggleActionItem: (itemId: string) => void;
+  onNavigateToTraining: () => void;
   onNavigateToAnalysis: () => void;
   onStarPress: (score: 1 | 2 | 3 | 4 | 5) => void;
   selectedScore: number;
@@ -281,6 +283,7 @@ function CoachingDetailContent({
   isPro,
   activeDog,
   onToggleActionItem,
+  onNavigateToTraining,
   onNavigateToAnalysis,
   onStarPress,
   selectedScore,
@@ -319,6 +322,7 @@ function CoachingDetailContent({
         blocks={coaching.blocks}
         isPro={isPro}
         onToggleActionItem={onToggleActionItem}
+        onNavigateToTraining={onNavigateToTraining}
         dogName={activeDog?.name}
         dogImageUrl={activeDog?.profile_image_url}
       />

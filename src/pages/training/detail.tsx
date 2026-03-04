@@ -218,6 +218,11 @@ function TrainingDetailPage() {
     navigation.navigate('/training/academy');
   }, [navigation]);
 
+  const handleCelebrationToCoaching = useCallback(() => {
+    setShowCelebration(false);
+    navigation.navigate('/coaching/result');
+  }, [navigation]);
+
   if (!isReady) return null;
 
   if (!curriculum) {
@@ -397,6 +402,13 @@ function TrainingDetailPage() {
             >
               <Text style={styles.celebrationButtonText}>아카데미로 돌아가기</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.coachingCTA}
+              onPress={handleCelebrationToCoaching}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.coachingCTAText}>새로운 AI 코칭 받아보기</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -552,5 +564,14 @@ const styles = StyleSheet.create({
     ...typography.label,
     fontWeight: '600',
     color: colors.white,
+  },
+  coachingCTA: {
+    marginTop: spacing.md,
+    paddingVertical: 10,
+  },
+  coachingCTAText: {
+    ...typography.bodySmall,
+    color: colors.primaryBlue,
+    fontWeight: '500',
   },
 });
