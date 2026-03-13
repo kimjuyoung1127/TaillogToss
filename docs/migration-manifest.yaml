@@ -1,0 +1,40 @@
+# Migration manifest for TailLog Toss React Native transition.
+version: 1
+default_repo_mode:
+  write_repo: "TaillogToss"
+  read_repo: "DogCoach"
+required_docs:
+  - "CLAUDE.md"
+  - "docs/ref/10-MIGRATION-OPERATING-MODEL.md"
+  - "docs/status/11-FEATURE-PARITY-MATRIX.md"
+  - "docs/ref/12-MIGRATION-WAVES-AND-GATES.md"
+status_enum:
+  - "Not Started"
+  - "In Progress"
+  - "Blocked"
+  - "Done"
+  - "Deferred"
+waves:
+  - id: "W0"
+    name: "Foundation"
+    parity:
+      - "APP-001"
+      - "AUTH-001"
+  - id: "W1"
+    name: "Core B2C"
+    parity:
+      - "UI-001"
+      - "LOG-001"
+      - "AI-001"
+  - id: "W2"
+    name: "Toss Core Features"
+    parity:
+      - "IAP-001"
+      - "MSG-001"
+  - id: "W3"
+    name: "B2B Expansion"
+    parity:
+      - "B2B-001"
+  - id: "W4"
+    name: "Release Readiness"
+    parity: []

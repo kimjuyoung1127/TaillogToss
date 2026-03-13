@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+dist/
+
+# Granite
+.granite
+.swc
+public/
+
+# Debug
+npm-debug.log
+yarn-error.log
+
+# Yarn
+.yarn/*
+.pnp.*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (Backend)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# mTLS Certificates
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+public/mTLS_*/
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# MCP
+.mcp.json
