@@ -1,11 +1,11 @@
 /**
  * AI 코칭 결과 화면 — 최신/기록 탭 + 6블록 인터랙티브 + 생성 파이프라인
  * DetailLayout (패턴B) — BackButton + "AI 행동 진단"
- * Parity: AI-001
+ * Parity: AI-001, UIUX-005
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { colors, typography, spacing } from 'styles/tokens';
 import { DetailLayout } from 'components/shared/layouts/DetailLayout';
 import { CoachingBlockList } from 'components/features/coaching/CoachingBlockList';
@@ -22,6 +22,7 @@ import {
   useDailyUsage,
 } from 'lib/hooks/useCoaching';
 import { parseCoachingError } from 'lib/api/coaching';
+import { buildCoachingShareText } from 'lib/charts/filters';
 import { useIsPro } from 'lib/hooks/useSubscription';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { tracker } from 'lib/analytics/tracker';
@@ -34,6 +35,18 @@ export const Route = createRoute('/coaching/result', {
 });
 
 type TabKey = 'latest' | 'history';
+
+const TREND_LABEL: Record<string, string> = {
+  improving: '개선 중',
+  stable: '유지 중',
+  worsening: '주의 필요',
+};
+
+const TREND_ICON: Record<string, string> = {
+  improving: '📈',
+  stable: '➡️',
+  worsening: '📉',
+};
 
 function CoachingResultPage() {
   const { user } = useAuth();
@@ -50,6 +63,7 @@ function CoachingResultPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('latest');
   const [selectedHistoryCoaching, setSelectedHistoryCoaching] = useState<CoachingResult | null>(null);
   const [selectedScore, setSelectedScore] = useState<number>(0);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const trackedRequestRef = useRef(false);
   const trackedCoachingIdRef = useRef<string | null>(null);
@@ -58,6 +72,12 @@ function CoachingResultPage() {
   const displayCoaching = activeTab === 'history' && selectedHistoryCoaching
     ? selectedHistoryCoaching
     : coaching;
+
+  // 코칭이 바뀌면 피드백 상태 리셋
+  useEffect(() => {
+    setSelectedScore(0);
+    setFeedbackSubmitted(false);
+  }, [displayCoaching?.id]);
 
   useEffect(() => {
     if (isReady && !trackedRequestRef.current) {
@@ -116,8 +136,11 @@ function CoachingResultPage() {
     navigation.navigate('/dashboard/analysis');
   }, [navigation]);
 
+  const handleNavigateToSubscription = useCallback(() => {
+    navigation.navigate('/settings/subscription');
+  }, [navigation]);
+
   const handleBack = useCallback(() => {
-    // 히스토리 상세 보기 중이면 리스트로 돌아감
     if (selectedHistoryCoaching) {
       setSelectedHistoryCoaching(null);
       return;
@@ -129,10 +152,26 @@ function CoachingResultPage() {
     (score: 1 | 2 | 3 | 4 | 5) => {
       if (!displayCoaching) return;
       setSelectedScore(score);
+      setFeedbackSubmitted(true);
+      tracker.coachingFeedbackSubmitted(score);
       submitFeedback.mutate({ coachingId: displayCoaching.id, score });
     },
     [displayCoaching, submitFeedback],
   );
+
+  const handleShare = useCallback(() => {
+    if (!displayCoaching) return;
+    const message = buildCoachingShareText({
+      dogName: activeDog?.name ?? '우리 강아지',
+      trend: displayCoaching.blocks.insight.trend,
+      reportType: displayCoaching.report_type,
+      keyPatterns: displayCoaching.blocks.insight.key_patterns,
+      completedCount: displayCoaching.blocks.action_plan.items.filter((i) => i.is_completed).length,
+      totalCount: displayCoaching.blocks.action_plan.items.length,
+    });
+    tracker.coachingShared(displayCoaching.report_type);
+    void Share.share({ message });
+  }, [displayCoaching, activeDog?.name]);
 
   if (!isReady) return null;
 
@@ -165,6 +204,26 @@ function CoachingResultPage() {
     );
   }
 
+  // ── 생성 실패 상태 (코칭 데이터 없고 에러 발생) ──
+  if (!coaching && generateError) {
+    return (
+      <DetailLayout title="AI 행동 진단" onBack={handleBack}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorEmoji}>😥</Text>
+          <Text style={styles.errorTitle}>{generateError}</Text>
+          <Text style={styles.errorDesc}>잠시 후 다시 시도해 주세요</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={handleGenerate}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.retryButtonText}>다시 시도하기</Text>
+          </TouchableOpacity>
+        </View>
+      </DetailLayout>
+    );
+  }
+
   // ── 빈 상태: 코칭 생성 CTA ──
   if (!coaching) {
     const dailyLimit = isPro ? 10 : 3;
@@ -189,9 +248,16 @@ function CoachingResultPage() {
           </TouchableOpacity>
           <Text style={styles.usageText}>
             오늘 {dailyUsed}/{dailyLimit}회 사용
-            {!isPro && remaining === 0 && ' · PRO로 업그레이드하면 더 많이 받을 수 있어요'}
           </Text>
-          {generateError && <Text style={styles.errorText}>{generateError}</Text>}
+          {!isPro && remaining === 0 && (
+            <TouchableOpacity
+              style={styles.proUpgradeLink}
+              onPress={handleNavigateToSubscription}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.proUpgradeLinkText}>PRO로 업그레이드하면 하루 10회까지 가능해요</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </DetailLayout>
     );
@@ -208,26 +274,33 @@ function CoachingResultPage() {
           : undefined
       }
     >
-      {/* 탭 헤더 */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'latest' && styles.tabActive]}
-          onPress={() => { setActiveTab('latest'); setSelectedHistoryCoaching(null); }}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, activeTab === 'latest' && styles.tabTextActive]}>
-            최신
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'history' && styles.tabActive]}
-          onPress={() => setActiveTab('history')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
-            기록
-          </Text>
-        </TouchableOpacity>
+      {/* 탭 헤더 + 공유 버튼 */}
+      <View style={styles.topBar}>
+        <View style={styles.tabRow}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'latest' && styles.tabActive]}
+            onPress={() => { setActiveTab('latest'); setSelectedHistoryCoaching(null); }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'latest' && styles.tabTextActive]}>
+              최신
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'history' && styles.tabActive]}
+            onPress={() => setActiveTab('history')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>
+              기록
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {displayCoaching && (
+          <TouchableOpacity onPress={handleShare} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.shareIcon}>{'\u{1F4E4}'}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 히스토리 탭 — 리스트 또는 선택한 코칭 상세 */}
@@ -247,11 +320,14 @@ function CoachingResultPage() {
           onToggleActionItem={handleToggleActionItem}
           onNavigateToTraining={handleNavigateToAcademy}
           onNavigateToAnalysis={handleNavigateToAnalysis}
+          onNavigateToSubscription={handleNavigateToSubscription}
           onStarPress={handleStarPress}
           selectedScore={selectedScore}
+          feedbackSubmitted={feedbackSubmitted}
           isSubmittingFeedback={submitFeedback.isPending}
           onGenerate={handleGenerate}
           isGenerating={generateCoaching.isPending}
+          generateError={generateError}
           usage={usage}
         />
       )}
@@ -270,11 +346,14 @@ interface CoachingDetailContentProps {
   onToggleActionItem: (itemId: string) => void;
   onNavigateToTraining: () => void;
   onNavigateToAnalysis: () => void;
+  onNavigateToSubscription: () => void;
   onStarPress: (score: 1 | 2 | 3 | 4 | 5) => void;
   selectedScore: number;
+  feedbackSubmitted: boolean;
   isSubmittingFeedback: boolean;
   onGenerate: () => void;
   isGenerating: boolean;
+  generateError: string | null;
   usage?: { used: number; limit: number } | null;
 }
 
@@ -285,24 +364,37 @@ function CoachingDetailContent({
   onToggleActionItem,
   onNavigateToTraining,
   onNavigateToAnalysis,
+  onNavigateToSubscription,
   onStarPress,
   selectedScore,
+  feedbackSubmitted,
   isSubmittingFeedback,
   onGenerate,
   isGenerating,
+  generateError,
   usage,
 }: CoachingDetailContentProps) {
   const completedCount = coaching.blocks.action_plan.items.filter((i) => i.is_completed).length;
   const totalCount = coaching.blocks.action_plan.items.length;
+  const trend = coaching.blocks.insight.trend;
+  const existingFeedback = coaching.feedback_score;
 
   return (
     <>
-      {/* 코칭 날짜 헤더 */}
-      <View style={styles.dateHeader}>
-        <Text style={styles.dateLabel}>
-          {formatReportType(coaching.report_type)} 코칭
-        </Text>
-        <Text style={styles.dateText}>{formatDate(coaching.created_at)}</Text>
+      {/* 인사이트 요약 헤더 카드 */}
+      <View style={styles.insightSummary}>
+        <View style={styles.insightSummaryLeft}>
+          <Text style={styles.insightSummaryIcon}>{TREND_ICON[trend]}</Text>
+          <View style={styles.insightSummaryTextWrap}>
+            <Text style={styles.insightSummaryTitle} numberOfLines={1}>
+              {coaching.blocks.insight.title}
+            </Text>
+            <Text style={styles.insightSummaryTrend}>
+              {TREND_LABEL[trend]} · {formatReportType(coaching.report_type)} 코칭
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.dateTextCompact}>{formatDate(coaching.created_at)}</Text>
       </View>
 
       {/* 진행률 */}
@@ -327,6 +419,22 @@ function CoachingDetailContent({
         dogImageUrl={activeDog?.profile_image_url}
       />
 
+      {/* PRO 업그레이드 넛지 — 비PRO + 잠금 블록 아래 */}
+      {!isPro && (
+        <TouchableOpacity
+          style={styles.proNudge}
+          onPress={onNavigateToSubscription}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.proNudgeIcon}>✨</Text>
+          <View style={styles.proNudgeTextWrap}>
+            <Text style={styles.proNudgeTitle}>PRO로 전체 코칭 열기</Text>
+            <Text style={styles.proNudgeDesc}>7일 플랜, 위험 분석, 전문가 질문까지</Text>
+          </View>
+          <Text style={styles.proNudgeArrow}>›</Text>
+        </TouchableOpacity>
+      )}
+
       {/* 분석 링크 */}
       <TouchableOpacity
         style={styles.analysisLink}
@@ -337,7 +445,20 @@ function CoachingDetailContent({
       </TouchableOpacity>
 
       {/* 피드백 */}
-      {coaching.feedback_score === null && selectedScore === 0 && (
+      {existingFeedback != null ? (
+        <View style={styles.feedbackSection}>
+          <Text style={styles.feedbackDoneText}>
+            {'★'.repeat(existingFeedback)}{'☆'.repeat(5 - existingFeedback)} 평가 완료
+          </Text>
+        </View>
+      ) : feedbackSubmitted ? (
+        <View style={styles.feedbackSection}>
+          <Text style={styles.feedbackThankTitle}>피드백 감사합니다!</Text>
+          <Text style={styles.feedbackThankDesc}>
+            {'★'.repeat(selectedScore)}{'☆'.repeat(5 - selectedScore)} 더 나은 코칭을 위해 반영할게요
+          </Text>
+        </View>
+      ) : (
         <View style={styles.feedbackSection}>
           <Text style={styles.feedbackTitle}>이 코칭이 도움이 되었나요?</Text>
           <View style={styles.feedbackStars}>
@@ -365,12 +486,17 @@ function CoachingDetailContent({
           activeOpacity={0.7}
           disabled={isGenerating}
         >
-          <Text style={styles.regenerateButtonText}>새 코칭 받기</Text>
+          <Text style={styles.regenerateButtonText}>
+            {isGenerating ? '생성 중...' : '새 코칭 받기'}
+          </Text>
         </TouchableOpacity>
         {usage && (
           <Text style={styles.usageTextSmall}>
             오늘 {usage.used}/{usage.limit}회 사용
           </Text>
+        )}
+        {generateError && (
+          <Text style={styles.generateErrorText}>{generateError}</Text>
         )}
       </View>
     </>
@@ -404,6 +530,7 @@ function formatDate(iso: string): string {
 // ──────────────────────────────────────
 
 const styles = StyleSheet.create({
+  // Empty/Generate
   emptyContainer: {
     alignItems: 'center',
     paddingBottom: spacing.xxl,
@@ -430,16 +557,59 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: 'center',
   },
-  errorText: {
+  proUpgradeLink: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  proUpgradeLinkText: {
     ...typography.caption,
-    color: colors.red500,
-    marginTop: spacing.sm,
+    color: colors.primaryBlue,
+    fontWeight: '500',
     textAlign: 'center',
   },
-  // Tabs
-  tabRow: {
-    flexDirection: 'row',
+  // Error container (generation failure)
+  errorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  errorEmoji: {
+    ...typography.emoji,
     marginBottom: spacing.lg,
+  },
+  errorTitle: {
+    ...typography.body,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  errorDesc: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: colors.primaryBlue,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 10,
+  },
+  retryButtonText: {
+    ...typography.bodySmall,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  // Top bar (tabs + share)
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  tabRow: {
+    flex: 1,
+    flexDirection: 'row',
     borderRadius: 10,
     backgroundColor: colors.grey100,
     padding: 3,
@@ -467,27 +637,47 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '700',
   },
-  // Date header
-  dateHeader: {
+  shareIcon: {
+    fontSize: 20,
+  },
+  // Insight summary header
+  insightSummary: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: 14,
+    padding: spacing.lg,
     marginBottom: spacing.lg,
   },
-  dateLabel: {
-    ...typography.detail,
-    fontWeight: '600',
-    color: colors.primaryBlue,
-    backgroundColor: colors.primaryBlueLight,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    overflow: 'hidden',
+  insightSummaryLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: spacing.sm,
   },
-  dateText: {
+  insightSummaryIcon: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  insightSummaryTextWrap: {
+    flex: 1,
+  },
+  insightSummaryTitle: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  insightSummaryTrend: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  dateTextCompact: {
     ...typography.caption,
     color: colors.textSecondary,
   },
+  // Progress
   progressSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -512,6 +702,39 @@ const styles = StyleSheet.create({
     minWidth: 55,
     textAlign: 'right',
   },
+  // PRO nudge
+  proNudge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.blue50,
+    borderRadius: 14,
+    padding: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  proNudgeIcon: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  proNudgeTextWrap: {
+    flex: 1,
+  },
+  proNudgeTitle: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: colors.primaryBlue,
+  },
+  proNudgeDesc: {
+    ...typography.caption,
+    color: colors.grey600,
+    marginTop: 2,
+  },
+  proNudgeArrow: {
+    ...typography.sectionTitle,
+    color: colors.primaryBlue,
+    marginLeft: spacing.sm,
+  },
+  // Analysis link
   analysisLink: {
     alignItems: 'center',
     paddingVertical: spacing.lg,
@@ -522,6 +745,7 @@ const styles = StyleSheet.create({
     color: colors.primaryBlue,
     fontWeight: '500',
   },
+  // Feedback
   feedbackSection: {
     alignItems: 'center',
     paddingVertical: spacing.xxl,
@@ -546,6 +770,22 @@ const styles = StyleSheet.create({
   starSelected: {
     color: colors.orange500,
   },
+  feedbackThankTitle: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: colors.green500,
+    marginBottom: spacing.xs,
+  },
+  feedbackThankDesc: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  feedbackDoneText: {
+    ...typography.caption,
+    color: colors.orange500,
+    fontWeight: '500',
+  },
+  // Regenerate
   regenerateSection: {
     alignItems: 'center',
     paddingVertical: spacing.lg,
@@ -568,5 +808,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  generateErrorText: {
+    ...typography.caption,
+    color: colors.red500,
+    marginTop: spacing.sm,
+    textAlign: 'center',
   },
 });

@@ -2,7 +2,7 @@
  * Survey Mapper — 7단계 설문 데이터를 Supabase dog_env JSONB 스키마로 변환
  * Parity: UIUX-004
  */
-import type { SurveyData, DogEnv, HouseholdInfo, HealthMeta, ActivityMeta } from 'types/dog';
+import type { SurveyData, DogEnv } from 'types/dog';
 
 /**
  * 설문 데이터를 DogEnv insert를 위한 부분 데이터로 변환

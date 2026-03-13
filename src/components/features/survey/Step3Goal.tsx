@@ -62,7 +62,7 @@ interface Props {
   onChange: (step5: SurveyStep5, step6: SurveyStep6, step7: SurveyStep7) => void;
 }
 
-export function Step3Goal({ step5, step6, step7, availableBehaviors, onChange }: Props) {
+export function Step3Goal({ step5, step6, step7, availableBehaviors: _availableBehaviors, onChange }: Props) {
   const [customCommand, setCustomCommand] = useState('');
 
   const update7 = (partial: Partial<SurveyStep7>) => {

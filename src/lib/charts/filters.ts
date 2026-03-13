@@ -163,3 +163,47 @@ export function buildAnalysisShareText(params: {
 
   return lines.join('\n');
 }
+
+/** 코칭 결과 공유 텍스트 빌더 */
+export function buildCoachingShareText(params: {
+  dogName: string;
+  trend: string;
+  reportType: string;
+  keyPatterns: string[];
+  completedCount: number;
+  totalCount: number;
+}): string {
+  const TREND_LABELS: Record<string, string> = {
+    improving: '개선 중',
+    stable: '유지 중',
+    worsening: '주의 필요',
+  };
+  const REPORT_LABELS: Record<string, string> = {
+    DAILY: '일간',
+    WEEKLY: '주간',
+    INSIGHT: '인사이트',
+  };
+
+  const trendLabel = TREND_LABELS[params.trend] ?? params.trend;
+  const reportLabel = REPORT_LABELS[params.reportType] ?? params.reportType;
+  const patterns = params.keyPatterns.slice(0, 2).join(', ');
+
+  const lines = [
+    `🐾 ${params.dogName}의 AI 행동 진단 결과`,
+    '',
+    `📊 행동 트렌드: ${trendLabel} (${reportLabel} 코칭)`,
+  ];
+
+  if (patterns) {
+    lines.push(`🔍 주요 패턴: ${patterns}`);
+  }
+
+  if (params.totalCount > 0) {
+    lines.push(`✅ 실행 계획: ${params.completedCount}/${params.totalCount} 완료`);
+  }
+
+  lines.push('');
+  lines.push('꼬리일기에서 AI 코칭을 받아보세요!');
+
+  return lines.join('\n');
+}

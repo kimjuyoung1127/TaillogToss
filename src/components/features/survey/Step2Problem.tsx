@@ -3,7 +3,7 @@
  * 기타 주관식 입력 필드 및 심각도 UI 조건부 렌더링
  * Parity: UIUX-004 고도화
  */
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';

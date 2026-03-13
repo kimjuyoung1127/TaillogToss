@@ -18,6 +18,8 @@ export interface EventPayloadMap {
   report_sent: { method: 'toss' | 'link' };
   parent_reaction: { type: string };
   analysis_shared: { period: string; log_count: number };
+  coaching_shared: { report_type: string };
+  coaching_feedback_submitted: { score: number };
 }
 
 export type EventName = keyof EventPayloadMap;
@@ -55,4 +57,8 @@ export const tracker = {
   parentReaction: (type: string) => track('parent_reaction', { type }),
   analysisShared: (period: string, logCount: number) =>
     track('analysis_shared', { period, log_count: logCount }),
+  coachingShared: (reportType: string) =>
+    track('coaching_shared', { report_type: reportType }),
+  coachingFeedbackSubmitted: (score: number) =>
+    track('coaching_feedback_submitted', { score }),
 };

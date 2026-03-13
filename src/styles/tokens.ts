@@ -61,6 +61,10 @@ export const colors = {
   primaryBlue: '#4E8AFF',
   primaryBlueLight: '#4E8AFF20',
   placeholder: '#B0B8C1',
+  // Aliases (survey 컴포넌트 호환)
+  primary: '#4E8AFF',
+  backgroundSecondary: '#F8F9FA',
+  borderLight: '#E5E8EB',
 
   // Badge semantic colors (행동 유형 뱃지 / 위험도 전용)
   badgeAmber: '#D97706',

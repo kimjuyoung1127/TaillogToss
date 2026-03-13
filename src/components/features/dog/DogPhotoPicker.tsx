@@ -14,7 +14,7 @@ interface Props {
   onSelect: (uri: string) => void;
 }
 
-export function DogPhotoPicker({ uri, onSelect }: Props) {
+export function DogPhotoPicker({ uri, onSelect: _onSelect }: Props) {
   const handlePress = async () => {
     try {
       // 실제 구현 시 Granite Native Bridge 호출

@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { colors, typography } from 'styles/tokens';
+import { colors } from 'styles/tokens';
 import { LottieAnimation } from '../../shared/LottieAnimation';
 
 interface Props {

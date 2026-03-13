@@ -19,7 +19,6 @@ import {
 } from 'react-native';
 import { Accordion } from 'components/tds-ext/Accordion';
 import { ErrorState } from 'components/tds-ext/ErrorState';
-import { DogAvatar } from 'components/features/dog/DogAvatar';
 import { DogPhotoPicker } from 'components/features/dog/DogPhotoPicker';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useAuth } from 'stores/AuthContext';

@@ -3,7 +3,7 @@
  * 믹스견 등 자유 입력 지원, 포커스 제어
  */
 import React, { useState, useMemo, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { colors, typography } from 'styles/tokens';
 import { ChipGroup } from 'components/tds-ext';
 import { DogPhotoPicker } from 'components/features/dog/DogPhotoPicker';

@@ -65,9 +65,15 @@ function DogAddPage() {
       step5_history: { past_attempts: [], professional_help: false },
       step6_goals: { goals: [], priority_behavior: 'other' },
       step7_preferences: {
-        ai_tone: 'empathetic',
-        ai_perspective: 'coach',
+        energy_score: 3,
+        social_score: 3,
+        mastered_commands: [],
+        rewards: { treats: 3, play: 3, praise: 3 },
         notification_consent: true,
+      },
+      step8_health_context: {
+        health: { has_pain: false, has_allergy: false, is_overweight: false, notes: '' },
+        environment_stress: { noise_sensitivity: 3, visitor_frequency: 'sometimes', walk_environment: 'normal' },
       },
     };
 
