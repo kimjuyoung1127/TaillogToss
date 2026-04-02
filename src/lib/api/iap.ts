@@ -5,6 +5,7 @@
  * Parity: IAP-001, B2B-001
  */
 import { getSupabasePublicConfig, supabase } from './supabase';
+import { tracker } from '../analytics/tracker';
 
 // ──────────────────────────────────────
 // 공식 SDK 인터페이스 미러
@@ -135,8 +136,9 @@ export function createOneTimePurchaseOrder({
     try {
       onEvent?.('PURCHASE_STARTED');
 
-      // 실 SDK에서는 토스 결제 UI가 뜨고 receipt을 반환
-      // Mock: orderId/transactionId 생성
+      // TODO(IAP-001): 실 SDK(@apps-in-toss/framework)로 교체 시
+      //   createOneTimePurchaseOrder()가 실제 receipt을 반환.
+      //   현재는 mock receipt으로 Edge Function 검증 플로우만 테스트.
       const receipt: IAPReceipt = {
         orderId: `order_${Date.now().toString(36)}`,
         productId: options.sku,
@@ -150,6 +152,9 @@ export function createOneTimePurchaseOrder({
       const granted = await processProductGrant(receipt);
 
       if (cancelled) return;
+      if (granted) {
+        tracker.iapPurchaseSuccess(options.sku);
+      }
       onEvent?.(granted ? 'GRANT_COMPLETED' : 'GRANT_FAILED');
     } catch (err) {
       if (!cancelled) {
@@ -302,13 +307,19 @@ export async function getPendingOrders(userId: string): Promise<PendingOrder[]> 
 /**
  * completeProductGrant — 미완료 주문 지급 완료
  * 실 SDK: @apps-in-toss/framework의 completeProductGrant()
+ * TODO(IAP-001): 실 SDK 교체 시 receipt 검증 로직이 SDK 내부로 이동.
+ *   현재는 mock receipt → Edge Function verifyAndGrant로 우회.
  */
 export async function completeProductGrant(order: PendingOrder): Promise<boolean> {
-  return verifyAndGrant({
+  const granted = await verifyAndGrant({
     orderId: order.orderId,
     productId: order.productId,
     transactionId: order.transactionId,
   });
+  if (granted) {
+    tracker.iapPurchaseSuccess(order.productId);
+  }
+  return granted;
 }
 
 /**

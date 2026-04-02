@@ -37,13 +37,15 @@ __pycache__/
 .venv/
 venv/
 
-# mTLS Certificates
+# mTLS Certificates & Security
 *.pem
 *.crt
 *.key
 *.p12
 *.pfx
 public/mTLS_*/
+src/public/
+securityMail*
 
 # IDE
 .vscode/settings.json

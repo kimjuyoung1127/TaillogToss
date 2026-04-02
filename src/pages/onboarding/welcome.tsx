@@ -8,7 +8,9 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { colors, typography } from 'styles/tokens';
 import { LottieAnimation } from 'components/shared/LottieAnimation';
+import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { tracker } from 'lib/analytics/tracker';
 
 export const Route = createRoute('/onboarding/welcome', {
   component: WelcomePage,
@@ -22,10 +24,28 @@ function WelcomePage() {
   });
 
   const handleStart = () => {
+    tracker.onboardingStarted();
     navigation.navigate('/onboarding/survey');
   };
 
-  if (!isReady) return null;
+  if (!isReady) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.container}>
+          <View style={styles.heroSection}>
+            <SkeletonBox width={120} height={120} borderRadius={60} />
+            <SkeletonBox width={200} height={28} style={{ marginTop: 32 }} />
+            <SkeletonBox width={160} height={20} style={{ marginTop: 12 }} />
+            <View style={[styles.features, { marginTop: 36 }]}>
+              {[1, 2, 3].map((i) => (
+                <SkeletonBox key={i} width="30%" height={100} borderRadius={16} />
+              ))}
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -86,7 +106,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F0F4FF',
+    backgroundColor: colors.blue50,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 32,

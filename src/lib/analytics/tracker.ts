@@ -1,4 +1,5 @@
 export interface EventPayloadMap {
+  onboarding_started: undefined;
   onboarding_complete: undefined;
   behavior_log_created: { mode: 'quick' | 'detailed' };
   ai_coach_requested: undefined;
@@ -30,6 +31,7 @@ function track<K extends EventName>(event: K, payload: EventPayloadMap[K]): void
 
 export const tracker = {
   track,
+  onboardingStarted: () => track('onboarding_started', undefined),
   onboardingComplete: () => track('onboarding_complete', undefined),
   behaviorLogCreated: (mode: 'quick' | 'detailed') =>
     track('behavior_log_created', { mode }),

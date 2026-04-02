@@ -18,6 +18,7 @@ import { useAuth } from 'stores/AuthContext';
 import { isB2BRole } from 'stores/OrgContext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { ErrorState } from 'components/tds-ext';
+import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
 import { useCurrentSubscription, useIsPro, usePurchaseIAP, useRestoreSubscription } from 'lib/hooks/useSubscription';
 import { IAP_PRODUCTS, DOG_LIMITS } from 'types/subscription';
 import { B2B_IAP_PRODUCTS } from 'types/b2b';
@@ -129,7 +130,7 @@ function SubscriptionPage() {
               AI 토큰 잔여: {subscription.ai_tokens_remaining}회
             </Text>
           )}
-          {isLoading && <Text style={styles.loadingText}>구독 정보 확인 중...</Text>}
+          {isLoading && <SkeletonBox width={140} height={14} style={{ marginTop: 8 }} />}
         </View>
 
         {/* PRO 플랜 카드 */}
@@ -283,14 +284,13 @@ const styles = StyleSheet.create({
   badgeFree: { backgroundColor: colors.border },
   badgeText: { ...typography.caption, fontWeight: '700' },
   badgeTextPro: { color: colors.white },
-  badgeTextFree: { color: '#6B7280' },
-  billingDate: { ...typography.caption, color: '#6B7280', marginTop: 8 },
+  badgeTextFree: { color: colors.grey600 },
+  billingDate: { ...typography.caption, color: colors.grey600, marginTop: 8 },
   tokenInfo: { ...typography.caption, color: colors.primaryBlue, marginTop: 8 },
-  loadingText: { ...typography.caption, color: '#9CA3AF', marginTop: 8 },
 
   /* PRO 플랜 카드 */
   planCard: {
-    backgroundColor: '#F0F4FF',
+    backgroundColor: colors.blue50,
     borderRadius: 16,
     padding: 24,
     marginBottom: 28,
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   planHeader: { marginBottom: 16 },
   planTitle: { ...typography.subtitle, fontWeight: '700', color: colors.primaryBlue },
   planPrice: { ...typography.heroTitle, fontWeight: '800', color: colors.textPrimary, marginTop: 4 },
-  planPeriod: { ...typography.detail, fontWeight: '400', color: '#6B7280' },
+  planPeriod: { ...typography.detail, fontWeight: '400', color: colors.grey600 },
   featureList: { marginBottom: 20 },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   featureIcon: { ...typography.label, marginRight: 10 },
@@ -333,10 +333,10 @@ const styles = StyleSheet.create({
   bestValueText: { ...typography.badge, fontWeight: '700', color: colors.white },
   tokenAmount: { ...typography.sectionTitle, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
   tokenPrice: { ...typography.label, fontWeight: '600', color: colors.textDark },
-  tokenUnit: { fontSize: 12, color: '#9CA3AF', marginTop: 2, marginBottom: 12 },
+  tokenUnit: { ...typography.badge, color: colors.grey400, marginTop: 2, marginBottom: 12 },
   tokenButton: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.grey300,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 24,
@@ -369,13 +369,13 @@ const styles = StyleSheet.create({
   },
   compareCell: { paddingHorizontal: 12, ...typography.caption },
   compareLabelCell: { flex: 2, fontWeight: '600', color: colors.textDark },
-  compareValueCell: { flex: 2, color: '#6B7280', textAlign: 'center' },
+  compareValueCell: { flex: 2, color: colors.grey600, textAlign: 'center' },
   compareProCell: { color: colors.primaryBlue, fontWeight: '600' },
   compareProValue: { color: colors.primaryBlue },
 
   /* 복원 */
   restoreButton: { alignItems: 'center', paddingVertical: 12 },
-  restoreText: { ...typography.detail, color: '#9CA3AF', textDecorationLine: 'underline' },
+  restoreText: { ...typography.detail, color: colors.grey400, textDecorationLine: 'underline' },
 
   /* B2B */
   b2bGrid: { gap: 12, marginBottom: 28 },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   b2bName: { ...typography.label, fontWeight: '700', color: colors.green700, marginBottom: 4 },
   b2bPrice: { ...typography.sectionTitle, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
-  b2bDesc: { ...typography.caption, color: '#6B7280', marginBottom: 12 },
+  b2bDesc: { ...typography.caption, color: colors.grey600, marginBottom: 12 },
 
   /* 공통 */
   buttonDisabled: { opacity: 0.5 },

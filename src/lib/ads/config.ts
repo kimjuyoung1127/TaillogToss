@@ -18,31 +18,57 @@ export function getAdGroupId(placement: AdPlacement): string {
 }
 
 /**
- * 토스 Ads SDK 2.0 ver2 공식 인터페이스
- * loadFullScreenAd({ adGroupId }) → showFullScreenAd() → destroy()
+ * 토스 Ads SDK 2.0 ver2 공식 인터페이스 — 이벤트 콜백 패턴
+ * loadFullScreenAd({ adGroupId, onLoaded, onError })
+ * → showFullScreenAd({ onRewarded, onClosed, onError })
+ * → destroy()
  */
+export interface AdLoadCallbacks {
+  onLoaded: () => void;
+  onError: (error: Error) => void;
+}
+
+export interface AdShowCallbacks {
+  onRewarded: () => void;
+  onClosed: () => void;
+  onError: (error: Error) => void;
+}
+
 export interface TossAdsSdk {
-  loadFullScreenAd(options: { adGroupId: string }): Promise<void>;
-  showFullScreenAd(): Promise<{ rewarded: boolean }>;
+  loadFullScreenAd(options: { adGroupId: string } & AdLoadCallbacks): void;
+  showFullScreenAd(callbacks: AdShowCallbacks): void;
   isAdLoaded(): boolean;
   destroy(): void;
 }
 
-/** Mock SDK — 1초 후 보상 지급 시뮬레이션 */
+/** Mock SDK — 콜백 패턴으로 보상 지급 시뮬레이션 */
 export function createMockAdsSdk(): TossAdsSdk {
   let loaded = false;
 
   return {
-    async loadFullScreenAd(options: { adGroupId: string }) {
-      void options;
-      await delay(300);
-      loaded = true;
+    loadFullScreenAd({ onLoaded, onError }) {
+      setTimeout(() => {
+        try {
+          loaded = true;
+          onLoaded();
+        } catch (err) {
+          onError(err instanceof Error ? err : new Error(String(err)));
+        }
+      }, 300);
     },
-    async showFullScreenAd() {
-      if (!loaded) throw new Error('Ad not loaded');
+    showFullScreenAd({ onRewarded, onError }) {
+      if (!loaded) {
+        onError(new Error('Ad not loaded'));
+        return;
+      }
       loaded = false;
-      await delay(700);
-      return { rewarded: true };
+      setTimeout(() => {
+        try {
+          onRewarded();
+        } catch (err) {
+          onError(err instanceof Error ? err : new Error(String(err)));
+        }
+      }, 700);
     },
     isAdLoaded() {
       return loaded;
@@ -51,10 +77,6 @@ export function createMockAdsSdk(): TossAdsSdk {
       loaded = false;
     },
   };
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
 }
 
 /**

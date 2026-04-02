@@ -15,7 +15,10 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useAuth } from 'stores/AuthContext';
 import { useActiveDog } from 'stores/ActiveDogContext';
@@ -93,9 +96,36 @@ function DogAddPage() {
     );
   }, [user?.id, name, breed, sex, dogs, createDog, setDogs, navigation]);
 
-  if (!isReady) return null;
+  if (!isReady) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.navbar}>
+          <View style={styles.backButton} />
+          <SkeletonBox width={100} height={20} />
+          <View style={styles.backButton} />
+        </View>
+        <View style={styles.scrollContent}>
+          <View style={{ alignItems: 'center', marginBottom: 32 }}>
+            <SkeletonBox width={80} height={80} borderRadius={40} />
+          </View>
+          <SkeletonBox width={60} height={14} style={{ marginBottom: 6 }} />
+          <SkeletonBox width="100%" height={44} borderRadius={10} style={{ marginBottom: 20 }} />
+          <SkeletonBox width={60} height={14} style={{ marginBottom: 6 }} />
+          <SkeletonBox width="100%" height={44} borderRadius={10} style={{ marginBottom: 20 }} />
+          <SkeletonBox width={60} height={14} style={{ marginBottom: 6 }} />
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {[1, 2, 3, 4].map((i) => (
+              <SkeletonBox key={i} width={80} height={40} borderRadius={20} />
+            ))}
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
-  const canSave = name.trim().length > 0 && breed.trim().length > 0 && !createDog.isPending;
+  const breedTrimmed = breed.trim();
+  const isBreedValid = breedTrimmed.length >= 2 && breedTrimmed.length <= 30;
+  const canSave = name.trim().length > 0 && isBreedValid && !createDog.isPending;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -107,6 +137,7 @@ function DogAddPage() {
         <View style={styles.backButton} />
       </View>
 
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {/* 아바타 */}
         <View style={styles.avatarSection}>
@@ -142,7 +173,11 @@ function DogAddPage() {
             onChangeText={setBreed}
             placeholder="품종 (예: 비숑, 골든리트리버)"
             placeholderTextColor={colors.placeholder}
+            maxLength={30}
           />
+          {breedTrimmed.length > 0 && breedTrimmed.length < 2 && (
+            <Text style={styles.validationHint}>품종 이름은 2자 이상 입력해주세요</Text>
+          )}
         </View>
 
         {/* 성별 */}
@@ -163,6 +198,7 @@ function DogAddPage() {
           </View>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* 저장 버튼 */}
       <View style={styles.bottomCTA}>
@@ -254,4 +290,5 @@ const styles = StyleSheet.create({
   },
   saveDisabled: { backgroundColor: colors.placeholder },
   saveText: { ...typography.body, fontWeight: '700', color: colors.white },
+  validationHint: { ...typography.caption, color: colors.red600, marginTop: 4 },
 });

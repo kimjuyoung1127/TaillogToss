@@ -52,7 +52,7 @@ export function RewardedAdButton({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: colors.orange700,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,

@@ -86,39 +86,48 @@ export function useRewardedAd(
       if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
     }, DEFAULT_AD_FALLBACK.timeout_ms);
 
-    sdk
-      .loadFullScreenAd({ adGroupId })
-      .then(() => {
+    sdk.loadFullScreenAd({
+      adGroupId,
+      onLoaded: () => {
         if (!mountedRef.current) return;
         tracker.adLoaded(placement);
         setAdState('showing');
-        return sdk.showFullScreenAd();
-      })
-      .then((result) => {
-        if (!mountedRef.current) return;
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-        if (result?.rewarded) {
-          incrementDailyCount(placement);
-          setAdState('rewarded');
-          tracker.adRewarded(placement);
-          onRewarded();
-        } else {
-          setAdState('no_fill');
-          tracker.adNoFill(placement, 'no_reward');
-          if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
-        }
-      })
-      .catch(() => {
+        sdk.showFullScreenAd({
+          onRewarded: () => {
+            if (!mountedRef.current) return;
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            incrementDailyCount(placement);
+            setAdState('rewarded');
+            tracker.adRewarded(placement);
+            onRewarded();
+          },
+          onClosed: () => {
+            if (!mountedRef.current) return;
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            setAdState('no_fill');
+            tracker.adNoFill(placement, 'closed_without_reward');
+            if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
+          },
+          onError: () => {
+            if (!mountedRef.current) return;
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            setAdState('error');
+            tracker.adError(placement);
+            if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
+            onError?.();
+          },
+        });
+      },
+      onError: () => {
         if (!mountedRef.current) return;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setAdState('error');
         tracker.adError(placement);
-
-        // 에러 시에도 무광고 폴백
         if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
         onError?.();
-      });
+      },
+    });
   }, [adState, placement, onRewarded, onError]);
 
   return { adState, showAd, isDailyLimitReached };

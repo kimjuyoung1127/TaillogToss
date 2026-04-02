@@ -17,6 +17,8 @@ import { useSurvey } from 'stores/SurveyContext';
 import { useAuth } from 'stores/AuthContext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { generateSurveyAnalysis } from 'lib/data/analysis/engine';
+import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
+import { ErrorState } from 'components/tds-ext';
 import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/survey-result', {
@@ -33,6 +35,7 @@ function SurveyResultPage() {
   });
 
   useEffect(() => {
+    if (!isReady) return;
     if (!surveyData) {
       const fallbackRoute = hasCompletedOnboarding ? '/dashboard' : '/onboarding/survey';
       if (__DEV__) {
@@ -43,7 +46,7 @@ function SurveyResultPage() {
       }
       navigation.navigate(fallbackRoute);
     }
-  }, [hasCompletedOnboarding, navigation, surveyData]);
+  }, [isReady, hasCompletedOnboarding, navigation, surveyData]);
 
   const behaviors = useMemo<BehaviorType[]>(
     () => surveyData?.step3_behavior.primary_behaviors ?? ['other'],
@@ -66,7 +69,24 @@ function SurveyResultPage() {
     navigation.navigate('/onboarding/notification');
   };
 
-  if (!isReady || !surveyData) return null;
+  if (!isReady || !surveyData) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <SkeletonBox width={80} height={20} />
+        </View>
+        <View style={styles.content}>
+          <View style={{ alignItems: 'center', marginBottom: 24 }}>
+            <SkeletonBox width={56} height={56} borderRadius={28} />
+            <SkeletonBox width={180} height={28} style={{ marginTop: 16 }} />
+          </View>
+          <SkeletonBox width="100%" height={120} borderRadius={16} />
+          <SkeletonBox width="100%" height={1} style={{ marginVertical: 24 }} />
+          <SkeletonBox width="100%" height={160} borderRadius={12} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -105,7 +125,9 @@ function SurveyResultPage() {
         <View style={styles.detailSection}>
           <Text style={styles.detailHeader}>📋 상세 리포트</Text>
 
-          {isDetailUnlocked && analysis ? (
+          {isDetailUnlocked && !analysis ? (
+            <ErrorState onRetry={() => navigation.navigate('/onboarding/survey')} />
+          ) : isDetailUnlocked && analysis ? (
             <View style={styles.unlockedContent}>
               <Text style={styles.detailText}>
                 {analysis.summaryParagraph}
