@@ -27,7 +27,7 @@ src/assets/curriculum/{id}_hero.webp
 ## 최종 배포 위치
 ```
 Supabase Storage: curriculum-images 버킷 (public)
-URL: https://kvknerzsqgmmdmyxlorl.supabase.co/storage/v1/object/public/curriculum-images/{파일명}
+URL: https://<PROJECT_REF>.supabase.co/storage/v1/object/public/curriculum-images/{파일명}
 ```
 
 ## 코드 연결 (이미지 도착 후)

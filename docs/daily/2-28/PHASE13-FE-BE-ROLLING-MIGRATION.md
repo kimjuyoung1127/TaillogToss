@@ -88,7 +88,7 @@ Scope: `IAP-001`, `MSG-001`, `AD-001` (Phase13 게이트 마감)
 
 2. MSG-001 실발송 증적 (대기)
 - [x] 기준선 확보: `public.noti_history` `noti_count=2`, `latest_noti_at=2026-02-28 00:52:11 KST`
-- [x] 자동 호출 시도 기록: Codex 실행환경 DNS 제한으로 `https://kvknerzsqgmmdmyxlorl.supabase.co` 해석 실패(`curl: Could not resolve host`)
+- [x] 자동 호출 시도 기록: Codex 실행환경 DNS 제한으로 `https://<PROJECT_REF>.supabase.co` 해석 실패(`curl: Could not resolve host`)
 - [x] 사전조건 확인: Smart Message 신청/승인 완료 전 실발송 게이트는 `PARTIAL` 유지
 - [x] 실시간 차단 증적: `send-smart-message` `HTTP 429` (`RATE_LIMITED: QUIET_HOURS`, `retryAfterSeconds=36000`)
 - [ ] Smart Message 신청/승인 완료
@@ -111,7 +111,7 @@ Scope: `IAP-001`, `MSG-001`, `AD-001` (Phase13 게이트 마감)
 ```powershell
 $envFile = "C:\Users\gmdqn\tosstaillog\Backend\.env"
 $serviceKey = ((Get-Content $envFile | Where-Object { $_ -like "SUPABASE_SERVICE_ROLE_KEY=*" } | Select-Object -First 1) -replace '^SUPABASE_SERVICE_ROLE_KEY=','')
-$url = "https://kvknerzsqgmmdmyxlorl.supabase.co/functions/v1/send-smart-message"
+$url = "https://<PROJECT_REF>.supabase.co/functions/v1/send-smart-message"
 $body = @{
   userId = "f59ac308-f321-464e-9a72-d686f55dd94f"
   notificationType = "training_reminder"
@@ -130,7 +130,7 @@ $resp
 
 `MSG-001` DB 증가 확인(`noti_history`):
 ```powershell
-$restUrl = "https://kvknerzsqgmmdmyxlorl.supabase.co/rest/v1/noti_history?select=id,user_id,sent_at,success,error_code,idempotency_key&order=sent_at.desc&limit=3"
+$restUrl = "https://<PROJECT_REF>.supabase.co/rest/v1/noti_history?select=id,user_id,sent_at,success,error_code,idempotency_key&order=sent_at.desc&limit=3"
 $rows = Invoke-RestMethod -Method Get -Uri $restUrl -Headers @{ "apikey" = $serviceKey; "Authorization" = "Bearer $serviceKey" }
 $rows
 ```

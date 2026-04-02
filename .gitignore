@@ -49,5 +49,6 @@ public/mTLS_*/
 .vscode/settings.json
 .idea/
 
-# MCP
+# MCP / AI IDE config (contains access tokens)
 .mcp.json
+.gemini/

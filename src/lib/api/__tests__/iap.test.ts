@@ -20,7 +20,7 @@ jest.mock('lib/api/supabase', () => ({
     },
   },
   getSupabasePublicConfig: () => ({
-    url: 'https://kvknerzsqgmmdmyxlorl.supabase.co',
+    url: 'https://test-project.supabase.co',
     anonKey: 'test-anon-key',
   }),
 }));
