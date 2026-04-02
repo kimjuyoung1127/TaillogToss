@@ -1,7 +1,7 @@
 # TaillogToss 진행도 체크리스트
 
 > 생성: 2026-04-02 | 갱신: 2026-04-02 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
-> 종합 완성도: **75%** (SDK 2.x 마이그레이션 완료 반영)
+> 종합 완성도: **82%** (P2 Quick-Win 3종 Done + mTLS 실전환 완료 반영)
 
 ---
 
@@ -15,11 +15,11 @@
   - [x] `getTossShareLink` 2번째 인자 — 실호출 없음 확인 (수정 불필요)
   - [x] React 19.2.3 + TDS RN 2.0.2 호환성 확인
   - [x] 최소 토스앱 v5.232.0 대응 (SDK 2.4.1 기준)
-- [ ] 🔴 **mTLS 실 인증서 발급** — 토스 콘솔에서 발급 (유효 390일) → `docs/ref/AIT-PUBLISHING-READINESS.md`
-  - [ ] 콘솔 → 앱 → mTLS 인증서 탭 → 발급
-  - [ ] `client.crt` + `client.key` 다운로드
-  - [ ] Supabase secrets에 Base64 인코딩 등록
-  - [ ] Edge Function 3종 mock→real 전환 (verify-iap-order, send-smart-message, grant-toss-points)
+- [x] ~~🔴 **mTLS 실 인증서 발급**~~ — ✅ 2026-04-02 완료 (인증서 발급 + Secrets 등록 + 4종 재배포)
+  - [x] 콘솔 → 앱 → mTLS 인증서 탭 → 발급
+  - [x] `mac_public.crt` + `mac_private.key` 다운로드
+  - [x] Supabase secrets에 Base64 인코딩 등록 (`TOSS_CLIENT_CERT_BASE64`, `TOSS_CLIENT_KEY_BASE64`)
+  - [x] Edge Function 4종 `resolveMtlsMode()` 자동 감지 + 재배포 (login-with-toss v18, verify-iap-order v17, send-smart-message v14, grant-toss-points v14)
   - [ ] 인증서 만료일 캘린더 등록
 - [ ] 🔴 **실기기 E2E 통합 검증** — 23화면 + 핵심 플로우 실기기 테스트
 - [x] ~~🔴 **번들 크기 100MB 미만 확인**~~ — ✅ 4.9MB (100MB 한도 대비 5%)
@@ -161,9 +161,9 @@
 - [ ] 광고 Ads SDK 2.0 → `createMockAdsSdk()` 사용 중
   - [ ] 실 Ad Group ID 교체
   - [ ] Rewarded/Interstitial/Banner 실 검증
-- [ ] send-smart-message → mock mTLS
-- [ ] grant-toss-points → mock mTLS
-- [ ] verify-iap-order → mock mTLS (v12 실기기 200 확인이나 mTLS는 mock)
+- [x] ~~send-smart-message → mock mTLS~~ → ✅ real mTLS (v14)
+- [x] ~~grant-toss-points → mock mTLS~~ → ✅ real mTLS (v14)
+- [x] ~~verify-iap-order → mock mTLS~~ → ✅ real mTLS (v17)
 - [ ] DogPhotoPicker → 카메라/앨범 브릿지 미연결
 - [ ] IAP 구독/복원 → Toss IAP 복원 API 공개 대기
 
@@ -199,9 +199,9 @@
 | Function | 버전 | 상태 | 잔여 |
 |----------|------|------|------|
 | login-with-toss | v13 | ✅ | fresh authCode 재증적 |
-| verify-iap-order | v12 | ✅ | mock→real mTLS |
-| send-smart-message | v9 | ⚠️ | 승인 대기 + real mTLS |
-| grant-toss-points | v9 | ⚠️ | happy-path + real mTLS |
+| verify-iap-order | v17 | ✅ | ✅ real mTLS 완료 |
+| send-smart-message | v14 | ✅ | ✅ real mTLS 완료 |
+| grant-toss-points | v14 | ✅ | ✅ real mTLS 완료 |
 | legal | v9 | ✅ | - |
 | toss-disconnect | v10 | ✅ | 콘솔 콜백 검증 |
 | generate-report | v4 | ⚠️ | real OpenAI 키 검증 |
@@ -210,7 +210,7 @@
 
 - [x] INFRA-1: Supabase 38테이블 + RLS 30+ 정책
 - [ ] INFRA-2: Edge Function Secrets drift 점검
-- [ ] INFRA-3: 토스 콘솔 등록 + mTLS 인증서 (수동)
+- [x] ~~INFRA-3: 토스 콘솔 등록 + mTLS 인증서~~ → ✅ 완료 (2026-04-02)
 
 ---
 
@@ -242,9 +242,9 @@
 
 - [x] `@apps-in-toss/framework` 1.3 → 2.4.1 ✅
 - [ ] Ads SDK mock → 실 Ad Group ID
-- [ ] verify-iap-order mock mTLS → real
-- [ ] send-smart-message mock mTLS → real
-- [ ] grant-toss-points mock mTLS → real
+- [x] ~~verify-iap-order mock mTLS → real~~ ✅
+- [x] ~~send-smart-message mock mTLS → real~~ ✅
+- [x] ~~grant-toss-points mock mTLS → real~~ ✅
 - [ ] generate-report mock → `REPORT_AI_MODE=real`
 - [ ] IAP 복원 DB 대체 → Toss IAP 복원 API
 

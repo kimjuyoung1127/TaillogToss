@@ -1,6 +1,6 @@
 # TaillogToss Project Status
 
-Last Updated: 2026-04-02 (KST) — SDK 2.x 마이그레이션 반영
+Last Updated: 2026-04-02 (KST) — P2 Quick-Win 3종 Done + mTLS 실전환 완료
 Owner Doc: `CLAUDE.md` (슬림 인덱스), 본 문서는 상태/이력 상세 전용.
 
 ## Mac 마이그레이션 (2026-04-02)
@@ -34,21 +34,21 @@ vibehub-media 하네스 이식 완료:
 
 ## Edge Function 상태
 
-| 함수 | 버전 | verify_jwt | 상태 |
-|------|------|-----------|------|
-| `login-with-toss` | v13 | false | Sandbox 실기기 200 + 실패 400 증적 확보 |
-| `verify-iap-order` | v12 | false | 실기기 `POST 200` + `toss_orders` 영속화(5건) 확인 |
-| `send-smart-message` | v9 | true | mock mTLS, 우회차단 검증 완료 |
-| `grant-toss-points` | v9 | true | mock mTLS, 우회차단 검증 완료 |
-| `legal` | v9 | false | 4종 HTML 서빙 |
-| `toss-disconnect` | v10 | false | Basic Auth 동작, 콘솔 콜백 대기 |
-| `generate-report` | v4 | true | mock/real 스위치, 우회차단 검증 완료 |
+| 함수 | 버전 | verify_jwt | mTLS | 상태 |
+|------|------|-----------|------|------|
+| `login-with-toss` | v18 | false | **real** | Sandbox 실기기 200 + 실패 400 증적 확보 |
+| `verify-iap-order` | v17 | true | **real** | resolveMtlsMode() 자동 감지, Secrets 등록 완료 |
+| `send-smart-message` | v14 | true | **real** | resolveMtlsMode() 자동 감지, Secrets 등록 완료 |
+| `grant-toss-points` | v14 | true | **real** | resolveMtlsMode() 자동 감지, Secrets 등록 완료 |
+| `legal` | v13 | false | — | 4종 HTML 서빙 |
+| `toss-disconnect` | v17 | false | — | Basic Auth 동작, 콘솔 콜백 대기 |
+| `generate-report` | v8 | true | — | mock/real 스위치, 우회차단 검증 완료 |
 
 ## Parity ID 추적 (요약)
 
 | Parity ID | 도메인 | 상태 | 완료 항목 | 잔여 |
 |-----------|--------|------|----------|------|
-| AUTH-001 | 인증 | In Progress | login.tsx, AuthContext, usePageGuard, login-with-toss v13, 실기기 200/400 증적 | 실패 케이스 앱 화면 증적 정리 |
+| AUTH-001 | 인증 | Done | login.tsx 토큰화, AuthContext, usePageGuard, login-with-toss v18 real mTLS, 실기기 200/400 증적 | — |
 | APP-001 | 앱 셸 | In Progress | 23라우트, _app.tsx, 레이아웃 5종, 딥엔트리 3종 | 실기기 라우팅 완전 검증 |
 | UI-001 | 디자인 | In Progress | 52컴포넌트, 토큰 중앙화 70+파일, Lottie 3종, 상태UI 8화면 | 실기기 비주얼 QA |
 | LOG-001 | 행동 기록 | In Progress | 대시보드/빠른기록/상세기록/분석, backend-first 전환 | FastAPI 로그 API 실기기 E2E |
@@ -85,7 +85,7 @@ vibehub-media 하네스 이식 완료:
 | Edge 7종 | 진행 | happy-path payload 실검증 잔여 |
 | BE (FastAPI) | 완료 | - |
 | DB (INFRA-1) | 완료 | - |
-| mTLS | 진행 | real 인증서/콘솔 등록 필요 |
+| mTLS | **완료** | Secrets 등록 + 4종 Edge Function real 모드 배포 완료 |
 
 ## Mock/Placeholder 목록
 
@@ -97,9 +97,9 @@ vibehub-media 하네스 이식 완료:
 | Ads SDK | `src/lib/ads/config.ts` | 실 Ad Group ID 교체 |
 | IAP 래퍼 | `src/lib/api/iap.ts` | 실 SDK 교체 |
 | generate-report | `supabase/functions/generate-report/` | `REPORT_AI_MODE=real` + 실 OpenAI 키 |
-| verify-iap-order | `supabase/functions/verify-iap-order/` | real mTLS 전환 |
-| send-smart-message | `supabase/functions/send-smart-message/` | real mTLS 전환 |
-| grant-toss-points | `supabase/functions/grant-toss-points/` | real mTLS 전환 |
+| ~~verify-iap-order~~ | `supabase/functions/verify-iap-order/` | ✅ real mTLS 전환 완료 (v17) |
+| ~~send-smart-message~~ | `supabase/functions/send-smart-message/` | ✅ real mTLS 전환 완료 (v14) |
+| ~~grant-toss-points~~ | `supabase/functions/grant-toss-points/` | ✅ real mTLS 전환 완료 (v14) |
 | IAP 복원 | `src/lib/api/subscription.ts:62` | Toss IAP 복원 API 공개 대기 |
 
 ## 테스트 현황
@@ -117,13 +117,14 @@ vibehub-media 하네스 이식 완료:
 
 ### CRITICAL
 1. ~~SDK 2.x 마이그레이션~~ → ✅ 완료 (2026-04-02)
-2. Edge Function real mTLS (INFRA-3): 인증서 발급/등록
+2. ~~Edge Function real mTLS~~ → ✅ 완료 (2026-04-02, Secrets 등록 + 4종 재배포)
+3. ~~P1 Ready 페이지 4개~~ → ✅ 완료 (2026-04-02, 16/21→19/21 Done)
 
 ### HIGH
-3. P1 Ready 페이지 4개 (`/onboarding/welcome`, `/onboarding/survey-result`, `/dog/add`, `/settings/subscription`)
 4. IAP E2E 테스트 (Sandbox 결제 플로우)
 5. B2B RPC 함수 (`verify_parent_phone_last4`)
 6. Ads 실 Ad Group ID 교체 + 검증
+7. B2B P2 페이지 2개 (`/ops/settings`, `/parent/reports`) → 21/21 Done
 
 ## 최신 AUTH 증적 (2026-02-28)
 
@@ -195,14 +196,14 @@ vibehub-media 하네스 이식 완료:
 
 | 영역 | 완성도 | 핵심 잔여 |
 |------|--------|----------|
-| FE 페이지 | 85% | Ready 8페이지 미착수 |
+| FE 페이지 | 95% | Ready 2페이지 (B2B P2) |
 | FE 컴포넌트 | 90% | mock 3곳 전환 |
 | Backend | 95% | BE↔DB 통합 테스트 |
-| DB/Infra | 90% | mTLS 실 인증서 |
-| Toss SDK | 55% | SDK 2.x 마이그레이션 |
+| DB/Infra | 95% | ~~mTLS 실 인증서~~ ✅ 완료 |
+| Toss SDK | 85% | ~~SDK 2.x~~ ✅ + Ads 실 ID 교체 |
 | 테스트 | 60% | E2E/성능 미구현 |
-| 퍼블리싱 | 40% | 심사 요건 미충족 |
-| **종합** | **72%** | SDK 2.x + mTLS + 실기기 E2E |
+| 퍼블리싱 | 55% | mTLS 완료, 심사 요건 일부 미충족 |
+| **종합** | **82%** | 실기기 E2E + Ads ID + B2B 2페이지 |
 
 ## 비고
 

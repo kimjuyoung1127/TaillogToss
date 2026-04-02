@@ -87,8 +87,8 @@
 | `TOSS_PII_DECRYPTION_KEY_BASE64` | Toss 암호화 PII 복호화 키 (login-with-toss 전용) |
 | `TOSS_PROFILE_DECRYPTION_KEY_BASE64` | 구 키명 호환 (레거시) |
 | `TOSS_MTLS_MODE` | mTLS 모드 강제(`real`/`mock`). `real`일 때 `TOSS_CLIENT_CERT_BASE64`/`TOSS_CLIENT_KEY_BASE64` 필수 |
-| `TOSS_CLIENT_CERT_BASE64` | mTLS 인증서 (INFRA-3 이후) |
-| `TOSS_CLIENT_KEY_BASE64` | mTLS 개인키 (INFRA-3 이후) |
+| `TOSS_CLIENT_CERT_BASE64` | mTLS 인증서 ✅ 등록 완료 (2026-04-02) |
+| `TOSS_CLIENT_KEY_BASE64` | mTLS 개인키 ✅ 등록 완료 (2026-04-02) |
 | `TOSS_CALLBACK_AUTH_ID` | toss-disconnect Basic Auth |
 | `TOSS_CALLBACK_AUTH_PW` | toss-disconnect Basic Auth |
 | `OPENAI_API_KEY` | AI 코칭 (generate-report) |
@@ -105,7 +105,7 @@
 
 ---
 
-## INFRA-3: 토스 콘솔 등록 + mTLS 인증서
+## INFRA-3: 토스 콘솔 등록 + mTLS 인증서 ✅ 완료 (2026-04-02)
 
 ### 목표
 사업자등록 완료 후 토스 개발자 콘솔에 앱 등록, mTLS 인증서 발급, 콜백 URL 설정.
@@ -724,7 +724,7 @@ BE-P8: "feat(backend): self-review fixes + integration test suite"
 
 1. **FE→BE API 연결**: `src/lib/api/backend.ts` HTTP 클라이언트 래퍼 생성. 복잡 쿼리(coaching generate, dashboard 집계, B2B org dogs)를 FastAPI 호출로 전환. 단순 CRUD는 Supabase 유지.
 2. **INFRA-2**: 7종 Edge Function 실 Supabase 배포 + Secrets 등록.
-3. **INFRA-3**: 토스 콘솔 등록 + mTLS 인증서 발급 (수동).
+3. ~~**INFRA-3**: 토스 콘솔 등록 + mTLS 인증서 발급~~ → ✅ 완료 (2026-04-02).
 
 ---
 
