@@ -8,7 +8,14 @@
         "--project-ref",
         "kvknerzsqgmmdmyxlorl",
         "--access-token",
-        "sbp_6e16594a0cbcacd834e2500baef2b6467b08c2a7"
+        "sbp_26f09e1fd8f290212723ab7ae8827bb7b24f9308"
+      ]
+    },
+    "code-review-graph": {
+      "command": "uvx",
+      "args": [
+        "code-review-graph",
+        "serve"
       ]
     }
   }

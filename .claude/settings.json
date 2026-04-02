@@ -2,23 +2,27 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.gpters.org)",
-      "Bash(test -f \"c:/Users/ezen601/Desktop/Jason/tosstaillog/AGENTS.md\")",
-      "Bash(npx --version)",
-      "Bash(adb version)",
-      "Bash(java -version)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npx create-granite-app@latest --help)",
-      "Read(//c/tmp/**)",
-      "Read(//tmp/**)",
+      "Bash(npx --version)",
       "Bash(npx tsc --noEmit)",
+      "Bash(npx create-granite-app@latest --help)",
       "Bash(git status -u)",
-      "Bash(find /c/Users/ezen601/Desktop/Jason/tosstaillog/docs -type f -exec ls -lh {} ;)",
-      "Read(//c/Users/ezen601/Desktop/Jason/tosstaillog/**)",
-      "Bash(git status -u --short)"
+      "Bash(git status -u --short)",
+      "Read(/tmp/**)"
     ],
-    "additionalDirectories": [
-      "c:\\Users\\ezen601\\Desktop\\Jason\\tosstaillog\\.claude\\skills",
-      "\\tmp\\taillog-toss-scaffold"
+    "additionalDirectories": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/post-edit-typecheck.sh"
+          }
+        ]
+      }
     ]
   }
 }

@@ -3,7 +3,11 @@
  * Parity: APP-001
  */
 import React, { type PropsWithChildren } from 'react';
+import { LogBox } from 'react-native';
 import { Granite, getSchemeUri, type InitialProps } from '@granite-js/react-native';
+
+// LogBox 오버레이 비활성화 — SafeArea 충돌 방지, 콘솔 워닝은 adb logcat으로 확인
+LogBox.ignoreAllLogs(true);
 import { context } from '../require.context';
 import { QueryProvider } from 'stores/QueryProvider';
 import { AuthProvider, useAuth } from 'stores/AuthContext';

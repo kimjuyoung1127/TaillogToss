@@ -9,8 +9,8 @@ This file only keeps execution rules, priorities, and pointers.
 
 | Scope | Path | Access |
 |---|---|---|
-| Write Repo | `C:\Users\gmdqn\tosstaillog` | read/write |
-| Read-only Ref | `C:\Users\gmdqn\DogCoach` | read-only |
+| Write Repo | `/Users/family/jason/TaillogToss` | read/write |
+| Read-only Ref | `/Users/family/jason/DogCoach` | read-only |
 
 ## Execution Rules (MUST)
 1. Announce change intent in 1-2 lines before editing.
@@ -55,6 +55,35 @@ This file only keeps execution rules, priorities, and pointers.
 | Auth | Toss Login -> `login-with-toss` -> Supabase Auth bridge |
 | Payments | Toss IAP (`verify-iap-order`) |
 | Ads | Toss Ads SDK 2.0 |
+
+## Commands (User-Invocable)
+
+| Command | Purpose | When to use |
+|---|---|---|
+| `/learn` | 교정 사항 → feedback memory 저장 | 교정 후 규칙으로 학습시킬 때 |
+| `/doc-update` | 코드 변경 후 문서 자동 갱신 | 구현 완료 후 문서 동기화 |
+| `/self-review` | working tree 전체 자기 리뷰 | 커밋 전 품질 점검 |
+| `/token-lint` | 스타일 토큰 하드코딩 탐지 | 스타일 변경 후 토큰 준수 확인 |
+
+## Hooks
+
+| Hook | Trigger | Action |
+|---|---|---|
+| `post-edit-typecheck` | `Edit\|Write` on `src/**/*.ts(x)` | `tsc --noEmit` 자동 실행 |
+
+## MCP Servers
+
+| Server | Purpose | Commands |
+|---|---|---|
+| `supabase` | Supabase DB/Edge 관리 | via MCP tools |
+| `code-review-graph` | 코드 지식 그래프 (1269 nodes, 6580 edges) | `status`, `build`, `update`, `visualize` |
+
+### code-review-graph Quick Reference
+- `code-review-graph status` — 그래프 통계
+- `code-review-graph update` — 변경분만 증분 업데이트
+- `code-review-graph build` — 전체 재빌드
+- `code-review-graph visualize` — HTML 시각화 생성
+- 범위 제외: `.code-review-graphignore` (node_modules, .expo, dist, Backend venv 등)
 
 ## Skill Routing Index (MUST)
 
@@ -103,15 +132,23 @@ Page/feature skill root: `.claude/skills/page-skills/`
 | `docs/status/11-FEATURE-PARITY-MATRIX.md` | parity notes and verification logs |
 | `docs/status/MISSING-AND-UNIMPLEMENTED.md` | missing implementations and V2 candidates |
 | `docs/status/PAGE-UPGRADE-BOARD.md` | route-level execution board |
+| `docs/status/PROGRESS-CHECKLIST.md` | 종합 완성도 체크리스트 (72%) |
 | `docs/status/SKILL-DOC-MATRIX.md` | page skill to code/doc mapping |
 | `docs/status/NIGHTLY-RUN-LOG.md` | nightly organizer execution history |
 | `docs/ref/BACKEND-PLAN.md` | backend implementation details |
 | `docs/ref/SCHEMA-B2B.md` | B2B schema reference |
 | `docs/ref/SUPABASE-SCHEMA-INDEX.md` | Supabase live schema + RLS + migration drift index |
 | `docs/ref/ARCHITECTURE-DIAGRAMS.md` | Toss in-app architecture index (6 diagram set) |
+| `docs/ref/AIT-SDK-2X-MIGRATION.md` | SDK 1.x→2.x 마이그레이션 가이드 |
+| `docs/ref/AIT-ADS-SDK-REFERENCE.md` | Toss Ads SDK 2.0 통합 레퍼런스 |
+| `docs/ref/AIT-PUBLISHING-READINESS.md` | 퍼블리싱 심사 요건 + mTLS 가이드 |
+| `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md` | IAP/Smart Message/포인트 API 레퍼런스 |
+| `docs/ref/PRD-TailLog-Toss.md` | B2C PRD (v2.2.0) |
+| `docs/ref/PRD-TailLog-B2B.md` | B2B PRD |
 | `docs/ref/ASSET-GUIDE.md` | asset catalog and usage notes |
 | `docs/ref/10-MIGRATION-OPERATING-MODEL.md` | migration operating model |
 | `docs/ref/12-MIGRATION-WAVES-AND-GATES.md` | migration waves and gate criteria |
+| `docs/status/AUTOMATION-HEALTH.md` | 자동화 상태 보고서 (hooks/commands/MCP) |
 | `docs/daily/` | daily logs (22:00 compression target) |
 | `docs/weekly/` | weekly compacted logs |
 

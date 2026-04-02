@@ -1,0 +1,11 @@
+# Build outputs and caches create noisy watch updates and low-value graph edges.
+node_modules/**
+.expo/**
+dist/**
+coverage/**
+test-results/**
+logs/**
+.code-review-graph/**
+Backend/__pycache__/**
+Backend/.venv/**
+supabase/.temp/**

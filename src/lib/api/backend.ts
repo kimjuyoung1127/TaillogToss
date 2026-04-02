@@ -8,9 +8,8 @@ import { NativeModules } from 'react-native';
 
 const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8000';
 
-// 개발 전용: adb reverse tcp:8000 바인딩 실패 시 실기기가 PC에 직접 접근할 LAN IP.
-// 네트워크 변경 시 이 값만 수정한다. 프로덕션에서는 사용되지 않는다.
-const DEV_LAN_BACKEND_URL = 'http://172.30.1.1:8000';
+// 개발 전용 LAN IP (adb reverse 불가 시 수동 전환):
+// const DEV_LAN_BACKEND_URL = 'http://192.168.0.57:8000';
 
 function resolveBackendUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -28,7 +27,9 @@ function resolveBackendUrl(): string {
     // Metro가 0.0.0.0/localhost로 노출되면 실기기에서 127.0.0.1은 기기 자신을 가리킨다.
     // __DEV__에서는 LAN IP로, 프로덕션에서는 loopback으로 폴백한다.
     if (parsed.hostname === '0.0.0.0' || parsed.hostname === 'localhost') {
-      return __DEV__ ? DEV_LAN_BACKEND_URL : DEFAULT_BACKEND_URL;
+      // adb reverse tcp:8000 tcp:8000 설정 시 127.0.0.1로 직접 접근 가능.
+      // LAN IP 폴백은 adb reverse 불가 시에만 DEV_LAN_BACKEND_URL로 수동 전환.
+      return DEFAULT_BACKEND_URL;
     }
     return `${parsed.protocol}//${parsed.hostname}:8000`;
   } catch {
