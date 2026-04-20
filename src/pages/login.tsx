@@ -11,6 +11,7 @@ import { colors, typography } from 'styles/tokens';
 import * as authApi from 'lib/api/auth';
 import { useAuth } from 'stores/AuthContext';
 import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
+import { LottieAnimation } from 'components/shared/LottieAnimation';
 
 interface EdgeFailureMeta {
   code?: string;
@@ -139,14 +140,15 @@ function LoginPage() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* 다크 오버레이 배경 */}
+      <View style={styles.overlay} />
+
       <View style={styles.container}>
-        {/* Logo Area */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoIcon}>🐾</Text>
-          </View>
+        {/* Hero Area */}
+        <View style={styles.heroSection}>
+          <LottieAnimation asset="cute-doggie" size={180} loop autoPlay />
           <Text style={styles.appName}>테일로그</Text>
-          <Text style={styles.tagline}>반려견 행동, 90초면 기록 끝</Text>
+          <Text style={styles.tagline}>반려견 행동 기록부터 AI 코칭까지</Text>
         </View>
 
         {/* CTA Area */}
@@ -161,7 +163,7 @@ function LoginPage() {
             style={[styles.tossButton, isLoading && styles.tossButtonDisabled]}
             onPress={handleTossLogin}
             disabled={isLoading}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             {isLoading ? (
               <ActivityIndicator color={colors.white} size="small" />
@@ -186,81 +188,87 @@ function LoginPage() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+  safe: { flex: 1, backgroundColor: colors.grey950 },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 44,
   },
-  logoSection: {
+  heroSection: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 24,
   },
-  logoPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: colors.primaryBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  logoIcon: { ...typography.display },
   appName: {
     ...typography.heroTitle,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: colors.white,
+    marginTop: 8,
     marginBottom: 8,
   },
   tagline: {
     ...typography.label,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.65)',
   },
   ctaSection: {
     paddingTop: 20,
   },
   errorBanner: {
-    backgroundColor: colors.badgeRedBg,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255,59,48,0.25)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,59,48,0.5)',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
   },
   errorText: {
     ...typography.detail,
-    color: colors.badgeRed,
+    color: '#FFB3B3',
     textAlign: 'center',
   },
   tossButton: {
     backgroundColor: colors.primaryBlue,
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 14,
+    paddingVertical: 17,
     alignItems: 'center',
+    shadowColor: colors.primaryBlue,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   tossButtonDisabled: {
-    backgroundColor: colors.grey300,
+    backgroundColor: colors.grey800,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   tossButtonText: {
     color: colors.white,
     ...typography.body,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
   termsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
   },
   termsLink: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.45)',
     textDecorationLine: 'underline',
   },
   termsDot: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: 'rgba(255,255,255,0.3)',
     marginHorizontal: 8,
   },
 });

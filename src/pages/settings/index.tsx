@@ -5,6 +5,7 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   View,
   Text,
@@ -73,8 +74,9 @@ function formatSavedTime(isoString: string): string {
 function SettingsPage() {
   const { isReady } = usePageGuard({ currentPath: '/settings' });
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, logout: clearAuthState } = useAuth();
   const { logout } = useLogout();
+  const queryClient = useQueryClient();
 
   const { data: settings, isLoading, isError, refetch } = useUserSettings(user?.id);
   const updateSettings = useUpdateSettings();
@@ -232,15 +234,21 @@ function SettingsPage() {
           onPress: async () => {
             if (!user?.id) return;
             try {
-              await withdrawUser(user.id);
-            } catch {
-              Alert.alert('오류', '탈퇴 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
+              await withdrawUser(user.id); // 내부에서 signOut() 포함
+              clearAuthState();            // AuthContext React 상태 초기화
+              queryClient.clear();
+              navigation.navigate('/onboarding/welcome' as never);
+            } catch (error) {
+              console.error('[WITHDRAW] 탈퇴 오류:', error);
+              const code =
+                (error as { message?: string })?.message ?? '알 수 없는 오류';
+              Alert.alert('오류', `탈퇴 처리 중 문제가 발생했습니다.\n(${code})`);
             }
           },
         },
       ],
     );
-  }, [user?.id]);
+  }, [user?.id, clearAuthState, queryClient, navigation]);
 
   const handleOpenDeviceSettings = useCallback(() => {
     void Linking.openSettings().catch(() => {
@@ -257,10 +265,12 @@ function SettingsPage() {
 
   if (!isReady) return null;
 
+  const canGoBack = navigation.canGoBack();
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <TopBar onBack={() => navigation.goBack()} />
+        <TopBar onBack={() => navigation.goBack()} canGoBack={canGoBack} />
         <SettingsScreenSkeleton />
       </SafeAreaView>
     );
@@ -269,7 +279,7 @@ function SettingsPage() {
   if (isError) {
     return (
       <SafeAreaView style={styles.safe}>
-        <TopBar onBack={() => navigation.goBack()} />
+        <TopBar onBack={() => navigation.goBack()} canGoBack={canGoBack} />
         <SettingsScreenError onRetry={() => void refetch()} />
       </SafeAreaView>
     );
@@ -277,7 +287,7 @@ function SettingsPage() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <TopBar onBack={() => navigation.goBack()} />
+      <TopBar onBack={() => navigation.goBack()} canGoBack={canGoBack} />
 
       <ScrollView style={styles.scroll}>
         <SettingsSectionCard title="알림 설정">
@@ -414,12 +424,16 @@ function SettingsPage() {
   );
 }
 
-function TopBar({ onBack }: { onBack: () => void }) {
+function TopBar({ onBack, canGoBack }: { onBack: () => void; canGoBack: boolean }) {
   return (
     <View style={styles.navbar}>
-      <TouchableOpacity onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backText}>{'←'}</Text>
-      </TouchableOpacity>
+      {canGoBack ? (
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <Text style={styles.backText}>{'←'}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.backButton} />
+      )}
       <Text style={styles.navTitle}>설정</Text>
       <View style={styles.backButton} />
     </View>

@@ -1,15 +1,23 @@
 # Supabase Schema Index (Single View)
 
-Last updated: 2026-03-01 (Asia/Seoul)
+Last updated: 2026-04-20 (Asia/Seoul)
 Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3) `Backend/app/shared/models.py`
+
+## 0) 프로젝트 이전 (2026-04-20)
+
+- **구 프로젝트** (웹+앱 혼용): `kvknerzsqgmmdmyxlorl` → **더 이상 사용 안 함**
+- **신규 프로젝트** (Toss 미니앱 전용): `gxvtgrcqkbdibkyeqyil` (ap-northeast-2)
+- URL: `https://SUPABASE_PROJECT.supabase.co`
+- 마이그레이션: `supabase/migrations/20260420000000_toss_project_init.sql`
+- 제거된 웹 전용 컬럼: `kakao_sync_id`, `pg_provider`, `pg_customer_key`
 
 ## 1) Snapshot
 
 - Public schema tables: 38
 - RLS enabled tables: 38 / 38
-- Key B2B helper functions: 5
+- Key B2B helper functions: 7 (is_org_member, is_org_member_with_role, is_parent_of_dog, purge_expired_pii, update_updated_at_column, get_parent_contact + 1)
 - Public enums: 13
-- Applied migrations on remote DB: 9
+- Applied migrations on remote DB: 1 (신규 프로젝트 초기화 단일 마이그레이션)
 
 ## 2) Public Table Inventory (Live DB)
 
@@ -136,7 +144,19 @@ B2B helper functions present:
   - local: `20260228124500...`
 - `20260228_b2b_tables.sql` and `20260228020042_b2b_tables_and_extensions.sql` overlap heavily. Keep one canonical source (`20260228020042`) and archive/deprecate the other.
 
-## 7) Recommended Operating Rule
+## 7) Edge Functions Inventory
+
+| Function | Version | Config | Purpose |
+|---|---|---|---|
+| `login-with-toss` | v13 | verify_jwt=false | Toss authCode → UUID user_id upsert + Supabase session bridge. |
+| `verify-iap-order` | v12 | verify_jwt=false | Toss IAP 주문 검증 + toss_orders 영속화. |
+| `send-smart-message` | v2 | verify_jwt=false | 쿨다운 정책(10분/일3회/22~08) + noti_history 기록. |
+| `grant-toss-points` | v1 | verify_jwt=false | IAP 완료 후 Toss Points 적립 (mock). |
+| `generate-report` | v3 | verify_jwt=false | B2B 일일/주간 리포트 AI 생성. |
+| `legal` | v1 | verify_jwt=false | 약관/개인정보 HTML 서빙 + toss-disconnect 콜백. |
+| `withdraw-user` | v3 | verify_jwt=false | 본인 계정 실삭제: public.users CASCADE → auth.users. ES256 JWT 호환(Admin API 검증). |
+
+## 8) Recommended Operating Rule
 
 - Schema truth source: remote MCP metadata + applied migrations list.
 - Code truth source: models and queries in `Backend/app/shared/` + `supabase/functions/`.

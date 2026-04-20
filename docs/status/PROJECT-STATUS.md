@@ -1,6 +1,6 @@
 # TaillogToss Project Status
 
-Last Updated: 2026-04-02 (KST) — P2 Quick-Win 3종 Done + mTLS 실전환 완료
+Last Updated: 2026-04-20 (KST) — withdraw-user Edge Function 신규 배포 (ES256 호환) + 탈퇴 AuthContext 버그 수정 + 기록 롱프레스 삭제
 Owner Doc: `CLAUDE.md` (슬림 인덱스), 본 문서는 상태/이력 상세 전용.
 
 ## Mac 마이그레이션 (2026-04-02)
@@ -36,22 +36,25 @@ vibehub-media 하네스 이식 완료:
 
 | 함수 | 버전 | verify_jwt | mTLS | 상태 |
 |------|------|-----------|------|------|
-| `login-with-toss` | v18 | false | **real** | Sandbox 실기기 200 + 실패 400 증적 확보 |
-| `verify-iap-order` | v17 | true | **real** | resolveMtlsMode() 자동 감지, Secrets 등록 완료 |
-| `send-smart-message` | v14 | true | **real** | resolveMtlsMode() 자동 감지, Secrets 등록 완료 |
-| `grant-toss-points` | v14 | true | **real** | resolveMtlsMode() 자동 감지, Secrets 등록 완료 |
-| `legal` | v13 | false | — | 4종 HTML 서빙 |
-| `toss-disconnect` | v17 | false | — | Basic Auth 동작, 콘솔 콜백 대기 |
-| `generate-report` | v8 | true | — | mock/real 스위치, 우회차단 검증 완료 |
+| `login-with-toss` | v18→재배포 | false | **real** | 신규 프로젝트 재배포, 신규 mTLS 인증서 적용 |
+| `verify-iap-order` | v17→재배포 | true | **real** | 신규 프로젝트 재배포 |
+| `send-smart-message` | v14→재배포 | true | **real** | 신규 프로젝트 재배포 |
+| `grant-toss-points` | v14→재배포 | true | **real** | 신규 프로젝트 재배포 |
+| `legal` | v13→재배포 | false | — | 신규 프로젝트 재배포 |
+| `toss-disconnect` | v17→ping수정 | false | — | ping(빈 body) 200 pong 처리 추가, 콘솔 콜백 검증 대기 |
+| `generate-report` | v8→재배포 | true | — | 신규 프로젝트 재배포 |
+| `withdraw-user` | v3 | false | — | 신규 배포: verify_jwt=false + 내부 Admin API JWT검증(ES256 호환), public/auth 실삭제 |
+
+> **신규 프로젝트**: `gxvtgrcqkbdibkyeqyil` (2026-04-20 이전, Toss 미니앱 전용)
 
 ## Parity ID 추적 (요약)
 
 | Parity ID | 도메인 | 상태 | 완료 항목 | 잔여 |
 |-----------|--------|------|----------|------|
-| AUTH-001 | 인증 | Done | login.tsx 토큰화, AuthContext, usePageGuard, login-with-toss v18 real mTLS, 실기기 200/400 증적 | — |
+| AUTH-001 | 인증 | Done | login.tsx 토큰화, AuthContext, usePageGuard, login-with-toss v18 real mTLS, 실기기 200/400 증적 + withdraw-user Edge(v3, ES256 호환) | — |
 | APP-001 | 앱 셸 | In Progress | 23라우트, _app.tsx, 레이아웃 5종, 딥엔트리 3종 | 실기기 라우팅 완전 검증 |
 | UI-001 | 디자인 | In Progress | 52컴포넌트, 토큰 중앙화 70+파일, Lottie 3종, 상태UI 8화면 | 실기기 비주얼 QA |
-| LOG-001 | 행동 기록 | In Progress | 대시보드/빠른기록/상세기록/분석, backend-first 전환 | FastAPI 로그 API 실기기 E2E |
+| LOG-001 | 행동 기록 | In Progress | 대시보드/빠른기록/상세기록/분석, backend-first 전환 + useDeleteLog 낙관적 삭제 훅 + LogCard 롱프레스 UI (2026-04-20) | FastAPI 로그 API 실기기 E2E |
 | AI-001 | AI 코칭 | In Progress | 6블록 코칭, 피드백, BE-P5 완료, backend-first 전환 | FastAPI 코칭 API 실연동 E2E |
 | IAP-001 | 결제 | In Progress | 구독 화면, useIsPro, verifyAndGrant, Edge v12, iap.test 9케이스, 서버 3시나리오+복구 재검증 증적 + DB 영속(5건) 확인 | 실기기 결제 UI 3시나리오 증적 정리 |
 | MSG-001 | 알림 | In Progress | Edge v9, 쿨다운, noti_history 영속, 우회차단, 테스트 통과 | Smart Message 신청/승인 완료 후 Sandbox 실발송 |

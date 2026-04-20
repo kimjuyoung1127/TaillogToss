@@ -104,6 +104,32 @@ export function useCreateDetailedLog() {
   });
 }
 
+export function useDeleteLog(dogId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (logId: string) => logApi.deleteLog(logId),
+    onMutate: async (logId) => {
+      if (!dogId) return;
+      await qc.cancelQueries({ queryKey: queryKeys.logs.list(dogId) });
+      const previousLogs = qc.getQueryData<BehaviorLog[]>(queryKeys.logs.list(dogId));
+      qc.setQueryData<BehaviorLog[]>(queryKeys.logs.list(dogId), (old) =>
+        old ? old.filter((l) => l.id !== logId) : [],
+      );
+      return { previousLogs };
+    },
+    onError: (_err, _logId, ctx) => {
+      if (!dogId) return;
+      qc.setQueryData(queryKeys.logs.list(dogId), ctx?.previousLogs);
+    },
+    onSettled: () => {
+      if (!dogId) return;
+      void qc.invalidateQueries({ queryKey: queryKeys.logs.list(dogId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.logs.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.detail(dogId) });
+    },
+  });
+}
+
 /** B2B: 조직 소속 강아지 기록 조회 */
 export function useOrgDogLogs(orgId: string | undefined, dogId: string | undefined) {
   return useQuery({

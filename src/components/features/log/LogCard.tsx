@@ -3,8 +3,8 @@
  * 카테고리, 강도 Badge, 시간, 위치 표시
  * Parity: UI-001, LOG-001
  */
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import type { BehaviorLog } from 'types/log';
 import { colors, typography } from 'styles/tokens';
 
@@ -36,17 +36,36 @@ function getIntensityBadge(intensity: number): { label: string; color: string; b
 export interface LogCardProps {
   log: BehaviorLog;
   onPress?: () => void;
+  onDelete?: (logId: string) => void;
 }
 
-export function LogCard({ log, onPress }: LogCardProps) {
+export function LogCard({ log, onPress, onDelete }: LogCardProps) {
   const category = log.quick_category ?? log.daily_activity ?? log.type_id ?? 'unknown';
   const label = CATEGORY_LABELS[category] ?? (log.behavior ? log.behavior.slice(0, 20) : '기록');
   const badge = getIntensityBadge(log.intensity);
   const time = new Date(log.occurred_at);
   const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
 
+  const handleLongPress = useCallback(() => {
+    if (!onDelete) return;
+    Alert.alert('기록 삭제', '이 기록을 삭제할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: () => onDelete(log.id),
+      },
+    ]);
+  }, [log.id, onDelete]);
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7} disabled={!onPress}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      onLongPress={onDelete ? handleLongPress : undefined}
+      activeOpacity={0.7}
+      disabled={!onPress && !onDelete}
+    >
       <View style={styles.left}>
         <Text style={styles.label}>{label}</Text>
         {log.antecedent && (

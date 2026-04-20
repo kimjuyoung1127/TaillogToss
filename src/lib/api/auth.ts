@@ -99,15 +99,25 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * 회원탈퇴 — 사용자 상태를 inactive로 변경 후 로그아웃.
+ * 회원탈퇴 — withdraw-user Edge Function 호출.
+ * public.users CASCADE 삭제 → auth.users 삭제 (서버에서 service_role로 처리).
  * Toss 연동해제는 toss-disconnect 콜백에서 Toss가 별도 호출.
  */
 export async function withdrawUser(userId: string): Promise<void> {
-  const { error: updateError } = await supabase
-    .from('users')
-    .update({ status: 'inactive', updated_at: new Date().toISOString() })
-    .eq('id', userId);
-  if (updateError) throw updateError;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) throw new Error('NO_SESSION');
+
+  const { error: invokeError, data } = await supabase.functions.invoke('withdraw-user', {
+    body: { userId },
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (invokeError) throw invokeError;
+  if (!(data as { ok?: boolean })?.ok) {
+    throw new Error((data as { error?: { code?: string } })?.error?.code ?? 'WITHDRAW_FAILED');
+  }
+
   await logout();
 }
 

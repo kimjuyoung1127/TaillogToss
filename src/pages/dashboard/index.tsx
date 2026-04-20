@@ -10,6 +10,7 @@ import React, { useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useDashboard } from 'lib/hooks/useDashboard';
+import { useDeleteLog } from 'lib/hooks/useLogs';
 import { DogCard } from 'components/features/dashboard/DogCard';
 import { StreakBanner } from 'components/features/dashboard/StreakBanner';
 import { LogCard } from 'components/features/log/LogCard';
@@ -101,9 +102,15 @@ function DashboardPage() {
 
   const analysisSummary = useMemo(() => computeAnalysisSummary(recentLogs), [recentLogs]);
 
+  const deleteLog = useDeleteLog(activeDog?.id);
+
   const handleQuickLog = useCallback(() => {
     navigation.navigate('/dashboard/quick-log');
   }, [navigation]);
+
+  const handleDeleteLog = useCallback((logId: string) => {
+    deleteLog.mutate(logId);
+  }, [deleteLog]);
 
   const recordContent = (
     <View style={styles.tabContent}>
@@ -138,7 +145,7 @@ function DashboardPage() {
             <Text style={styles.logListTitle}>최근 기록</Text>
           </View>
           {recentLogs.map((log) => (
-            <LogCard key={log.id} log={log} />
+            <LogCard key={log.id} log={log} onDelete={handleDeleteLog} />
           ))}
         </ScrollView>
       )}
