@@ -16,6 +16,10 @@ export interface Dog {
   sex: DogSex;
   weight_kg?: number; // NUMERIC(5,2) — 체중(kg), 프로필 완전성용
   profile_image_url: string | null;
+  /** B2B 센터 등록 시 수집 (선택) */
+  vet_name?: string | null;
+  animal_reg_no?: string | null;
+  parent_address?: string | null;
   created_at: string;
   updated_at: string;
 }

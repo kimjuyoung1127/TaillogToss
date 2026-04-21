@@ -112,6 +112,8 @@ export interface OrgDog {
   dog_id: string;
   parent_user_id: string | null;
   parent_name: string | null;
+  /** 보호자 전화번호 뒷 4자리 (명문, 인증 전용) */
+  parent_phone_last4: string | null;
   group_tag: string; // default 'default'
   enrolled_at: string;
   discharged_at: string | null;
@@ -270,43 +272,43 @@ export interface OrgDogPii {
 import type { IAPProduct } from './subscription';
 
 /** B2B IAP 상품 카탈로그 (가격 기준일: 2026-02-26) */
-export const B2B_IAP_PRODUCTS: Record<string, IAPProduct> = {
-  CENTER_BASIC: {
+export const B2B_IAP_PRODUCTS: Record<OrgPlanType, IAPProduct> = {
+  center_basic: {
     product_id: 'center_basic',
     name: '센터 Basic',
     price: 29000,
     type: 'non_consumable',
     description: '최대 30마리 + 직원 5명 + 일일 리포트',
   },
-  CENTER_PRO: {
+  center_pro: {
     product_id: 'center_pro',
     name: '센터 Pro',
     price: 59000,
     type: 'non_consumable',
     description: '최대 60마리 + 직원 10명 + AI 리포트 + 통계',
   },
-  CENTER_ENTERPRISE: {
+  center_enterprise: {
     product_id: 'center_enterprise',
     name: '센터 Enterprise',
     price: 99000,
     type: 'non_consumable',
     description: '최대 100마리+ + 직원 20명 + 전체 기능',
   },
-  TRAINER_10: {
+  trainer_10: {
     product_id: 'trainer_10',
     name: '훈련사 Lite',
     price: 9900,
     type: 'non_consumable',
     description: '최대 10마리 + 일일 리포트',
   },
-  TRAINER_30: {
+  trainer_30: {
     product_id: 'trainer_30',
     name: '훈련사 Standard',
     price: 19900,
     type: 'non_consumable',
     description: '최대 30마리 + AI 리포트 + 통계',
   },
-  TRAINER_50: {
+  trainer_50: {
     product_id: 'trainer_50',
     name: '훈련사 Pro',
     price: 39900,

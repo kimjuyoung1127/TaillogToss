@@ -5,8 +5,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from 'lib/api/queryKeys';
 import * as orgApi from 'lib/api/org';
-import type { OrgMember, DogAssignment } from 'types/b2b';
+import type { OrgMember, DogAssignment, OrgType } from 'types/b2b';
 import { getActiveOrgDogCount, getActiveOrgMemberCount } from 'lib/api/org';
+import { useOrg } from 'stores/OrgContext';
+
+/** 조직 생성 — create_organization RPC 호출 후 캐시 무효화 */
+export function useCreateOrg() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, type }: { name: string; type?: OrgType }) =>
+      orgApi.createOrganization(name, type ?? 'daycare'),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.org.all });
+    },
+  });
+}
 
 export function useOrgDetail(orgId: string | undefined) {
   return useQuery({
@@ -102,6 +115,32 @@ export function useOrgAssignments(orgId: string | undefined) {
     queryKey: queryKeys.assignments.byOrg(orgId ?? ''),
     queryFn: () => orgApi.getOrgAssignments(orgId!),
     enabled: !!orgId,
+  });
+}
+
+/** 센터 강아지 등록 (dogs + org_dogs 원자적 생성) */
+export function useCreateOrgDog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof orgApi.createOrgDog>[0]) =>
+      orgApi.createOrgDog(input),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.orgDogs.list(variables.org_id) });
+    },
+  });
+}
+
+/** 조직 기본 정보 수정 */
+export function useUpdateOrg() {
+  const qc = useQueryClient();
+  const { org, setOrg } = useOrg();
+  return useMutation({
+    mutationFn: (updates: Parameters<typeof orgApi.updateOrg>[1]) =>
+      orgApi.updateOrg(org!.id, updates),
+    onSuccess: (updatedOrg) => {
+      setOrg(updatedOrg);
+      void qc.invalidateQueries({ queryKey: queryKeys.org.detail(org!.id) });
+    },
   });
 }
 

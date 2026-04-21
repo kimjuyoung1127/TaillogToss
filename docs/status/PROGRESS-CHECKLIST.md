@@ -37,35 +37,28 @@
 
 ## B. 페이지 완성도 (PAGE-UPGRADE-BOARD 기준)
 
-### B1. Done (12/21 = 57%)
+### B1. Done (20/20 = 100%)
 
+- [x] `/onboarding/welcome` — AUTH-001, UIUX-004 | 2026-04-20
 - [x] `/onboarding/survey` — UIUX-004 | 2026-03-02
-- [x] `/onboarding/notification` — APP-001 | 2026-03-02
+- [x] `/onboarding/survey-result` — UI-001 | 2026-04-02
+- [x] `/onboarding/notification` — APP-001 | 2026-04-20
 - [x] `/dashboard` — UIUX-001 | 2026-03-01
 - [x] `/dashboard/quick-log` — LOG-001 | 2026-03-01
 - [x] `/dashboard/analysis` — UIUX-001 | 2026-03-02
-- [x] `/coaching/result` — UIUX-005, AI-001 | 2026-03-13
+- [x] `/coaching/result` — UIUX-005, AI-001 | 2026-04-20
 - [x] `/training/academy` — UIUX-002, UIUX-003 | 2026-03-01
-- [x] `/training/detail` — UIUX-005 | 2026-03-01
+- [x] `/training/detail` — UIUX-005 | 2026-04-20
 - [x] `/dog/profile` — UIUX-006 | 2026-03-02
+- [x] `/dog/add` — APP-001 | 2026-04-02
+- [x] `/dog/switcher` — UIUX-006 | 2026-04-02
 - [x] `/settings` — APP-001 | 2026-03-02
-- [x] `/ops/today` — B2B-001 | 2026-03-01
-
-### B2. QA (1/21 = 5%)
-
-- [ ] `/dog/switcher` — UIUX-006 | QA 진행 중
-
-### B3. Ready (8/21 = 38%)
-
-- [ ] `/login` — AUTH-001 | P2
-- [ ] `/onboarding/welcome` — UIUX-004 | P1
-- [ ] `/onboarding/survey-result` — UI-001 | P1
-- [ ] `/dog/add` — APP-001 | P1
-- [ ] `/settings/subscription` — IAP-001 | P1
-- [ ] `/legal/terms` — APP-001 | P2
-- [ ] `/legal/privacy` — APP-001 | P2
-- [ ] `/ops/settings` — B2B-001 | P2
-- [ ] `/parent/reports` — B2B-001 | P2
+- [x] `/settings/subscription` — IAP-001 | 2026-04-02
+- [x] `/legal/terms` — APP-001 | 2026-04-02
+- [x] `/legal/privacy` — APP-001 | 2026-04-02
+- [x] `/ops/today` — B2B-001 | 2026-04-20
+- [x] `/parent/reports` — B2B-001 | 2026-04-21 (FlatList 목록+선택 상세 개선)
+- [x] `/ops/settings` — B2B-001, B2B-002 | 2026-04-21 (센터정보수정+강아지현황+멤버관리+플랜카드 실데이터)
 
 ---
 
@@ -159,7 +152,7 @@
 ### D2. Mock/부분 구현 (20%)
 
 - [ ] 광고 Ads SDK 2.0 → `createMockAdsSdk()` 사용 중
-  - [ ] 실 Ad Group ID 교체
+  - [ ] 실 Ad Group ID 교체 **⏸ 보류** — 계좌사본 미비, 사업자 광고 심사 불가. ENV 구조(AIT_AD_R1/R2/R3 + babel inline) 준비 완료
   - [ ] Rewarded/Interstitial/Banner 실 검증
 - [x] ~~send-smart-message → mock mTLS~~ → ✅ real mTLS (v14)
 - [x] ~~grant-toss-points → mock mTLS~~ → ✅ real mTLS (v14)

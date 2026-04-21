@@ -6,6 +6,22 @@ import { supabase } from './supabase';
 import { requestBackend, withBackendFallback } from './backend';
 import type { Organization, OrgMember, OrgDog, DogAssignment } from 'types/b2b';
 
+/**
+ * 조직 생성 + owner 멤버 자동 등록 (SECURITY DEFINER RPC)
+ * RLS INSERT 정책 없는 organizations 테이블을 RPC로 원자적 처리
+ */
+export async function createOrganization(
+  name: string,
+  type: string = 'daycare',
+): Promise<Organization> {
+  const { data, error } = await supabase.rpc('create_organization', {
+    p_name: name,
+    p_type: type,
+  });
+  if (error) throw error;
+  return data as Organization;
+}
+
 /** 조직 상세 조회 */
 export async function getOrg(orgId: string): Promise<Organization> {
   const { data, error } = await supabase.from('organizations').select('*').eq('id', orgId).single();
@@ -58,6 +74,7 @@ function mapBackendOrgDog(row: BackendOrgDogWithStatus): OrgDogWithStatus {
     dog_id: row.dog_id,
     parent_user_id: row.parent_user_id ?? null,
     parent_name: row.parent_name ?? null,
+    parent_phone_last4: null,
     group_tag: row.group_tag ?? 'default',
     enrolled_at: row.enrolled_at,
     discharged_at: row.discharged_at ?? null,
@@ -180,8 +197,9 @@ export async function enrollDog(input: {
   parent_user_id?: string;
   parent_name?: string;
   group_tag?: string;
-  parent_phone_enc?: string; // 이미 암호화된 base64
-  parent_email_enc?: string; // 이미 암호화된 base64
+  parent_phone_last4?: string; // 인증용 명문 뒷 4자리
+  parent_phone_enc?: string;   // btoa 인코딩된 전화번호 (추후 AES-GCM 교체)
+  parent_email_enc?: string;   // btoa/암호화된 이메일
 }): Promise<OrgDog> {
   const { data, error } = await supabase
     .from('org_dogs')
@@ -191,6 +209,7 @@ export async function enrollDog(input: {
       parent_user_id: input.parent_user_id ?? null,
       parent_name: input.parent_name ?? null,
       group_tag: input.group_tag ?? 'default',
+      parent_phone_last4: input.parent_phone_last4 ?? null,
     })
     .select()
     .single();
@@ -298,6 +317,88 @@ export async function getOrgTodayStats(orgId: string): Promise<import('types/b2b
     .single();
   if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
   return data as import('types/b2b').OrgAnalyticsDaily | null;
+}
+
+/**
+ * 센터 강아지 등록 — dogs 레코드 생성 후 org_dogs에 입소 처리
+ * (보호자가 앱 미가입인 경우를 위해 trainerId를 임시 owner로 사용)
+ * NOTE: parent_phone_enc는 btoa 임시 저장 — 추후 Edge Function AES-GCM으로 교체 예정
+ * NOTE: parent_phone_last4는 인증용 명문 저장 (PII 비해당)
+ */
+export async function createOrgDog(input: {
+  org_id: string;
+  trainer_user_id: string; // dogs.user_id 임시 owner
+  dog_name: string;
+  dog_breed?: string;
+  dog_sex: 'MALE' | 'FEMALE';
+  parent_name?: string;
+  parent_phone?: string;  // 선택 — org_dogs_pii에 btoa 저장 + last4 명문 저장
+  parent_address?: string; // 선택 — dogs.parent_address 저장
+  vet_name?: string;       // 선택 — dogs.vet_name 저장
+  animal_reg_no?: string;  // 선택 — dogs.animal_reg_no 저장
+  group_tag?: string;
+}): Promise<OrgDog> {
+  // 1. dogs 레코드 생성 (의료/주소 필드 포함)
+  const { data: dog, error: dogError } = await supabase
+    .from('dogs')
+    .insert({
+      user_id: input.trainer_user_id,
+      name: input.dog_name.trim(),
+      breed: input.dog_breed?.trim() || null,
+      sex: input.dog_sex,
+      parent_address: input.parent_address?.trim() || null,
+      vet_name: input.vet_name?.trim() || null,
+      animal_reg_no: input.animal_reg_no?.trim() || null,
+    })
+    .select()
+    .single();
+  if (dogError) throw dogError;
+
+  // 2. 전화번호 처리 — last4 추출 + btoa 인코딩
+  const phoneDigits = input.parent_phone?.replace(/\D/g, '') || '';
+  const parentPhoneLast4 = phoneDigits.length >= 4 ? phoneDigits.slice(-4) : undefined;
+  const parentPhoneEnc = phoneDigits
+    ? btoa(unescape(encodeURIComponent(phoneDigits)))
+    : undefined;
+
+  // 3. org_dogs에 입소 처리
+  return enrollDog({
+    org_id: input.org_id,
+    dog_id: dog.id,
+    parent_name: input.parent_name?.trim() || undefined,
+    group_tag: input.group_tag?.trim() || 'default',
+    parent_phone_last4: parentPhoneLast4,
+    parent_phone_enc: parentPhoneEnc,
+  });
+}
+
+/**
+ * 현재 유저의 조직 + 멤버십 조회 (앱 부트스트랩용)
+ * org_members JOIN organizations — B2B 역할 유저가 앱 시작 시 자신의 org를 로드할 때 사용
+ */
+export async function getMyOrg(
+  userId: string,
+): Promise<{ org: Organization; membership: OrgMember } | null> {
+  const { data, error } = await supabase
+    .from('org_members')
+    .select('*, organizations!inner(*)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  const membership: OrgMember = {
+    id: data.id,
+    org_id: data.org_id,
+    user_id: data.user_id,
+    role: data.role,
+    status: data.status,
+    invited_at: data.invited_at,
+    accepted_at: data.accepted_at,
+  };
+  return { org: (data as any).organizations as Organization, membership };
 }
 
 /** 조직 설정 업데이트 */

@@ -21,6 +21,7 @@ describe('verify-iap-order handler', () => {
   });
 
   test('retries transient 5xx and succeeds', async () => {
+    jest.useRealTimers();
     const handler = createVerifyIapOrderHandler();
 
     const result = await handler(

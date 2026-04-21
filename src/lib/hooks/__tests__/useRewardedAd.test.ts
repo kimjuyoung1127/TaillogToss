@@ -1,19 +1,29 @@
 /**
- * useRewardedAd 훅 테스트 — 상태 전이, 타임아웃 폴백, 일일 한도, 에러 폴백
+ * useRewardedAd 훅 테스트 — 상태 전이, 타임아웃 폴백, 에러 폴백
  * Parity: AD-001
+ *
+ * SDK 인터페이스: 콜백 기반 (onLoaded / onRewarded / onClosed / onError)
+ * → mock은 callbacks를 동기 호출로 시뮬레이션
  */
 import { renderHook, act } from '@testing-library/react-native';
 import { useRewardedAd } from '../useRewardedAd';
 
-// Mock SDK — 테스트별 동작 제어
-let mockLoadFn: jest.Mock;
-let mockShowFn: jest.Mock;
+type LoadOpts = { adGroupId: string; onLoaded: () => void; onError: (e: Error) => void };
+type ShowOpts = { onRewarded: () => void; onClosed: () => void; onError: (e: Error) => void };
+
+// 콜백 캡처용 — 각 테스트에서 직접 트리거 가능
+let capturedLoadOpts: LoadOpts | null = null;
+let capturedShowOpts: ShowOpts | null = null;
 
 jest.mock('lib/ads/config', () => ({
   getAdGroupId: () => 'test-ad-group-id',
   getAdsSdk: () => ({
-    loadFullScreenAd: (...args: unknown[]) => mockLoadFn(...args),
-    showFullScreenAd: (...args: unknown[]) => mockShowFn(...args),
+    loadFullScreenAd: (opts: LoadOpts) => {
+      capturedLoadOpts = opts;
+    },
+    showFullScreenAd: (opts: ShowOpts) => {
+      capturedShowOpts = opts;
+    },
     isAdLoaded: () => true,
     destroy: jest.fn(),
   }),
@@ -31,8 +41,8 @@ jest.mock('lib/analytics/tracker', () => ({
 
 beforeEach(() => {
   jest.useFakeTimers();
-  mockLoadFn = jest.fn().mockResolvedValue(undefined);
-  mockShowFn = jest.fn().mockResolvedValue({ rewarded: true });
+  capturedLoadOpts = null;
+  capturedShowOpts = null;
 });
 
 afterEach(() => {
@@ -49,24 +59,33 @@ describe('useRewardedAd', () => {
     expect(result.current.isDailyLimitReached).toBe(false);
   });
 
-  it('showAd → loading → rewarded 상태 전이 + onRewarded 호출', async () => {
+  it('showAd → loading → showing → rewarded 상태 전이 + onRewarded 호출', async () => {
     const onRewarded = jest.fn();
     const { result } = renderHook(() => useRewardedAd('R1', onRewarded));
 
+    // showAd 호출 → loading 상태 + loadFullScreenAd 콜백 캡처
     await act(async () => {
       result.current.showAd();
-      // Promise 체인 해소
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
     });
+    expect(result.current.adState).toBe('loading');
+    expect(capturedLoadOpts).not.toBeNull();
 
+    // onLoaded 트리거 → showing 상태 + showFullScreenAd 콜백 캡처
+    await act(async () => {
+      capturedLoadOpts!.onLoaded();
+    });
+    expect(result.current.adState).toBe('showing');
+    expect(capturedShowOpts).not.toBeNull();
+
+    // onRewarded 트리거 → rewarded 상태
+    await act(async () => {
+      capturedShowOpts!.onRewarded();
+    });
     expect(result.current.adState).toBe('rewarded');
     expect(onRewarded).toHaveBeenCalledTimes(1);
   });
 
-  it('SDK 에러 시 error 상태 + 무광고 폴백으로 onRewarded 호출', async () => {
-    mockLoadFn.mockRejectedValue(new Error('Network error'));
+  it('SDK loadFullScreenAd 에러 시 error 상태 + 무광고 폴백으로 onRewarded 호출', async () => {
     const onRewarded = jest.fn();
     const onError = jest.fn();
 
@@ -74,48 +93,55 @@ describe('useRewardedAd', () => {
 
     await act(async () => {
       result.current.showAd();
-      await Promise.resolve();
-      await Promise.resolve();
+    });
+    expect(capturedLoadOpts).not.toBeNull();
+
+    // load 에러 트리거
+    await act(async () => {
+      capturedLoadOpts!.onError(new Error('Network error'));
     });
 
     expect(result.current.adState).toBe('error');
-    expect(onRewarded).toHaveBeenCalledTimes(1); // 무광고 폴백
+    expect(onRewarded).toHaveBeenCalledTimes(1); // unlock_on_no_fill
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
   it('loading 중 중복 showAd 호출 무시', async () => {
-    // 느린 로드 시뮬레이션
-    mockLoadFn.mockImplementation(() => new Promise(() => {}));
     const onRewarded = jest.fn();
     const { result } = renderHook(() => useRewardedAd('R3', onRewarded));
 
+    // 첫 번째 showAd → loading (콜백 미트리거로 유지)
     await act(async () => {
       result.current.showAd();
-      await Promise.resolve();
     });
-
     expect(result.current.adState).toBe('loading');
 
-    // 중복 호출 — 무시되어야 함
+    // 두 번째 showAd → 무시 (loading 상태이므로)
+    const prevLoadOpts = capturedLoadOpts;
     await act(async () => {
       result.current.showAd();
-      await Promise.resolve();
     });
 
-    expect(mockLoadFn).toHaveBeenCalledTimes(1);
+    // loadFullScreenAd가 한 번만 호출됐는지 확인 (capturedLoadOpts 동일)
+    expect(capturedLoadOpts).toBe(prevLoadOpts);
+    expect(result.current.adState).toBe('loading');
   });
 
-  it('보상 미지급 시 no_fill + 무광고 폴백', async () => {
-    mockShowFn.mockResolvedValue({ rewarded: false });
+  it('보상 미지급(onClosed) 시 no_fill + 무광고 폴백으로 onRewarded 호출', async () => {
     const onRewarded = jest.fn();
-
     const { result } = renderHook(() => useRewardedAd('R1', onRewarded));
 
     await act(async () => {
       result.current.showAd();
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
+    });
+    await act(async () => {
+      capturedLoadOpts!.onLoaded();
+    });
+    expect(result.current.adState).toBe('showing');
+
+    // 보상 없이 닫기 → no_fill
+    await act(async () => {
+      capturedShowOpts!.onClosed();
     });
 
     expect(result.current.adState).toBe('no_fill');

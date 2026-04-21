@@ -19,6 +19,7 @@ describe('grant-toss-points handler', () => {
   });
 
   test('maps toss error codes on failure', async () => {
+    jest.useRealTimers();
     const handler = createGrantTossPointsHandler({ usedGrantKeys: new Set<string>() });
 
     const result = await handler(

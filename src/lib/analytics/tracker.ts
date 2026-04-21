@@ -26,7 +26,7 @@ export interface EventPayloadMap {
 export type EventName = keyof EventPayloadMap;
 
 function track<K extends EventName>(event: K, payload: EventPayloadMap[K]): void {
-  console.log('[tracker]', event, payload ?? {});
+  if (__DEV__) console.log('[tracker]', event, payload ?? {});
 }
 
 export const tracker = {

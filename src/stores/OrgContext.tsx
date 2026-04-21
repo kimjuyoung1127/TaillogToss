@@ -9,8 +9,10 @@ import type { UserRole } from 'types/auth';
 interface OrgContextValue {
   org: Organization | null;
   membership: OrgMember | null;
+  isOrgLoading: boolean;
   setOrg: (org: Organization | null) => void;
   setMembership: (member: OrgMember | null) => void;
+  setOrgLoading: (loading: boolean) => void;
 }
 
 const OrgContext = createContext<OrgContextValue | null>(null);
@@ -18,6 +20,7 @@ const OrgContext = createContext<OrgContextValue | null>(null);
 export function OrgProvider({ children }: { children: React.ReactNode }) {
   const [org, setOrgState] = useState<Organization | null>(null);
   const [membership, setMembershipState] = useState<OrgMember | null>(null);
+  const [isOrgLoading, setIsOrgLoading] = useState(true); // 최초 로드 완료 전까지 true
 
   const setOrg = useCallback((newOrg: Organization | null) => {
     setOrgState(newOrg);
@@ -27,9 +30,13 @@ export function OrgProvider({ children }: { children: React.ReactNode }) {
     setMembershipState(member);
   }, []);
 
+  const setOrgLoading = useCallback((loading: boolean) => {
+    setIsOrgLoading(loading);
+  }, []);
+
   const value = useMemo(
-    () => ({ org, membership, setOrg, setMembership }),
-    [org, membership, setOrg, setMembership]
+    () => ({ org, membership, isOrgLoading, setOrg, setMembership, setOrgLoading }),
+    [org, membership, isOrgLoading, setOrg, setMembership, setOrgLoading]
   );
 
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>;

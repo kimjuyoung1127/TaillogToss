@@ -26,7 +26,6 @@ export function DogPhotoPicker({ uri, onSelect: _onSelect }: Props) {
       // if (result.uri) onSelect(result.uri);
 
       // 테스트용 Mock (실제 환경에서는 브릿지 호출로 대체)
-      console.log('Image picker triggered');
     } catch (e) {
       console.error('Image picking failed:', e);
     }
@@ -90,10 +89,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.white,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontWeight: '700',
     fontSize: 18,
   },

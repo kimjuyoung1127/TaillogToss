@@ -1,6 +1,8 @@
 # TaillogToss Project Status
 
-Last Updated: 2026-04-20 (KST) — withdraw-user Edge Function 신규 배포 (ES256 호환) + 탈퇴 AuthContext 버그 수정 + 기록 롱프레스 삭제
+Last Updated: 2026-04-21 (KST) — ops/settings 실데이터 업그레이드(B2B-002): 센터정보수정(OrgInfoEditForm+useUpdateOrg), 강아지현황카드(DogQuotaCard), 멤버초대피드백(Alert), 플랜카드(PlanCard), B2B_IAP_PRODUCTS 키 케이스 불일치 수정. OrgContext isOrgLoading 추가, OrgBootstrap role체크 제거 → org null 버그 해결. ops/dog-add isOrgLoading 대기+ops/setup 리디렉트. dogs 테이블 vet_name/animal_reg_no/parent_address 컬럼 추가 migration, org_dogs.parent_phone_last4 명문 저장 + verify_parent_phone_last4 RPC 수정. 128/128 테스트 통과.
+
+Previous: Supabase 프로젝트 정합성 복구: CLI를 올바른 프로젝트(`gxvtgrcqkbdibkyeqyil`)에 재연결, `assign-b2b-role` Edge Function 재배포(verify_jwt=false), `create_organization`+`verify_parent_phone_last4` RPC 신규 프로젝트에 적용, `behavior_logs.org_id` 미삽입 버그 수정(QuickLogInput+createQuickLog+ops/today). 전체 40개 테이블 스키마 비교 완료.
 Owner Doc: `CLAUDE.md` (슬림 인덱스), 본 문서는 상태/이력 상세 전용.
 
 ## Mac 마이그레이션 (2026-04-02)
@@ -44,6 +46,7 @@ vibehub-media 하네스 이식 완료:
 | `toss-disconnect` | v17→ping수정 | false | — | ping(빈 body) 200 pong 처리 추가, 콘솔 콜백 검증 대기 |
 | `generate-report` | v8→재배포 | true | — | 신규 프로젝트 재배포 |
 | `withdraw-user` | v3 | false | — | 신규 배포: verify_jwt=false + 내부 Admin API JWT검증(ES256 호환), public/auth 실삭제 |
+| `assign-b2b-role` | v2 | false | **real** | 재배포(2026-04-21): 올바른 프로젝트(gxvtgrcqkbdibkyeqyil)에 배포, verify_jwt=false + 내부 JWT 수동 검증 |
 
 > **신규 프로젝트**: `gxvtgrcqkbdibkyeqyil` (2026-04-20 이전, Toss 미니앱 전용)
 
@@ -55,11 +58,12 @@ vibehub-media 하네스 이식 완료:
 | APP-001 | 앱 셸 | In Progress | 23라우트, _app.tsx, 레이아웃 5종, 딥엔트리 3종 | 실기기 라우팅 완전 검증 |
 | UI-001 | 디자인 | In Progress | 52컴포넌트, 토큰 중앙화 70+파일, Lottie 3종, 상태UI 8화면 | 실기기 비주얼 QA |
 | LOG-001 | 행동 기록 | In Progress | 대시보드/빠른기록/상세기록/분석, backend-first 전환 + useDeleteLog 낙관적 삭제 훅 + LogCard 롱프레스 UI (2026-04-20) | FastAPI 로그 API 실기기 E2E |
-| AI-001 | AI 코칭 | In Progress | 6블록 코칭, 피드백, BE-P5 완료, backend-first 전환 | FastAPI 코칭 API 실연동 E2E |
+| AI-001 | AI 코칭 | In Progress | 6블록 코칭, 피드백, BE-P5, backend-first, 실연동 E2E 완료(2026-04-20): subscriptions drift 수정, max_tokens 1800, ownership 검증, CoachingGenerationLoader 5단계, FreeBlock Plan C | 실기기 QA (typing/Lottie/bg-flash 시각 확인) |
+| AI-TRAIN-001 | 훈련 데이터 플라이휠 | InProgress | 합성 생성(synthetic.py) + 품질 태깅(training.py) + admin API 3개(ADMIN_API_KEY 인증) + migration(training_candidate/quality_score/approved/synthetic 컬럼) + 자동화 2개(daily 08:00 / weekly 일 09:00) | Supabase Edge Function 포팅, ADMIN_API_KEY .env 값 설정, pg_cron 스케줄 등록 |
 | IAP-001 | 결제 | In Progress | 구독 화면, useIsPro, verifyAndGrant, Edge v12, iap.test 9케이스, 서버 3시나리오+복구 재검증 증적 + DB 영속(5건) 확인 | 실기기 결제 UI 3시나리오 증적 정리 |
-| MSG-001 | 알림 | In Progress | Edge v9, 쿨다운, noti_history 영속, 우회차단, 테스트 통과 | Smart Message 신청/승인 완료 후 Sandbox 실발송 |
+| MSG-001 | 알림 | In Progress | Edge v9, 쿨다운, noti_history 영속, 우회차단, 테스트 통과, Sandbox 실발송 완료(2026-04-20, A/B안 발송됨) | 토스팀 검토 승인 후 FastAPI 연동(templateCode: taillog-app-TAILLOG_BEHAVIOR_REMIND) |
 | AD-001 | 광고 | Done | 타입, mock SDK, useRewardedAd, R1/R2/R3 통합, test 5케이스 | 실 Ad Group ID 교체 + Sandbox 검증 |
-| B2B-001 | B2B 운영 | In Progress | P1~P7, 스키마 정합, roleGuard test 8케이스, BE-P7 | 40마리 FlatList 성능, 공유 링크, B2C 회귀, verify_parent_phone RPC |
+| B2B-001 | B2B 운영 | In Progress | P1~P7, 스키마 정합, roleGuard test 8케이스, BE-P7, `/ops/setup` 페이지(2026-04-21), `create_organization` RPC(2026-04-21), `assign-b2b-role` Edge(2026-04-21), B2B 무료 전환(2026-04-21), `/dashboard` B2B 배너(2026-04-21), `/ops/dog-add` 페이지(2026-04-21), `createOrgDog()` API(2026-04-21) | 40마리 FlatList 성능, 공유 링크, B2C 회귀, verify_parent_phone RPC |
 | REG-001 | 등록 | Done | legal, toss-disconnect, mTLS 구현, 약관 2종, 사업자등록/배포 완료 | 콘솔 테스트 콜백 검증 |
 
 ## Phase 진행 현황
@@ -83,7 +87,7 @@ vibehub-media 하네스 이식 완료:
 | AUTH | 진행 | 실기기 200/400 증적 확보, 문서/스크린샷 정리 |
 | IAP | 진행 | 앱 UI 기준 결제/복구/실패 3시나리오 증적 정리 |
 | MSG | 진행 | Smart Message 신청/승인 대기 + Sandbox 실발송 미검증 |
-| AD | 진행 | 실 Ad Group ID 교체 + 실노출 미검증 |
+| AD | **보류** | 실 Ad Group ID 교체 보류 — 계좌사본 미비로 사업자 광고 심사 불가. ENV 구조(AIT_AD_R1/R2/R3)는 준비 완료 |
 | UI | 진행 | 실기기 비주얼 QA |
 | Edge 7종 | 진행 | happy-path payload 실검증 잔여 |
 | BE (FastAPI) | 완료 | - |
@@ -97,7 +101,7 @@ vibehub-media 하네스 이식 완료:
 
 | 항목 | 위치 | 전환 필요 |
 |------|------|----------|
-| Ads SDK | `src/lib/ads/config.ts` | 실 Ad Group ID 교체 |
+| Ads SDK | `src/lib/ads/config.ts` | 실 Ad Group ID 교체 **보류** — 계좌사본 없어 광고 심사 불가. ENV 준비됨(AIT_AD_R1/R2/R3 fallback) |
 | IAP 래퍼 | `src/lib/api/iap.ts` | 실 SDK 교체 |
 | generate-report | `supabase/functions/generate-report/` | `REPORT_AI_MODE=real` + 실 OpenAI 키 |
 | ~~verify-iap-order~~ | `supabase/functions/verify-iap-order/` | ✅ real mTLS 전환 완료 (v17) |

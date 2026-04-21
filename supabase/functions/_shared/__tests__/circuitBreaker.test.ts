@@ -29,6 +29,7 @@ describe('circuitBreaker', () => {
   });
 
   test('retries only for 5xx errors', async () => {
+    jest.useRealTimers();
     let attempts = 0;
 
     const value = await retryOnServerError(

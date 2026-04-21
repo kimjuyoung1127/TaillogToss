@@ -1,23 +1,36 @@
 /**
- * Ops 설정 — 조직 정보, 직원 관리, 프리셋 관리, 통계
- * Parity: B2B-001
+ * Ops 설정 — 센터정보수정 / 강아지현황 / 직원관리 / 플랜 (실데이터)
+ * Parity: B2B-002
  */
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { colors, typography } from 'styles/tokens';
+import {
+  View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, Modal, ActivityIndicator, Alert,
+} from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
+import { colors, typography, spacing } from 'styles/tokens';
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import { ErrorState } from 'components/tds-ext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useOrg } from 'stores/OrgContext';
-import { useOrgMembers, useInviteMember, useOrgTodayStats } from 'lib/hooks/useOrg';
-import { useOrgEntitlement } from 'lib/hooks/useOrgSubscription';
+import {
+  useOrgMembers, useInviteMember, useOrgTodayStats,
+  useOrgDogs, useUpdateOrg,
+} from 'lib/hooks/useOrg';
+import { useOrgEntitlement, useOrgSubscription } from 'lib/hooks/useOrgSubscription';
 import { MemberList } from 'components/features/ops/MemberList';
 import { InviteSheet } from 'components/features/ops/InviteSheet';
 import { OrgStatsSheet } from 'components/features/ops/OrgStatsSheet';
 import { PresetManager } from 'components/features/ops/PresetManager';
-import type { OrgMemberRole } from 'types/b2b';
+import { OrgInfoEditForm } from 'components/features/ops/OrgInfoEditForm';
+import { DogQuotaCard } from 'components/features/ops/DogQuotaCard';
+import { PlanCard } from 'components/features/ops/PlanCard';
+import type { OrgMemberRole, Organization } from 'types/b2b';
 
-export const Route = createRoute('/ops/settings', { component: OpsSettingsPage });
+export const Route = createRoute('/ops/settings', {
+  component: OpsSettingsPage,
+  screenOptions: { headerShown: false },
+});
 
 function OpsSettingsPage() {
   const { isReady } = usePageGuard({
@@ -26,36 +39,54 @@ function OpsSettingsPage() {
   });
   const navigation = useNavigation();
   const { org } = useOrg();
+
   const { data: members, isLoading: membersLoading, isError: membersError, refetch: refetchMembers } = useOrgMembers(org?.id);
   const { data: todayStats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useOrgTodayStats(org?.id);
+  const { data: orgDogs, isLoading: dogsLoading } = useOrgDogs(org?.id);
+  const { data: subscription, isLoading: subLoading } = useOrgSubscription(org?.id);
+  const entitlement = useOrgEntitlement(org?.id);
+  const inviteMember = useInviteMember(entitlement.maxStaff);
+  const updateOrg = useUpdateOrg();
 
   const isLoading = membersLoading || statsLoading;
   const isError = membersError || statsError;
   const refetchAll = useCallback(() => { void refetchMembers(); void refetchStats(); }, [refetchMembers, refetchStats]);
-  const entitlement = useOrgEntitlement(org?.id);
-  const inviteMember = useInviteMember(entitlement.maxStaff);
 
   const [showInvite, setShowInvite] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
+  const activeCount = orgDogs?.filter((d) => d.status === 'active').length ?? 0;
+
   const handleInvite = useCallback((userId: string, role: OrgMemberRole) => {
     if (!org) return;
-    inviteMember.mutate({ org_id: org.id, user_id: userId, role });
-    setShowInvite(false);
+    inviteMember.mutate(
+      { org_id: org.id, user_id: userId, role },
+      {
+        onSuccess: () => {
+          setShowInvite(false);
+          Alert.alert('초대 완료', '직원을 초대했어요.');
+        },
+        onError: (err) => {
+          Alert.alert('초대 실패', err instanceof Error ? err.message : '다시 시도해주세요.');
+        },
+      },
+    );
   }, [org, inviteMember]);
+
+  const handleOrgSave = useCallback((updates: Pick<Organization, 'name' | 'phone' | 'address'>) => {
+    updateOrg.mutate(updates, {
+      onError: () => {
+        Alert.alert('저장 실패', '센터 정보를 저장하지 못했어요. 다시 시도해주세요.');
+      },
+    });
+  }, [updateOrg]);
 
   if (!isReady) return null;
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.navbar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Text style={styles.backBtn}>{'\u2190'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.navTitle}>운영 설정</Text>
-          <View style={styles.navSpacer} />
-        </View>
+        <Navbar onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primaryBlue} />
         </View>
@@ -66,13 +97,7 @@ function OpsSettingsPage() {
   if (isError) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.navbar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <Text style={styles.backBtn}>{'\u2190'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.navTitle}>운영 설정</Text>
-          <View style={styles.navSpacer} />
-        </View>
+        <Navbar onBack={() => navigation.goBack()} />
         <ErrorState onRetry={refetchAll} />
       </SafeAreaView>
     );
@@ -80,49 +105,48 @@ function OpsSettingsPage() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={styles.backBtn}>{'\u2190'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.navTitle}>운영 설정</Text>
-        <View style={styles.navSpacer} />
-      </View>
+      <Navbar onBack={() => navigation.goBack()} />
 
-      <ScrollView style={styles.body}>
-        {/* 조직 정보 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>조직 정보</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>이름</Text>
-            <Text style={styles.infoValue}>{org?.name ?? '—'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>유형</Text>
-            <Text style={styles.infoValue}>{org?.type ?? '—'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>최대 강아지</Text>
-            <Text style={styles.infoValue}>{org?.max_dogs ?? 0}마리</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>최대 직원</Text>
-            <Text style={styles.infoValue}>{org?.max_staff ?? 0}명</Text>
-          </View>
-        </View>
+      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
 
-        {/* 직원 관리 */}
+        {/* M1: 센터 기본 정보 수정 */}
+        {org && (
+          <OrgInfoEditForm
+            org={org}
+            isLoading={updateOrg.isPending}
+            onSave={handleOrgSave}
+          />
+        )}
+
+        {/* M2: 강아지 현황 */}
+        <DogQuotaCard
+          activeCount={activeCount}
+          maxDogs={entitlement.maxDogs}
+          isLoading={dogsLoading}
+        />
+
+        {/* M3: 직원 관리 */}
         <MemberList
           members={members ?? []}
           onInvite={() => setShowInvite(true)}
         />
 
-        {/* 통계 */}
+        {/* 통계 버튼 */}
         <TouchableOpacity style={styles.statsBtn} onPress={() => setShowStats(true)} activeOpacity={0.7}>
           <Text style={styles.statsBtnText}>운영 통계 보기</Text>
         </TouchableOpacity>
 
         {/* 프리셋 관리 */}
         <PresetManager />
+
+        {/* M4: 구독 플랜 */}
+        <PlanCard
+          subscription={subscription}
+          isLoading={subLoading}
+          onUpgrade={() => navigation.navigate('/settings/subscription' as never)}
+        />
+
+        <View style={styles.bottomPad} />
       </ScrollView>
 
       {/* 초대 모달 */}
@@ -138,28 +162,39 @@ function OpsSettingsPage() {
   );
 }
 
+function Navbar({ onBack }: { onBack: () => void }) {
+  return (
+    <View style={styles.navbar}>
+      <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
+        <Text style={styles.backBtn}>{'\u2190'}</Text>
+      </TouchableOpacity>
+      <Text style={styles.navTitle}>운영 설정</Text>
+      <View style={styles.navSpacer} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   navbar: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.divider,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: colors.divider,
   },
-  backBtn: { ...typography.pageTitle, color: colors.textPrimary, paddingRight: 8 },
+  backBtn: { ...typography.sectionTitle, color: colors.textPrimary, paddingRight: 8 },
   navTitle: { flex: 1, ...typography.subtitle, fontWeight: '600', color: colors.textPrimary, textAlign: 'center' },
   navSpacer: { width: 30 },
   body: { flex: 1 },
-  section: { paddingHorizontal: 20, paddingTop: 20 },
-  sectionTitle: { ...typography.label, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
-  infoRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F2F3F5',
-  },
-  infoLabel: { ...typography.detail, color: '#6B7280' },
-  infoValue: { ...typography.detail, fontWeight: '600', color: colors.textPrimary },
   statsBtn: {
-    marginHorizontal: 20, marginVertical: 16,
-    backgroundColor: colors.divider, borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+    marginHorizontal: spacing.screenHorizontal,
+    marginVertical: spacing.md,
+    backgroundColor: colors.divider,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
-  statsBtnText: { ...typography.bodySmall, fontWeight: '600', color: '#374151' },
+  statsBtnText: { ...typography.bodySmall, fontWeight: '600', color: colors.textDark },
+  bottomPad: { height: spacing.xxxl },
 });
