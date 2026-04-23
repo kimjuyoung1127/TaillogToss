@@ -29,7 +29,7 @@ function wrapHTML(chartScript: string): string {
 }
 
 /** Radar 차트 HTML */
-export function generateRadarHTML(data: RadarChartData): string {
+export function generateRadarHTML(data: RadarChartData, title?: string): string {
   const config = {
     type: 'radar',
     data: {
@@ -37,10 +37,10 @@ export function generateRadarHTML(data: RadarChartData): string {
       datasets: data.datasets.map((ds) => ({
         label: ds.label,
         data: ds.data,
-        backgroundColor: ds.backgroundColor ?? 'rgba(0, 100, 255, 0.2)',
-        borderColor: ds.borderColor ?? '#0064FF',
+        backgroundColor: ds.backgroundColor ?? 'rgba(78, 138, 255, 0.2)',
+        borderColor: ds.borderColor ?? '#4E8AFF',
         borderWidth: 2,
-        pointBackgroundColor: ds.borderColor ?? '#0064FF',
+        pointBackgroundColor: ds.borderColor ?? '#4E8AFF',
       })),
     },
     options: {
@@ -48,7 +48,10 @@ export function generateRadarHTML(data: RadarChartData): string {
       scales: {
         r: { beginAtZero: true, max: 100, ticks: { stepSize: 20 } },
       },
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        title: { display: !!title, text: title ?? '', font: { size: 13, weight: 'bold' }, padding: { bottom: 8 } },
+      },
     },
   };
   return wrapHTML(`
@@ -58,7 +61,8 @@ export function generateRadarHTML(data: RadarChartData): string {
 }
 
 /** Heatmap 차트 HTML (matrix plugin 또는 순수 canvas) */
-export function generateHeatmapHTML(data: HeatmapData): string {
+export function generateHeatmapHTML(data: HeatmapData, title?: string): string {
+  const padT = title ? 36 : 20;
   const script = `
     const canvas = document.getElementById('chart');
     const ctx = canvas.getContext('2d');
@@ -66,16 +70,25 @@ export function generateHeatmapHTML(data: HeatmapData): string {
     const days = ${JSON.stringify(data.day_labels)};
     const hours = ${JSON.stringify(data.hour_labels)};
     const maxVal = ${data.max_value};
+    const title = ${JSON.stringify(title ?? null)};
 
-    const cellW = 20, cellH = 20, padL = 30, padT = 20;
+    const cellW = 20, cellH = 20, padL = 30, padT = ${padT};
     canvas.width = padL + hours.length * cellW + 10;
     canvas.height = padT + days.length * cellH + 10;
 
+    if (title) {
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, canvas.width / 2, 18);
+    }
+
     ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#333';
     ctx.textAlign = 'center';
 
     hours.forEach((h, i) => {
-      if (i % 3 === 0) ctx.fillText(h, padL + i * cellW + cellW/2, 12);
+      if (i % 3 === 0) ctx.fillText(h, padL + i * cellW + cellW/2, padT - 8);
     });
     days.forEach((d, i) => {
       ctx.textAlign = 'right';
@@ -85,7 +98,7 @@ export function generateHeatmapHTML(data: HeatmapData): string {
     matrix.forEach((row, ri) => {
       row.forEach((val, ci) => {
         const intensity = maxVal > 0 ? val / maxVal : 0;
-        ctx.fillStyle = 'rgba(0, 100, 255, ' + (0.1 + intensity * 0.8) + ')';
+        ctx.fillStyle = 'rgba(78, 138, 255, ' + (0.2 + intensity * 0.7) + ')';
         ctx.fillRect(padL + ci * cellW, padT + ri * cellH, cellW - 1, cellH - 1);
       });
     });
@@ -94,26 +107,31 @@ export function generateHeatmapHTML(data: HeatmapData): string {
 }
 
 /** Bar 차트 HTML */
-export function generateBarHTML(data: BarChartData): string {
-  const config = {
+export function generateBarHTML(data: BarChartData, title?: string): string {
+  const configBase = {
     type: 'bar',
     data: {
       labels: data.labels,
       datasets: data.datasets.map((ds) => ({
         label: ds.label,
         data: ds.data,
-        backgroundColor: ds.backgroundColor ?? '#0064FF',
+        backgroundColor: ds.backgroundColor ?? '#4E8AFF',
       })),
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true } },
+      plugins: {
+        legend: { display: false },
+        title: { display: !!title, text: title ?? '', font: { size: 13, weight: 'bold' }, padding: { bottom: 8 } },
+      },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 } } },
     },
   };
   return wrapHTML(`
     const ctx = document.getElementById('chart').getContext('2d');
-    new Chart(ctx, ${JSON.stringify(config)});
+    const config = ${JSON.stringify(configBase)};
+    config.options.scales.y.ticks.callback = (v) => v + '건';
+    new Chart(ctx, config);
   `);
 }
 
@@ -126,7 +144,7 @@ export function generateLineHTML(data: LineChartData): string {
       datasets: data.datasets.map((ds) => ({
         label: ds.label,
         data: ds.data,
-        borderColor: ds.borderColor ?? '#0064FF',
+        borderColor: ds.borderColor ?? '#4E8AFF',
         fill: ds.fill ?? false,
         tension: 0.3,
       })),

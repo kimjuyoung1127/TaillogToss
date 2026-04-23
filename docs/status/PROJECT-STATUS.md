@@ -1,6 +1,6 @@
 # TaillogToss Project Status
 
-Last Updated: 2026-04-23 (KST) — 코드 리뷰: UI-TRAINING-PERSONALIZATION-001 + UI-TRAINING-DETAIL-001 실데이터 연결 이미 완료 확인. `useStepAttempts`, `AttemptHistorySheet`, `StreakBadge`, `ReactionTrendBar` 모두 실 API 연결 상태. 잔여: 실기기 시각 QA만 남음. tsc 0 errors. 이전: PlanSelector 바텀시트 Plan C 잠금 해제, DayTabBar Day 5 잘림 수정.
+Last Updated: 2026-04-23 (KST) — 앱인토스 콘솔 앱정보 신청 완료 (앱이름/영문명/키워드/카테고리/스크린샷 세로3장+가로1장). Analysis 화면 풍성화(UIUX-001): 브랜드 리네임(꼬리일기→테일로그), 차트 내부 타이틀 추가(Bar/Radar/Heatmap), `heatmapPeakHour()` 신규, `buildAnalysisShareText` 종합 리포트 형식으로 전면 개편(topBehaviors Top3+trainingEffects+peakHour+DogEnv 생활환경·건강), TRIGGER_LABELS/HEALTH_LABELS 한국어 로컬라이징, Bar+Radar 이중 Supabase Storage 업로드 → 두 URL 공유, `useDogEnv` 분석화면 연결, `ChartWebView.onCapture` 확장, `behaviorIcons.ts` 신규. tsc 0 errors. 이전: 코드 리뷰: UI-TRAINING-PERSONALIZATION-001 + UI-TRAINING-DETAIL-001 실데이터 연결 완료 확인.
 
 Previous: 훈련 커리큘럼 철학 재정의 완료 (플랜 A/B/C): `PlanPhilosophy` 타입+`planMeta` 전체 7개 커리큘럼 적용, altB/C 전체 109스텝 100% 채우기(fear_desensitization 포함), `variant_notes` C 레이블 커리큘럼별 갱신(35개), `VariantSelector` 철학 뱃지 UI, `detail.tsx` 5개 컴포넌트 분리(CurriculumHeroCard/DayProgressIndicator/DayTabBar/CelebrationModal/AttemptHistorySheet), `recommendPlan(DogPlanSignals)` 엔진 추가(노령·대형견→C, 불안·반응성→B, 기본→A), `detail.tsx` 훈련 첫 시작 시 dogEnv 기반 자동 Plan 설정, `training-data-maintenance.prompt.md` 자동화 등록. tsc 0 errors.
 

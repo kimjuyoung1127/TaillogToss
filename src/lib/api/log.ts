@@ -6,7 +6,7 @@ import { supabase } from './supabase';
 import { requestBackend, withBackendFallback } from './backend';
 import type { BehaviorLog, QuickLogInput, DetailedLogInput } from 'types/log';
 
-async function getLogsFromSupabase(dogId: string, limit = 50): Promise<BehaviorLog[]> {
+async function getLogsFromSupabase(dogId: string, limit = 500): Promise<BehaviorLog[]> {
   const { data, error } = await supabase
     .from('behavior_logs')
     .select('*')
@@ -17,13 +17,13 @@ async function getLogsFromSupabase(dogId: string, limit = 50): Promise<BehaviorL
   return data as BehaviorLog[];
 }
 
-async function getLogsFromBackend(dogId: string, limit = 50): Promise<BehaviorLog[]> {
+async function getLogsFromBackend(dogId: string, limit = 500): Promise<BehaviorLog[]> {
   const data = await requestBackend<BehaviorLog[]>(`/api/v1/logs/${dogId}`);
   return Array.isArray(data) ? data.slice(0, limit) : [];
 }
 
 /** 기록 목록 조회 */
-export async function getLogs(dogId: string, limit = 50): Promise<BehaviorLog[]> {
+export async function getLogs(dogId: string, limit = 500): Promise<BehaviorLog[]> {
   return withBackendFallback(
     () => getLogsFromBackend(dogId, limit),
     () => getLogsFromSupabase(dogId, limit),

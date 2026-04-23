@@ -117,6 +117,22 @@ export function logsToWeeklyBar(logs: BehaviorLog[], days: number): BarChartData
   };
 }
 
+/** Heatmap → 가장 빈번한 시간대 텍스트 반환 */
+export function heatmapPeakHour(data: HeatmapData): string | null {
+  let maxVal = 0;
+  let peakDay = 0;
+  let peakHour = 0;
+  data.matrix.forEach((row, ri) => {
+    row.forEach((val, ci) => {
+      if (val > maxVal) { maxVal = val; peakDay = ri; peakHour = ci; }
+    });
+  });
+  if (maxVal === 0) return null;
+  const amPm = peakHour < 12 ? '오전' : '오후';
+  const hour12 = peakHour === 0 ? 12 : peakHour > 12 ? peakHour - 12 : peakHour;
+  return `${data.day_labels[peakDay]} ${amPm} ${hour12}시`;
+}
+
 /** 월별 집계: 로그 범위 기반 월 버킷, 라벨 "YY.MM", 최대 36바 */
 export function logsToMonthlyBar(logs: BehaviorLog[]): BarChartData {
   if (logs.length === 0) {

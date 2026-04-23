@@ -55,7 +55,7 @@ async def create_detailed_log(
 
 
 async def get_recent_logs(
-    db: AsyncSession, dog_id: UUID, limit: int = 20,
+    db: AsyncSession, dog_id: UUID, limit: int = 1000,
 ) -> List[schemas.LogResponse]:
     """최근 로그 조회"""
     logs = await repository.get_logs_by_dog(db, dog_id, limit=limit)

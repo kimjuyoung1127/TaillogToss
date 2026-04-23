@@ -191,22 +191,26 @@ describe('I. buildAnalysisShareText', () => {
       dogName: '메이',
       periodLabel: '전체',
       totalLogs: 40,
-      topBehavior: { label: '짖음/울음', count: 14 },
-      trainingEffect: {
+      topBehaviors: [{ label: '짖음/울음', count: 14 }, { label: '분리불안', count: 8 }],
+      trainingEffects: [{
         curriculumTitle: '반응성 관리 훈련',
         behaviorLabel: '짖음/울음',
         beforeCount: 10,
         afterCount: 6,
         changePercent: -40,
-      },
+      }],
+      peakHour: '목요일 오후 3시',
+      dogEnv: null,
     });
 
     expect(text).toContain('메이');
     expect(text).toContain('전체');
     expect(text).toContain('40건');
-    expect(text).toContain('짖음/울음 (14회)');
-    expect(text).toContain('40% 감소');
-    expect(text).toContain('꼬리일기');
+    expect(text).toContain('짖음/울음');
+    expect(text).toContain('14회');
+    expect(text).toContain('↓40%');
+    expect(text).toContain('테일로그');
+    expect(text).toContain('목요일 오후 3시');
   });
 
   test('12. 빈 데이터 → 크래시 없음', () => {
@@ -214,13 +218,15 @@ describe('I. buildAnalysisShareText', () => {
       dogName: '댕댕이',
       periodLabel: '주간',
       totalLogs: 0,
-      topBehavior: null,
-      trainingEffect: null,
+      topBehaviors: [],
+      trainingEffects: [],
+      peakHour: null,
+      dogEnv: null,
     });
 
     expect(text).toContain('댕댕이');
     expect(text).toContain('0건');
-    expect(text).not.toContain('가장 많은 행동');
-    expect(text).not.toContain('훈련 효과');
+    expect(text).not.toContain('[주요 행동]');
+    expect(text).not.toContain('[훈련 현황]');
   });
 });

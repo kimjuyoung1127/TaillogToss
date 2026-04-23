@@ -4,6 +4,7 @@
  * Parity: UI-001, LOG-001
  */
 import type { BehaviorLog, QuickLogCategory } from 'types/log';
+import type { DogEnv } from 'types/dog';
 import type { TrainingProgress, CurriculumId } from 'types/training';
 
 /** 카테고리 한국어 라벨 맵 */
@@ -16,6 +17,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   anxiety: '분리불안',
   aggression: '공격성',
   other_behavior: '공포/회피',
+  other: '기타',
 };
 
 /** 기간 필터링 — days 이내 로그만 반환 */
@@ -27,7 +29,7 @@ export function filterByPeriod(logs: BehaviorLog[], days: number): BehaviorLog[]
 }
 
 /** 카테고리별 빈도 집계 — 내림차순 정렬 */
-export function countByCategory(logs: BehaviorLog[]): { label: string; count: number }[] {
+export function countByCategory(logs: BehaviorLog[]): { key: string; label: string; count: number }[] {
   const counts: Record<string, number> = {};
   for (const log of logs) {
     const key = log.quick_category ?? log.type_id ?? 'other';
@@ -35,7 +37,7 @@ export function countByCategory(logs: BehaviorLog[]): { label: string; count: nu
   }
 
   return Object.entries(counts)
-    .map(([key, count]) => ({ label: CATEGORY_LABELS[key] ?? key, count }))
+    .map(([key, count]) => ({ key, label: CATEGORY_LABELS[key] ?? key, count }))
     .sort((a, b) => b.count - a.count);
 }
 
@@ -135,31 +137,127 @@ export function computeTrainingEffects(
 
 // ── Share Text Builder ───────────────────────────────────
 
+const LIVING_TYPE_LABELS: Record<string, string> = {
+  apartment: '아파트',
+  house: '주택',
+  villa: '빌라',
+  other: '기타',
+};
+
+const TRIGGER_LABELS: Record<string, string> = {
+  other_dogs: '다른 개',
+  strangers: '낯선 사람',
+  loud_noises: '큰 소리',
+  children: '어린이',
+  cars: '자동차',
+  bicycles: '자전거',
+  cats: '고양이',
+  thunderstorm: '천둥·번개',
+  fireworks: '불꽃놀이',
+  visitors: '방문객',
+  alone: '혼자 있을 때',
+  leash: '리드줄',
+  vacuum: '청소기',
+  doorbell: '초인종',
+  other: '기타',
+};
+
+const HEALTH_LABELS: Record<string, string> = {
+  anxiety: '불안',
+  arthritis: '관절염',
+  diabetes: '당뇨',
+  epilepsy: '간질',
+  heart_disease: '심장병',
+  kidney_disease: '신장병',
+  allergy: '알레르기',
+  obesity: '비만',
+  skin_condition: '피부질환',
+  dental_disease: '치주질환',
+  other: '기타',
+};
+
+function localizeList(items: string[], labelMap: Record<string, string>): string[] {
+  return items.map((v) => labelMap[v] ?? v);
+}
+
 export function buildAnalysisShareText(params: {
   dogName: string;
   periodLabel: string;
   totalLogs: number;
-  topBehavior: { label: string; count: number } | null;
-  trainingEffect: TrainingEffect | null;
+  topBehaviors: { label: string; count: number }[];
+  trainingEffects: TrainingEffect[];
+  peakHour: string | null;
+  dogEnv: DogEnv | null;
 }): string {
-  const lines = [
-    `[꼬리일기] ${params.dogName} 행동 분석 리포트`,
-    `기간: ${params.periodLabel}`,
-    `총 기록: ${params.totalLogs}건`,
-  ];
+  const lines: string[] = [];
 
-  if (params.topBehavior) {
-    lines.push(`가장 많은 행동: ${params.topBehavior.label} (${params.topBehavior.count}회)`);
+  lines.push(`${params.dogName} 행동 분석 · ${params.periodLabel}`);
+  lines.push(`총 ${params.totalLogs}건 기록됐어요`);
+
+  if (params.topBehaviors.length > 0) {
+    lines.push('');
+    lines.push('[주요 행동]');
+    params.topBehaviors.slice(0, 3).forEach((b, i) => {
+      lines.push(`${i + 1}. ${b.label} ${b.count}회`);
+    });
   }
 
-  if (params.trainingEffect) {
-    const { behaviorLabel, changePercent } = params.trainingEffect;
-    const direction = changePercent <= 0 ? '감소' : '증가';
-    lines.push(`훈련 효과: ${behaviorLabel} ${Math.abs(changePercent)}% ${direction}`);
+  const env = params.dogEnv;
+  if (env) {
+    lines.push('');
+    lines.push('[생활 환경]');
+    const hh = env.household_info;
+    const envParts: string[] = [];
+    if (hh.members_count) envParts.push(`${hh.members_count}인 가족`);
+    if (hh.has_children) envParts.push('어린이 있음');
+    if (hh.has_other_pets) envParts.push('다른 반려동물 있음');
+    if (hh.living_type) envParts.push(LIVING_TYPE_LABELS[hh.living_type] ?? hh.living_type);
+    if (envParts.length > 0) lines.push(envParts.join(' · '));
+
+    const act = env.activity_meta;
+    if (act) {
+      const actParts: string[] = [];
+      if (act.daily_walk_minutes) actParts.push(`하루 산책 ${act.daily_walk_minutes}분`);
+      const levelLabel = act.exercise_level === 'low' ? '낮음' : act.exercise_level === 'high' ? '높음' : '보통';
+      actParts.push(`운동량 ${levelLabel}`);
+      lines.push(actParts.join(' · '));
+    }
+
+    if (env.triggers.length > 0) {
+      const triggerLabels = localizeList(env.triggers.slice(0, 3), TRIGGER_LABELS);
+      lines.push(`주요 트리거: ${triggerLabels.join(', ')}`);
+    }
+
+    lines.push('');
+    lines.push('[건강]');
+    const hm = env.health_meta;
+    const healthParts: string[] = [];
+    if (hm.chronic_issues.length > 0) {
+      const issues = localizeList(hm.chronic_issues, HEALTH_LABELS);
+      healthParts.push(`만성질환: ${issues.join(', ')}`);
+    }
+    if (hm.medications.length > 0) healthParts.push(`복용약: ${hm.medications.join(', ')}`);
+    if (hm.vet_notes) healthParts.push(`수의사 메모: ${hm.vet_notes}`);
+    lines.push(healthParts.length > 0 ? healthParts.join('\n') : '특이사항 없음');
+  }
+
+  if (params.trainingEffects.length > 0) {
+    lines.push('');
+    lines.push('[훈련 현황]');
+    params.trainingEffects.slice(0, 3).forEach((e) => {
+      const dir = e.changePercent <= 0 ? '↓' : '↑';
+      lines.push(`${e.curriculumTitle} · ${e.behaviorLabel} ${dir}${Math.abs(e.changePercent)}%`);
+    });
+  }
+
+  if (params.peakHour) {
+    lines.push('');
+    lines.push('[피크 시간]');
+    lines.push(params.peakHour);
   }
 
   lines.push('');
-  lines.push('꼬리일기에서 우리 강아지 행동을 분석해보세요');
+  lines.push('테일로그에서 더 자세히 확인해보세요');
 
   return lines.join('\n');
 }
@@ -203,7 +301,7 @@ export function buildCoachingShareText(params: {
   }
 
   lines.push('');
-  lines.push('꼬리일기에서 AI 코칭을 받아보세요!');
+  lines.push('테일로그에서 AI 코칭을 받아보세요');
 
   return lines.join('\n');
 }
