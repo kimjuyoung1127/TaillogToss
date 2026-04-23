@@ -172,3 +172,34 @@ export function useSubmitStepFeedback() {
     },
   });
 }
+
+export function useBehaviorAnalytics(dogId: string | undefined) {
+  return useQuery({
+    queryKey: ['behavior-analytics', dogId],
+    queryFn: () => trainingApi.getBehaviorAnalytics(dogId!),
+    enabled: !!dogId,
+    staleTime: 5 * 60 * 1000,  // 5분 캐시
+    select: (data) => data ?? null,
+  });
+}
+
+export function useSubmitStepAttempt() {
+  return useMutation({
+    mutationFn: ({
+      dogId,
+      data,
+    }: {
+      dogId: string;
+      data: Parameters<typeof trainingApi.submitStepAttempt>[1];
+    }) => trainingApi.submitStepAttempt(dogId, data),
+  });
+}
+
+export function useStepAttempts(dogId: string | undefined, stepId?: string) {
+  return useQuery({
+    queryKey: ['step-attempts', dogId ?? '', stepId ?? ''],
+    queryFn: () => trainingApi.getStepAttempts(dogId!, stepId),
+    enabled: !!dogId,
+    staleTime: STALE_TIME_ACTIVE,
+  });
+}

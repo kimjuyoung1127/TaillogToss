@@ -1,5 +1,5 @@
 /**
- * 404 라우트 — 알 수 없는 경로 진입 시 로그인으로 리다이렉트한다.
+ * 404 라우트 — 알 수 없는 경로 진입 시 welcome으로 리다이렉트한다.
  * Parity: APP-001
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
@@ -8,13 +8,14 @@ import { Text, View } from 'react-native';
 
 export const Route = createRoute('/_404' as '/', {
   component: NotFoundPage,
+  screenOptions: { headerShown: false },
 });
 
 function NotFoundPage() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    navigation.navigate('/login');
+    navigation.navigate('/onboarding/welcome');
   }, [navigation]);
 
   return (

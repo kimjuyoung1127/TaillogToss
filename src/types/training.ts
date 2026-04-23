@@ -3,6 +3,19 @@
  * Parity: UI-001
  */
 
+/** Plan 훈련 철학 */
+export type PlanPhilosophy = 'Focus' | 'PlayBased' | 'Adaptive';
+
+/** Plan별 철학 메타데이터 */
+export interface PlanMeta {
+  philosophy: PlanPhilosophy;
+  intensity: 'high' | 'low' | 'variable';
+  pace: 'fast' | 'slow' | 'variable';
+  reward_style: string;
+  ideal_for: string;
+  sessions_per_day?: number;
+}
+
 /** 커리큘럼 ID (7종) */
 export type CurriculumId =
   | 'basic_obedience'
@@ -31,6 +44,8 @@ export interface Curriculum {
   total_days: number; // 5~6일
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   recommended_for: string[]; // BehaviorType 매핑
+  /** Plan A/B/C 철학 메타데이터 */
+  planMeta?: Record<PlanVariant, PlanMeta>;
   days: TrainingDay[];
 }
 
@@ -136,3 +151,35 @@ export interface StepFeedback {
   reaction: DogReaction;
   memo: string | null;
 }
+
+/** 시행착오 상세 기록 (training_step_attempts 테이블) */
+export interface StepAttempt {
+  id?: string;
+  dog_id: string;
+  step_id: string;
+  curriculum_id: string;
+  day_number: number;
+  attempt_number: number;
+  reaction?: DogReaction;
+  situation_tags?: string[];
+  method_used?: string;
+  what_worked?: string;
+  what_didnt_work?: string;
+  created_at: string;
+}
+
+/** 상황 칩 옵션 */
+export interface SituationChipOption {
+  id: string;
+  label: string;
+  emoji: string;
+  sentiment: 'positive' | 'neutral' | 'negative';
+}
+
+export const SITUATION_CHIPS: SituationChipOption[] = [
+  { id: 'went_well', label: '잘 됐어요', emoji: '🟢', sentiment: 'positive' },
+  { id: 'took_time', label: '처음엔 어려워했지만', emoji: '🟡', sentiment: 'neutral' },
+  { id: 'no_response', label: '반응 없었어요', emoji: '🔴', sentiment: 'negative' },
+  { id: 'anxious', label: '불안해했어요', emoji: '😰', sentiment: 'negative' },
+  { id: 'tried_different', label: '다른 방법으로 해봤어요', emoji: '💡', sentiment: 'neutral' },
+];

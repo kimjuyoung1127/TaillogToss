@@ -12,23 +12,28 @@ import { AIPersonalizedHero } from 'components/features/training/AIPersonalizedH
 import { CurriculumJourneyMap } from 'components/features/training/CurriculumJourneyMap';
 import { InsightSummaryBar } from 'components/features/training/InsightSummaryBar';
 import { ProUpgradeBanner } from 'components/features/training/ProUpgradeBanner';
+import { RecommendedCurriculumCard } from 'components/features/training/RecommendedCurriculumCard';
+import { RelatedCurriculumCarousel } from 'components/features/training/RelatedCurriculumCarousel';
 import { EmptyState } from 'components/tds-ext/EmptyState';
+import { ICONS } from 'lib/data/iconSources';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { CURRICULUMS } from 'lib/data/published/runtime';
-import { getRecommendations } from 'lib/data/recommendation/engine';
-import { useTrainingProgress, useStepFeedback } from 'lib/hooks/useTraining';
+import { getRecommendations, getRecommendationsV2 } from 'lib/data/recommendation/engine';
+import { useTrainingProgress, useStepFeedback, useBehaviorAnalytics } from 'lib/hooks/useTraining';
 import { useIsPro } from 'lib/hooks/useSubscription';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import { useSurvey } from 'stores/SurveyContext';
 import type { Curriculum, CurriculumId, TrainingProgress } from 'types/training';
+import type { CurriculumRecommendationV2 } from 'lib/data/recommendation/engine';
 import { SkeletonAcademy } from 'components/features/training/SkeletonAcademy';
 import { BottomNavBar } from 'components/shared/BottomNavBar';
 import { colors, typography, spacing } from 'styles/tokens';
 
 export const Route = createRoute('/training/academy', {
   component: TrainingAcademyPage,
+  screenOptions: { headerShown: false },
 });
 
 function TrainingAcademyPage() {
@@ -38,6 +43,7 @@ function TrainingAcademyPage() {
   const { surveyData } = useSurvey();
   const { data: progressList, isLoading, isError, refetch } = useTrainingProgress(activeDog?.id);
   const { data: feedbackList } = useStepFeedback(activeDog?.id);
+  const { data: behaviorAnalytics } = useBehaviorAnalytics(activeDog?.id);
   const { isReady } = usePageGuard({ currentPath: '/training/academy' });
 
   // 진행 상태 맵: curriculumId → TrainingProgress
@@ -59,11 +65,15 @@ function TrainingAcademyPage() {
       .map((p: TrainingProgress) => p.curriculum_id);
   }, [progressList]);
 
-  // AI 맞춤 추천 (설문 행동 데이터 기반)
+  // AI 맞춤 추천 (cold start fallback 포함)
   const recommendation = useMemo(() => {
     const behaviors = surveyData?.step3_behavior.primary_behaviors ?? ['other'];
-    return getRecommendations(behaviors, completedIds);
-  }, [surveyData, completedIds]);
+    // Cold start: 로그 5개 미만 → 기존 설문 기반 엔진
+    if (!behaviorAnalytics || behaviorAnalytics.total_logs < 5) {
+      return getRecommendations(behaviors, completedIds);
+    }
+    return getRecommendationsV2(behaviors, completedIds, behaviorAnalytics);
+  }, [surveyData, completedIds, behaviorAnalytics]);
 
   // 현재 진행 중인 커리큘럼
   const activeProgress = useMemo(() => {
@@ -115,6 +125,7 @@ function TrainingAcademyPage() {
         <EmptyState
           title="준비 중인 커리큘럼이에요"
           description="곧 새로운 훈련 과정이 열려요"
+          iconSource={ICONS['illust-empty-training']!}
         />
       ) : (
         <>
@@ -140,7 +151,32 @@ function TrainingAcademyPage() {
             <InsightSummaryBar feedbackList={feedbackList} />
           )}
 
-          {/* 커리큘럼 Journey Map */}
+          {/* 섹션 1: AI 맞춤 추천 */}
+          <Text style={styles.sectionTitle}>AI 맞춤 추천</Text>
+          <RecommendedCurriculumCard
+            curriculumId={recommendation.primary}
+            reasoning={recommendation.reasoning}
+            scoreBand={'scoreBand' in recommendation ? (recommendation as CurriculumRecommendationV2).scoreBand : undefined}
+            logCount={behaviorAnalytics?.total_logs ?? 0}
+            isPro={isPro ?? false}
+            onPress={() => {
+              const c = CURRICULUMS.find((cur) => cur.id === recommendation.primary);
+              if (c) handleCardPress(c);
+            }}
+          />
+
+          {/* 섹션 2: 관련 훈련 (secondary 있을 때만) */}
+          {recommendation.secondary && (
+            <>
+              <Text style={styles.sectionTitle}>관련 훈련</Text>
+              <RelatedCurriculumCarousel
+                curriculumIds={[recommendation.secondary, ...CURRICULUMS.filter(c => c.id !== recommendation.primary && c.id !== recommendation.secondary).slice(0, 3).map(c => c.id)]}
+                onPress={handleCardPress}
+              />
+            </>
+          )}
+
+          {/* 섹션 3: 전체 커리큘럼 */}
           <Text style={styles.sectionTitle}>전체 커리큘럼 ({CURRICULUMS.length})</Text>
           <CurriculumJourneyMap
             curriculums={CURRICULUMS}

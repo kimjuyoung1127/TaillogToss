@@ -6,19 +6,26 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { colors, typography } from 'styles/tokens';
 import { PresetChipGrid } from './PresetChipGrid';
+import { StepAttemptHistory } from 'components/features/training/StepAttemptHistory';
 import type { PresetOption } from 'lib/data/presets';
 import type { OpsItem } from './OpsListItem';
+import type { StepAttempt } from 'types/training';
+
+type ActiveTab = 'record' | 'training';
 
 interface RecordModalProps {
   item: OpsItem;
   onSave: (data: { dogId: string; presetId: string; memo: string; intensity: number }) => void;
   onSaveAndNext: (data: { dogId: string; presetId: string; memo: string; intensity: number }) => void;
   onClose: () => void;
+  stepAttempts?: StepAttempt[];
+  isOrgPro?: boolean;
 }
 
-export function RecordModal({ item, onSave, onSaveAndNext, onClose }: RecordModalProps) {
+export function RecordModal({ item, onSave, onSaveAndNext, onClose, stepAttempts = [], isOrgPro = false }: RecordModalProps) {
   const [selectedPreset, setSelectedPreset] = useState<PresetOption | null>(null);
   const [memo, setMemo] = useState('');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('record');
 
   const handlePresetSelect = useCallback((preset: PresetOption) => {
     setSelectedPreset(preset);
@@ -57,40 +64,67 @@ export function RecordModal({ item, onSave, onSaveAndNext, onClose }: RecordModa
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-        <PresetChipGrid onSelect={handlePresetSelect} selectedId={selectedPreset?.id} />
-
-        <View style={styles.memoSection}>
-          <Text style={styles.memoLabel}>메모</Text>
-          <TextInput
-            style={styles.memoInput}
-            value={memo}
-            onChangeText={setMemo}
-            placeholder="추가 메모 (선택)"
-            multiline
-            numberOfLines={3}
-          />
+      {/* 탭 (훈련 시도 이력 있을 때만 노출) */}
+      {stepAttempts.length > 0 || isOrgPro ? (
+        <View style={styles.tabs}>
+          {(['record', 'training'] as ActiveTab[]).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tab, activeTab === tab && styles.tabActive]}
+              onPress={() => setActiveTab(tab)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                {tab === 'record' ? '기록' : '훈련 이력'}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </ScrollView>
+      ) : null}
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.saveBtn, !selectedPreset && styles.saveBtnDisabled]}
-          onPress={handleSave}
-          disabled={!selectedPreset}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.saveBtnText}>저장</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.saveNextBtn, !selectedPreset && styles.saveBtnDisabled]}
-          onPress={handleSaveAndNext}
-          disabled={!selectedPreset}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.saveNextBtnText}>저장 & 다음</Text>
-        </TouchableOpacity>
-      </View>
+      {activeTab === 'record' ? (
+        <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          <PresetChipGrid onSelect={handlePresetSelect} selectedId={selectedPreset?.id} />
+
+          <View style={styles.memoSection}>
+            <Text style={styles.memoLabel}>메모</Text>
+            <TextInput
+              style={styles.memoInput}
+              value={memo}
+              onChangeText={setMemo}
+              placeholder="추가 메모 (선택)"
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+        </ScrollView>
+      ) : (
+        <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          <StepAttemptHistory attempts={stepAttempts} />
+        </ScrollView>
+      )}
+
+      {activeTab === 'record' && (
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.saveBtn, !selectedPreset && styles.saveBtnDisabled]}
+            onPress={handleSave}
+            disabled={!selectedPreset}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.saveBtnText}>저장</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.saveNextBtn, !selectedPreset && styles.saveBtnDisabled]}
+            onPress={handleSaveAndNext}
+            disabled={!selectedPreset}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.saveNextBtnText}>저장 & 다음</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -185,5 +219,28 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     fontWeight: '600',
     color: colors.white,
+  },
+  tabs: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primaryBlue,
+  },
+  tabText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: colors.primaryBlue,
+    fontWeight: '700',
   },
 });

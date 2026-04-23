@@ -146,11 +146,11 @@ const styles = StyleSheet.create({
     minHeight: 80, textAlignVertical: 'top',
   },
   aiBox: {
-    backgroundColor: '#F0F9FF', borderRadius: 8, padding: 12, borderLeftWidth: 3, borderLeftColor: colors.primaryBlue,
+    backgroundColor: colors.aiSectionBg, borderRadius: 8, padding: 12, borderLeftWidth: 3, borderLeftColor: colors.primaryBlue,
   },
-  aiText: { ...typography.detail, color: '#1E40AF' },
+  aiText: { ...typography.detail, color: colors.blue800 },
   shareRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  shareLabel: { fontSize: 12, color: colors.textSecondary, width: 80 },
+  shareLabel: { ...typography.caption, color: colors.textSecondary, width: 80 },
   shareLink: { flex: 1, ...typography.caption, color: colors.primaryBlue },
   footer: {
     flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 16,

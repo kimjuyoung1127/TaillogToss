@@ -19,6 +19,7 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     Numeric,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -230,8 +231,6 @@ class Subscription(Base):
     ai_tokens_remaining = Column(Integer, default=0)
     ai_tokens_total = Column(Integer, default=0)
     next_billing_date = Column(DateTime(timezone=True))
-    canceled_at = Column(DateTime(timezone=True))
-    cancel_reason = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -336,7 +335,7 @@ class AICoaching(Base):
     __tablename__ = "ai_coaching"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    dog_id = Column(UUID(as_uuid=True), ForeignKey("dogs.id", ondelete="CASCADE"), index=True)
+    dog_id = Column(UUID(as_uuid=True), ForeignKey("dogs.id", ondelete="CASCADE"), nullable=True, index=True)
     report_type = Column(Enum(ReportType, name="report_type"), nullable=False)
     blocks = Column(JSONB)  # 6블록 구조 (FE CoachingBlocks)
     analysis_json = Column(JSONB)  # DogCoach 호환
@@ -344,8 +343,15 @@ class AICoaching(Base):
     feedback_score = Column(Integer)
     ai_tokens_used = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # 훈련 데이터 플라이휠 컬럼
+    training_candidate = Column(Boolean, default=False)
+    training_quality_score = Column(SmallInteger, nullable=True)
+    training_approved = Column(Boolean, default=False)
+    training_approved_at = Column(DateTime(timezone=True), nullable=True)
+    training_version = Column(String, nullable=True)
+    is_synthetic = Column(Boolean, default=False)
 
-    dog = relationship("Dog", back_populates="coaching_reports")
+    dog = relationship("Dog", back_populates="coaching_reports", foreign_keys=[dog_id])
     action_tracker = relationship("ActionTracker", back_populates="coaching", cascade="all, delete-orphan")
 
 
@@ -428,6 +434,32 @@ class UserTrainingStatus(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")
+
+
+class TrainingStepAttempt(Base):
+    """시행착오 상세 기록 — training_step_attempts (2026-04-22 신규)
+    VAR-1: user_training_status.reaction 과 별개 — 상세 선택적 레코드
+    """
+    __tablename__ = "training_step_attempts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    dog_id = Column(UUID(as_uuid=True), ForeignKey("dogs.id", ondelete="CASCADE"), nullable=False, index=True)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True)
+    step_id = Column(String(100), nullable=False)
+    curriculum_id = Column(String(50), nullable=False)
+    day_number = Column(Integer, nullable=False)
+    attempt_number = Column(Integer, nullable=False, default=1)
+    reaction = Column(String(20), CheckConstraint("reaction IN ('enjoyed','neutral','sensitive')"), nullable=True)
+    situation_tags = Column(JSONB, nullable=True)
+    method_used = Column(Text, nullable=True)
+    what_worked = Column(Text, nullable=True)
+    what_didnt_work = Column(Text, nullable=True)
+    recorded_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("step_attempts_idx", "dog_id", "step_id", "created_at"),
+    )
 
 
 class TossOrder(Base):
@@ -771,6 +803,33 @@ class OrgDogPii(Base):
 
 
 # Edge Function 멱등성 요청 테이블 (supabase/functions/_shared/ 참조)
+
+class CoachingTrainingBatch(Base):
+    """Fine-tuning 배치 버전 관리"""
+    __tablename__ = "coaching_training_batches"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    batch_name = Column(String, nullable=False)
+    record_count = Column(Integer, default=0)
+    jsonl_path = Column(String, nullable=True)
+    finetune_job_id = Column(String, nullable=True)
+    model_id = Column(String, nullable=True)
+    status = Column(String, default="pending")  # pending → training → deployed
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    deployed_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class CoachingSyntheticLog(Base):
+    """합성 데이터 생성 진행 추적 (중복 방지)"""
+    __tablename__ = "coaching_synthetic_log"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    run_date = Column(Date, nullable=False)
+    category = Column(String, nullable=False)
+    generated_count = Column(Integer, default=0)
+    coaching_ids = Column(JSONB, nullable=True)  # UUID 목록
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
 class EdgeFunctionRequest(Base):
     """Edge Function 멱등성 추적"""

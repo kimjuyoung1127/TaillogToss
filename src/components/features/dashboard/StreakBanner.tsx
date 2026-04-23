@@ -4,9 +4,17 @@
  * Parity: UI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import type { BehaviorLog } from 'types/log';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
+
+function getStreakBadge(streak: number): string | null {
+  if (streak >= 30) return ICONS['badge-streak-30']!;
+  if (streak >= 7) return ICONS['badge-streak-7']!;
+  if (streak >= 3) return ICONS['badge-streak-3']!;
+  return null;
+}
 
 export interface StreakBannerProps {
   logs: BehaviorLog[];
@@ -43,9 +51,15 @@ export function StreakBanner({ logs, streakOverride }: StreakBannerProps) {
 
   if (streak === 0) return null;
 
+  const badge = getStreakBadge(streak);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>{'\uD83D\uDD25'}</Text>
+      {badge ? (
+        <Image source={{ uri: badge }} style={styles.badgeImg} />
+      ) : (
+        <Text style={styles.emoji}>{'\uD83D\uDD25'}</Text>
+      )}
       <Text style={styles.text}>
         <Text style={styles.count}>{streak}일</Text> 연속 기록 중!
       </Text>
@@ -63,6 +77,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 12,
     borderRadius: 10,
+  },
+  badgeImg: {
+    width: 28,
+    height: 28,
+    marginRight: 8,
   },
   emoji: {
     ...typography.subtitle,

@@ -4,7 +4,8 @@
  * Parity: B2B-001
  */
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet ,ActivityIndicator, TouchableOpacity  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography } from 'styles/tokens';
 import { createRoute } from '@granite-js/react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
@@ -17,6 +18,7 @@ import { supabase } from 'lib/api/supabase';
 export const Route = createRoute('/report/[shareToken]', {
   validateParams: (params) => params as { shareToken: string },
   component: ShareTokenReportPage,
+  screenOptions: { headerShown: false },
 });
 
 function ShareTokenReportPage() {
@@ -162,11 +164,11 @@ const styles = StyleSheet.create({
     fontSize: 24, fontWeight: '700', textAlign: 'center', color: colors.textPrimary,
     letterSpacing: 8,
   },
-  verifyError: { ...typography.caption, color: '#DC2626', marginTop: 8 },
+  verifyError: { ...typography.caption, color: colors.badgeRed, marginTop: 8 },
   verifyBtn: {
     width: 160, height: 48, backgroundColor: colors.primaryBlue, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center', marginTop: 20,
   },
-  verifyBtnDisabled: { backgroundColor: '#D1D5DB' },
+  verifyBtnDisabled: { backgroundColor: colors.grey300 },
   verifyBtnText: { ...typography.label, fontWeight: '600', color: colors.white },
 });

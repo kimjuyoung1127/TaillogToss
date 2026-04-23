@@ -8,12 +8,19 @@ import { StyleSheet, type ViewStyle } from 'react-native';
 import LottieView from '@granite-js/native/lottie-react-native';
 
 /** 사전 등록된 Lottie 에셋 키 */
-export type LottieAssetKey = 'cute-doggie' | 'jackie' | 'long-dog';
+export type LottieAssetKey =
+  | 'cute-doggie'      // 걷는 강아지 — welcome, 온보딩 로딩
+  | 'jackie'           // 걷는 강아지 상세 — 대시보드 로딩
+  | 'long-dog'         // 닥스훈트 — 빈 상태 (로그/코칭)
+  | 'happy-dog'        // 행복한 강아지 — B2B 빈 상태 / 보호자 리포트
+  | 'perrito-corriendo'; // 달리는 강아지 — 생성 로딩 (코칭/리포트 생성 중)
 
 const LOTTIE_SOURCES: Record<LottieAssetKey, ReturnType<typeof require>> = {
   'cute-doggie': require('../../assets/lottie/cute-doggie.json'),
   'jackie': require('../../assets/lottie/jackie.json'),
   'long-dog': require('../../assets/lottie/long-dog.json'),
+  'happy-dog': require('../../assets/lottie/happy-dog.json'),
+  'perrito-corriendo': require('../../assets/lottie/perrito-corriendo.json'),
 };
 
 export interface LottieAnimationProps {

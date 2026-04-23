@@ -8,7 +8,7 @@ const DEEP_ENTRY_MAP: Record<string, GuardRoute> = {
 
 const DEFAULT_APP_NAME = 'taillog-app';
 const DEFAULT_SCHEME = 'intoss';
-const DEFAULT_ROUTE: GuardRoute = '/login';
+const DEFAULT_ROUTE: GuardRoute = '/onboarding/welcome';
 
 function toFallbackBase(initialScheme: string): string {
   if (!initialScheme) return `${DEFAULT_SCHEME}://${DEFAULT_APP_NAME}${DEFAULT_ROUTE}`;

@@ -5,9 +5,10 @@
  * Parity: AI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
 import type { Next7DaysBlock, RiskSignalsBlock, ConsultationQuestionsBlock } from 'types/coaching';
 import { colors, typography, spacing } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 const BLOCK_META: Record<string, { label: string; icon: string; teaser: string }> = {
   next_7_days: {
@@ -197,9 +198,9 @@ export function RiskSignalsView({ data }: { data: RiskSignalsBlock }) {
 // PRO 블록 ⑥: 전문가 상담 질문 — 프로필 카드 + 복사 가능 질문
 // ──────────────────────────────────────
 
-const SPECIALIST_META: Record<string, { icon: string; label: string; desc: string }> = {
+const SPECIALIST_META: Record<string, { icon: string; iconSource?: string; label: string; desc: string }> = {
   behaviorist: { icon: '🧠', label: '행동 전문가', desc: '동물행동학 기반 문제행동 분석' },
-  trainer: { icon: '🎓', label: '전문 훈련사', desc: '실전 행동교정 및 사회화 훈련' },
+  trainer: { icon: '🎓', iconSource: ICONS['ic-trainer'], label: '전문 훈련사', desc: '실전 행동교정 및 사회화 훈련' },
   vet: { icon: '🏥', label: '수의사', desc: '건강 원인 행동 문제 진단' },
 };
 
@@ -213,7 +214,11 @@ export function ConsultationView({ data }: { data: ConsultationQuestionsBlock })
       {/* 전문가 프로필 카드 */}
       {specialist && (
         <View style={styles.specialistCard}>
-          <Text style={styles.specialistIcon}>{specialist.icon}</Text>
+          {specialist.iconSource ? (
+            <Image source={{ uri: specialist.iconSource }} style={styles.specialistIconImg} />
+          ) : (
+            <Text style={styles.specialistIcon}>{specialist.icon}</Text>
+          )}
           <View style={styles.specialistInfo}>
             <Text style={styles.specialistTitle}>
               추천: {specialist.label}
@@ -445,6 +450,11 @@ const styles = StyleSheet.create({
   },
   specialistIcon: {
     fontSize: 36,
+    marginRight: spacing.lg,
+  },
+  specialistIconImg: {
+    width: 36,
+    height: 36,
     marginRight: spacing.lg,
   },
   specialistInfo: {

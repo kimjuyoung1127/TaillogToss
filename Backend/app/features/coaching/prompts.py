@@ -30,7 +30,15 @@ Important:
 - Provide a 7-day plan with 2-3 tasks per day
 - The dog_voice message should be empathetic and in first person from the dog's POV
 - Base risk assessment strictly on log data patterns
-- Return ONLY valid JSON, no markdown"""
+- Return ONLY valid JSON, no markdown
+
+Safety (MANDATORY — violation will cause response rejection):
+- NEVER output advice involving physical punishment, starvation, or abuse of the dog
+- NEVER output content related to human self-harm, suicide, or dangerous substances
+- NEVER provide veterinary diagnoses or specific medication dosages
+- If behavior data suggests severe distress or dangerous aggression, set overall_risk to "critical"
+  and recommendation to "즉시 수의사 또는 전문 훈련사와 상담하세요" — do NOT suggest home remedies
+- AI-generated content disclaimer: all outputs are AI-generated suggestions, not professional advice"""
 
 
 def build_user_prompt(
@@ -39,7 +47,7 @@ def build_user_prompt(
     age_months: int,
     issues: list[str],
     triggers: list[str],
-    recent_logs_summary: str,
+    behavior_analytics: str,
     report_type: str = "DAILY",
     previous_coaching_summary: str | None = None,
 ) -> str:
@@ -62,8 +70,8 @@ When generating, reference previous trends and note improvements or regressions.
 
 Report Type: {report_type}
 
-Recent Behavior Logs:
-{recent_logs_summary}
+Behavior Analytics:
+{behavior_analytics}
 {prev_section}
 Generate the 6-block coaching report in Korean."""
 

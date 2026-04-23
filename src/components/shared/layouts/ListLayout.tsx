@@ -4,7 +4,8 @@
  * Parity: UI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, type ViewStyle } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface ListLayoutProps {
@@ -15,11 +16,15 @@ export interface ListLayoutProps {
   /** ScrollView 아래 고정 영역 (BottomNavBar 등) */
   footer?: React.ReactNode;
   children: React.ReactNode;
+  /** SafeAreaView 스타일 오버라이드 (배경색 등) */
+  style?: ViewStyle;
+  /** ScrollView contentContainerStyle 오버라이드 */
+  contentContainerStyle?: ViewStyle;
 }
 
-export function ListLayout({ title, headerRight, onBack, footer, children }: ListLayoutProps) {
+export function ListLayout({ title, headerRight, onBack, footer, children, style, contentContainerStyle }: ListLayoutProps) {
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, style]}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           {onBack && (
@@ -31,7 +36,7 @@ export function ListLayout({ title, headerRight, onBack, footer, children }: Lis
         </View>
         {headerRight && <View>{headerRight}</View>}
       </View>
-      <ScrollView style={styles.body} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.body} contentContainerStyle={[styles.content, contentContainerStyle]}>
         {children}
       </ScrollView>
       {footer}

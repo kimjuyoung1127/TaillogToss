@@ -3,7 +3,8 @@
  * children 변경 시 스크롤 상단 초기화 로직 포함
  */
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView ,TouchableOpacity  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface FormLayoutProps {

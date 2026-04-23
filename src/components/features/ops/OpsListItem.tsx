@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   meta: {
-    fontSize: 12,
+    ...typography.caption,
     color: colors.textSecondary,
   },
   trainer: {
-    fontSize: 12,
+    ...typography.caption,
     color: colors.primaryBlue,
     marginLeft: 8,
   },

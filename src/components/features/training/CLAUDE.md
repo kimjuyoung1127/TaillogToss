@@ -20,5 +20,10 @@ training/academy.tsx, training/detail.tsx 페이지에서 사용.
 | `DaySummarySheet.tsx` | Day 완료 축하 + 반응 요약 시트 |
 | `RecommendationCard.tsx` | AI 맞춤 추천 카드 (fade-in 연출) |
 | `MissionChecklist.tsx` | 미션 체크리스트 (체크 애니메이션 + 메모 + 팁) |
-| `VariantSelector.tsx` | Plan A/B/C 전환 |
+| `VariantSelector.tsx` | Plan A/B/C 전환 + 철학 배지 (planMeta 기반) |
+| `CurriculumHeroCard.tsx` | 커리큘럼 히어로 카드 (아이콘 + 제목 + 난이도) |
+| `DayProgressIndicator.tsx` | Day X/Y 텍스트 + 프로그레스 바 |
+| `DayTabBar.tsx` | Day 1~N 가로 탭 선택 |
+| `CelebrationModal.tsx` | 커리큘럼 완료 축하 모달 |
+| `AttemptHistorySheet.tsx` | 시도 이력 바텀시트 (StepAttemptHistory 래퍼) |
 | `SkeletonAcademy.tsx` | 아카데미 로딩 스켈레톤 (JourneyMap 미러링) |

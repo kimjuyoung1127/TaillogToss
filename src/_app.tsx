@@ -18,7 +18,7 @@ import { rewriteInitialUrlForDeepEntry } from 'lib/guards';
 import { usePendingOrderRecovery } from 'lib/hooks/useSubscription';
 import { useAppStateRefetch } from 'lib/hooks/useAppStateRefetch';
 import { ErrorBoundary } from 'components/tds-ext/ErrorBoundary';
-import { DevMenu } from 'components/shared/DevMenu';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { getMyOrg } from 'lib/api/org';
 import { useOrg } from 'stores/OrgContext';
 
@@ -77,6 +77,7 @@ function AppStateRefreshBridge() {
 
 function AppContainer({ children }: PropsWithChildren<InitialProps>) {
   return (
+    <SafeAreaProvider>
     <ErrorBoundary>
       <QueryProvider>
         <AuthProvider>
@@ -87,13 +88,14 @@ function AppContainer({ children }: PropsWithChildren<InitialProps>) {
               <OrgBootstrap />
               <SurveyProvider>
                 {children}
-                {__DEV__ && <DevMenu />}
+                {/* __DEV__ && <DevMenu /> */}{/* 스크린샷용 임시 비활성화 */}
               </SurveyProvider>
             </OrgProvider>
           </ActiveDogProvider>
         </AuthProvider>
       </QueryProvider>
     </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 

@@ -9,14 +9,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Alert,
   Linking,
 } from 'react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { ListLayout } from 'components/shared/layouts/ListLayout';
 import { useAuth } from 'stores/AuthContext';
 import { useLogout } from 'lib/hooks/useAuth';
 import { useUserSettings, useUpdateSettings } from 'lib/hooks/useSettings';
@@ -39,10 +38,11 @@ import {
   type NotificationPref,
   type UserSettings,
 } from 'types/settings';
-import { colors, typography } from 'styles/tokens';
+import { colors, typography, spacing } from 'styles/tokens';
 
 export const Route = createRoute('/settings', {
   component: SettingsPage,
+  screenOptions: { headerShown: false },
 });
 
 type StatusTone = 'neutral' | 'success' | 'danger';
@@ -266,30 +266,44 @@ function SettingsPage() {
   if (!isReady) return null;
 
   const canGoBack = navigation.canGoBack();
+  const onBack = canGoBack ? () => navigation.goBack() : undefined;
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <TopBar onBack={() => navigation.goBack()} canGoBack={canGoBack} />
+      <ListLayout
+        title="설정"
+        onBack={onBack}
+        style={styles.safe}
+        contentContainerStyle={styles.scrollContent}
+        footer={<BottomNavBar activeTab="settings" />}
+      >
         <SettingsScreenSkeleton />
-      </SafeAreaView>
+      </ListLayout>
     );
   }
 
   if (isError) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <TopBar onBack={() => navigation.goBack()} canGoBack={canGoBack} />
+      <ListLayout
+        title="설정"
+        onBack={onBack}
+        style={styles.safe}
+        contentContainerStyle={styles.scrollContent}
+        footer={<BottomNavBar activeTab="settings" />}
+      >
         <SettingsScreenError onRetry={() => void refetch()} />
-      </SafeAreaView>
+      </ListLayout>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <TopBar onBack={() => navigation.goBack()} canGoBack={canGoBack} />
-
-      <ScrollView style={styles.scroll}>
+    <ListLayout
+      title="설정"
+      onBack={onBack}
+      style={styles.safe}
+      contentContainerStyle={styles.scrollContent}
+      footer={<BottomNavBar activeTab="settings" />}
+    >
         <SettingsSectionCard title="알림 설정">
           <SettingsStatusRow statusText={syncStatus.text} tone={syncStatus.tone} />
           <View style={styles.divider} />
@@ -417,45 +431,13 @@ function SettingsPage() {
         </View>
 
         <Text style={styles.versionText}>v0.1.0</Text>
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-      <BottomNavBar activeTab="settings" />
-    </SafeAreaView>
-  );
-}
-
-function TopBar({ onBack, canGoBack }: { onBack: () => void; canGoBack: boolean }) {
-  return (
-    <View style={styles.navbar}>
-      {canGoBack ? (
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backText}>{'←'}</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.backButton} />
-      )}
-      <Text style={styles.navTitle}>설정</Text>
-      <View style={styles.backButton} />
-    </View>
+    </ListLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surfaceTertiary },
-  navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceTertiary,
-  },
-  backButton: { width: 40 },
-  backText: { ...typography.sectionTitle, color: colors.grey950 },
-  navTitle: { ...typography.body, fontWeight: '600', color: colors.grey950 },
-  scroll: { flex: 1 },
+  safe: { backgroundColor: colors.surfaceTertiary },
+  scrollContent: { paddingHorizontal: 0, paddingTop: 0, paddingBottom: spacing.xxxl },
   divider: { height: 1, backgroundColor: colors.surfaceTertiary, marginLeft: 20 },
   dangerSection: {
     marginTop: 32,
@@ -475,5 +457,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 32,
   },
-  bottomSpacer: { height: 48 },
 });

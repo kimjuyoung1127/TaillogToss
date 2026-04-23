@@ -6,7 +6,7 @@
  */
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { CURRICULUM_ICONS } from 'lib/data/published/runtime';
+import { CURRICULUM_ICON_URIS, CURRICULUM_ICON_FALLBACK_URI } from 'lib/data/curriculumIconAssets';
 import type { Curriculum, CurriculumStatus, CurriculumShowcase, DogReaction } from 'types/training';
 import { colors, typography, spacing } from 'styles/tokens';
 
@@ -43,7 +43,6 @@ export function CurriculumShowcaseCard({
   onPress,
   onProCTA,
 }: Props) {
-  const icon = CURRICULUM_ICONS[curriculum.id] ?? '\u{1F4DA}';
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = !!showcase.image_url && !imageFailed;
   const badgeKey: keyof typeof STATUS_BADGE = isLocked ? 'locked' : isRecommended ? 'recommended' : status;
@@ -66,7 +65,10 @@ export function CurriculumShowcaseCard({
           />
         ) : (
           <View style={styles.iconWrap}>
-            <Text style={styles.icon}>{icon}</Text>
+            <Image
+              source={{ uri: CURRICULUM_ICON_URIS[curriculum.id] ?? CURRICULUM_ICON_FALLBACK_URI }}
+              style={styles.curriculumIcon}
+            />
           </View>
         )}
         <View style={[styles.badge, { backgroundColor: badge.bg }]}>
@@ -150,8 +152,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
-    fontSize: 26,
+  curriculumIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
   badge: {
     paddingHorizontal: 10,

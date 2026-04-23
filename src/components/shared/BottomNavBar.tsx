@@ -4,7 +4,7 @@
  * Parity: UI-001, B2B-001
  */
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@granite-js/react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from 'stores/AuthContext';
@@ -14,6 +14,7 @@ import { queryKeys } from 'lib/api/queryKeys';
 import { getDashboard } from 'lib/api/dashboard';
 import { getTrainingProgress } from 'lib/api/training';
 import { colors, typography, spacing } from '../../styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 const PREFETCH_STALE_TIME = 2 * 60 * 1000; // 2분 이내 fetch된 데이터는 skip
 
@@ -27,16 +28,16 @@ interface TabConfig {
 }
 
 const B2C_TABS: TabConfig[] = [
-  { key: 'home', label: '홈', icon: '\uD83C\uDFE0', route: '/dashboard' },
-  { key: 'training', label: '훈련', icon: '\uD83C\uDF93', route: '/training/academy' },
-  { key: 'settings', label: '설정', icon: '\u2699\uFE0F', route: '/settings' },
+  { key: 'home', label: '홈', icon: ICONS['ic-home']!, route: '/dashboard' },
+  { key: 'training', label: '훈련', icon: ICONS['ic-training']!, route: '/training/academy' },
+  { key: 'settings', label: '설정', icon: ICONS['ic-settings']!, route: '/settings' },
 ];
 
 const B2B_TABS: TabConfig[] = [
-  { key: 'home', label: '홈', icon: '\uD83C\uDFE0', route: '/dashboard' },
-  { key: 'ops', label: '운영', icon: '\uD83D\uDCCB', route: '/ops/today' },
-  { key: 'training', label: '훈련', icon: '\uD83C\uDF93', route: '/training/academy' },
-  { key: 'settings', label: '설정', icon: '\u2699\uFE0F', route: '/settings' },
+  { key: 'home', label: '홈', icon: ICONS['ic-home']!, route: '/dashboard' },
+  { key: 'ops', label: '운영', icon: ICONS['ic-ops']!, route: '/ops/today' },
+  { key: 'training', label: '훈련', icon: ICONS['ic-training']!, route: '/training/academy' },
+  { key: 'settings', label: '설정', icon: ICONS['ic-settings']!, route: '/settings' },
 ];
 
 interface BottomNavBarProps {
@@ -89,7 +90,7 @@ export function BottomNavBar({ activeTab }: BottomNavBarProps) {
               onPress={() => handlePress(tab)}
               activeOpacity={0.7}
             >
-              <Text style={styles.icon}>{tab.icon}</Text>
+              <Image source={{ uri: tab.icon }} style={styles.iconImg} />
               <Text style={[styles.label, isActive && styles.labelActive]}>
                 {tab.label}
               </Text>
@@ -120,9 +121,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.xs,
   },
-  icon: {
-    fontSize: 20,
-    lineHeight: 24,
+  iconImg: {
+    width: 24,
+    height: 24,
     marginBottom: 2,
   },
   label: {

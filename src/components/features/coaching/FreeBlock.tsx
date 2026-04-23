@@ -4,10 +4,11 @@
  * Parity: AI-001
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import type { InsightBlock, ActionPlanBlock, DogVoiceBlock } from 'types/coaching';
 import { SpeechBubble } from 'components/tds-ext/SpeechBubble';
 import { colors, typography, spacing } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 // ──────────────────────────────────────
 // Block ①: 행동 분석 인사이트 — 트렌드 배지 + 카테고리 아이콘
@@ -31,7 +32,13 @@ const TREND_ICON: Record<string, string> = {
   worsening: '📉',
 };
 
-const PATTERN_ICONS = ['🔍', '🎯', '💡', '⚡', '🧩'];
+const PATTERN_ICONS: string[] = [
+  ICONS['ic-search']!,
+  ICONS['ic-target']!,
+  ICONS['ic-idea']!,
+  ICONS['ic-bolt']!,
+  ICONS['ic-puzzle']!,
+];
 
 export function InsightBlockView({ data }: { data: InsightBlock }) {
   return (
@@ -51,9 +58,10 @@ export function InsightBlockView({ data }: { data: InsightBlock }) {
         <View style={styles.patternList}>
           {data.key_patterns.map((pattern, idx) => (
             <View key={idx} style={styles.patternItem}>
-              <Text style={styles.patternIcon}>
-                {PATTERN_ICONS[idx % PATTERN_ICONS.length]}
-              </Text>
+              <Image
+                source={{ uri: PATTERN_ICONS[idx % PATTERN_ICONS.length] }}
+                style={styles.patternIconImg}
+              />
               <Text style={styles.patternText}>{pattern}</Text>
             </View>
           ))}
@@ -187,7 +195,7 @@ export function ActionPlanBlockView({
           onPress={onNavigateToTraining}
           activeOpacity={0.7}
         >
-          <Text style={styles.trainingLinkText}>🎯 관련 훈련 시작하기</Text>
+          <Text style={styles.trainingLinkText}>관련 훈련 시작하기</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -325,8 +333,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: spacing.xs,
   },
-  patternIcon: {
-    fontSize: 14,
+  patternIconImg: {
+    width: 16,
+    height: 16,
     marginRight: spacing.sm,
     marginTop: 1,
   },

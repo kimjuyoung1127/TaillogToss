@@ -63,7 +63,9 @@ export function OpsList({
       renderItem={renderItem}
       keyExtractor={keyExtractor}
       getItemLayout={getItemLayout}
+      initialNumToRender={10}
       maxToRenderPerBatch={10}
+      updateCellsBatchingPeriod={50}
       windowSize={5}
       removeClippedSubviews
       ListEmptyComponent={ListEmptyComponent}

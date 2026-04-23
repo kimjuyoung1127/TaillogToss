@@ -6,7 +6,7 @@ interface OnboardingGuardInput {
 }
 
 export function onboardingGuard({ hasCompletedOnboarding, currentPath }: OnboardingGuardInput): GuardResult {
-  if (currentPath === '/login') return { allow: true };
+  if (currentPath === '/onboarding/welcome') return { allow: true };
 
   if (!hasCompletedOnboarding) {
     if (currentPath.startsWith('/onboarding/')) return { allow: true };

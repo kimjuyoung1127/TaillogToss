@@ -87,6 +87,7 @@ export async function createQuickLog(input: QuickLogInput): Promise<BehaviorLog>
           memo: normalizedInput.memo ?? null,
           location: normalizedInput.location ?? null,
           duration_minutes: normalizedInput.duration_minutes ?? null,
+          org_id: normalizedInput.org_id ?? null,
         })
         .select()
         .single();

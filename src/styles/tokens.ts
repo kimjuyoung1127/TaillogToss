@@ -40,9 +40,15 @@ export const colors = {
   green100: '#BBF7D0',
 
   // Orange (Warning)
+  orange50: '#FFF7ED',
   orange500: '#FF9500',
   orange600: '#FF8800',
   orange700: '#FF6B00',
+
+  // Blue (extended)
+  blue200: '#BFDBFE',   // B2B 경계선 (BulkActionBar)
+  blue800: '#1E40AF',   // AI 텍스트 (ReportViewer, ReportPreviewSheet)
+  aiSectionBg: '#F0F9FF', // AI 섹션 배경
 
   // Purple (Accent)
   purple500: '#8B5CF6',
@@ -82,6 +88,10 @@ export const colors = {
   badgePinkBg: '#FCE7F3',
   badgeGrey: '#6B7280',
   badgeGreyBg: '#F3F4F6',
+
+  // Dev-only (DevMenu 전용 — 프로덕션 UI에서 사용 금지)
+  devWarningBg: '#FFF3CD',
+  devWarningText: '#856404',
 } as const;
 
 // ─── Typography ───────────────────────────────────────────
@@ -118,6 +128,7 @@ export const typography = {
   detail: { fontSize: 14, lineHeight: 20 },
   subtitle: { fontSize: 18, lineHeight: 27 },
   emoji: { fontSize: 48, lineHeight: 56 },
+  iconLg: { fontSize: 24, lineHeight: 32 },
 } as const;
 
 // ─── Spacing ──────────────────────────────────────────────

@@ -35,3 +35,8 @@ entrypoint = "./functions/toss-disconnect/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/generate-report/index.ts"
+
+[functions.assign-b2b-role]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/assign-b2b-role/index.ts"

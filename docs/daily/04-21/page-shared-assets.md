@@ -6,6 +6,7 @@
 - [x] Badge PNG set generated in `src/assets/icons/`
 - [x] Empty-state illustration PNG set generated in `src/assets/icons/`
 - [x] Additional utility PNG set generated in `src/assets/icons/` (`ic-ops`, `ic-trainer`, stage, search/idea/bolt/puzzle, dog/report)
+- [x] App logo exports generated: `app-logo-600.png`, `app-logo-600-dark.png`, `app-thumbnail-horizontal-1932x828.png`
 
 ## 2026-04-21 추가 작업 (실배포 직전)
 

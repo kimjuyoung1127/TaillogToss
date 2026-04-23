@@ -21,7 +21,8 @@ export default defineConfig({
       brand: {
         displayName: '테일로그',
         primaryColor: '#3182F6',
-        icon: '',
+        // 콘솔 업로드 + 이 필드 양쪽 모두 설정 필요
+        icon: './src/assets/icons/app-logo-600.png',
       },
       permissions: [],
     }),

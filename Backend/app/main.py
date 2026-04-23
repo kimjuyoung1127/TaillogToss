@@ -93,6 +93,7 @@ from app.features.subscription.router import router as subscription_router
 from app.features.notification.router import router as notification_router
 from app.features.org.router import router as org_router
 from app.features.report.router import router as report_router
+from app.features.analytics.router import router as analytics_router
 
 prefix = settings.API_V1_STR
 
@@ -108,6 +109,7 @@ app.include_router(subscription_router, prefix=f"{prefix}/subscription", tags=["
 app.include_router(notification_router, prefix=f"{prefix}/notification", tags=["notification"])
 app.include_router(org_router, prefix=f"{prefix}/org", tags=["org"])
 app.include_router(report_router, prefix=f"{prefix}/report", tags=["report"])
+app.include_router(analytics_router, prefix=f"{prefix}/dogs", tags=["analytics"])
 
 
 @app.get("/")

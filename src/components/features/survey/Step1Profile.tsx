@@ -3,8 +3,9 @@
  * 믹스견 등 자유 입력 지원, 포커스 제어
  */
 import React, { useState, useMemo, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, Image, TextInput, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 import { ChipGroup } from 'components/tds-ext';
 import { DogPhotoPicker } from 'components/features/dog/DogPhotoPicker';
 import type { SurveyStep1, SurveyStep2, DogSex } from 'types/dog';
@@ -18,9 +19,9 @@ const LIVING_OPTIONS = [
 ];
 
 const LIFE_STAGES = [
-  { key: 'puppy', label: '퍼피', desc: '1세 미만', icon: '🐾' },
-  { key: 'adult', label: '성견', desc: '1~7세 미만', icon: '🐕' },
-  { key: 'senior', label: '시니어', desc: '7세 이상', icon: '🛋️' },
+  { key: 'puppy', label: '퍼피', desc: '1세 미만', icon: ICONS['ic-stage-puppy'] },
+  { key: 'adult', label: '성견', desc: '1~7세 미만', icon: ICONS['ic-stage-adult'] },
+  { key: 'senior', label: '시니어', desc: '7세 이상', icon: ICONS['ic-stage-senior'] },
 ];
 
 interface Props {
@@ -139,7 +140,7 @@ export function Step1Profile({ step1, step2, onChange }: Props) {
                   else updateAge(8, 0);
                 }}
               >
-                <Text style={styles.stageEmoji}>{stage.icon}</Text>
+                <Image source={{ uri: stage.icon }} style={styles.stageIconImg} />
                 <Text style={[styles.stageLabel, isActive && styles.stageLabelActive]}>{stage.label}</Text>
                 <Text style={styles.stageDesc}>{stage.desc}</Text>
               </TouchableOpacity>
@@ -234,13 +235,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     ...typography.bodySmall,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     color: colors.textPrimary,
   },
   sexRow: { flexDirection: 'row', gap: 12 },
   sexCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 16,
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   lifeStageRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   stageCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stageCardActive: { borderColor: colors.primary, backgroundColor: colors.backgroundSecondary, borderWidth: 2 },
-  stageEmoji: { fontSize: 20, marginBottom: 4 },
+  stageIconImg: { width: 32, height: 32, marginBottom: 4 },
   stageLabel: { ...typography.detail, fontWeight: '700', color: colors.textPrimary, fontSize: 13 },
   stageLabelActive: { color: colors.primary },
   stageDesc: { ...typography.detail, color: colors.textSecondary, fontSize: 10, marginTop: 2 },
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
   ageInput: { flex: 1, paddingVertical: 12, ...typography.bodySmall, textAlign: 'right', marginRight: 4, color: colors.textPrimary },
   ageUnit: { ...typography.detail, color: colors.textSecondary },
   searchContainer: { position: 'relative', zIndex: 100 },
-  dropdown: { position: 'absolute', top: 56, left: 0, right: 0, backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: colors.border, maxHeight: 200, elevation: 5, zIndex: 1000 },
+  dropdown: { position: 'absolute', top: 56, left: 0, right: 0, backgroundColor: colors.white, borderRadius: 12, borderWidth: 1, borderColor: colors.border, maxHeight: 200, elevation: 5, zIndex: 1000 },
   dropdownItem: { padding: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
   dropdownText: { ...typography.bodySmall, color: colors.textPrimary },
   divider: { height: 1, backgroundColor: colors.borderLight, marginVertical: 24 },

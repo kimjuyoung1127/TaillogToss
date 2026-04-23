@@ -223,14 +223,14 @@ describe('createOneTimePurchaseOrder', () => {
 
     jest.useFakeTimers();
     const cleanup = createOneTimePurchaseOrder({
-      options: { sku: 'pro_monthly' },
+      sku: 'pro_monthly',
       processProductGrant,
       onEvent,
     });
 
     // PURCHASE_STARTED는 즉시 발생
     await Promise.resolve();
-    expect(onEvent).toHaveBeenCalledWith('PURCHASE_STARTED');
+    expect(onEvent).toHaveBeenCalledWith({ type: 'PURCHASE_STARTED' });
 
     // cleanup 호출 → 이후 이벤트 차단
     cleanup();
@@ -239,7 +239,7 @@ describe('createOneTimePurchaseOrder', () => {
     await Promise.resolve();
 
     // GRANT_COMPLETED는 발생하지 않아야 함
-    expect(onEvent).not.toHaveBeenCalledWith('GRANT_COMPLETED');
+    expect(onEvent).not.toHaveBeenCalledWith({ type: 'GRANT_COMPLETED' });
     jest.useRealTimers();
   });
 });

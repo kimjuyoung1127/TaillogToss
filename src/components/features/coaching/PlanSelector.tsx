@@ -1,5 +1,5 @@
 /**
- * PlanSelector — Plan B/C 바텀시트 선택
+ * PlanSelector — Plan A/B/C 바텀시트 선택
  * ModalLayout 활용, Plan A/B/C 중 하나 선택
  * Parity: AI-001
  */
@@ -13,7 +13,6 @@ interface PlanSelectorProps {
   visible: boolean;
   currentVariant: PlanVariant;
   variantNotes: Record<PlanVariant, string>;
-  isPro?: boolean;
   onSelect: (variant: PlanVariant) => void;
   onClose: () => void;
 }
@@ -30,7 +29,6 @@ export function PlanSelector({
   visible,
   currentVariant,
   variantNotes,
-  isPro = false,
   onSelect,
   onClose,
 }: PlanSelectorProps) {
@@ -45,27 +43,22 @@ export function PlanSelector({
         </Text>
         {VARIANTS.map((v) => {
           const isSelected = v === currentVariant;
-          const isLocked = v === 'C' && !isPro;
           return (
             <TouchableOpacity
               key={v}
-              style={[styles.option, isSelected && styles.optionSelected, isLocked && styles.optionLocked]}
-              onPress={() => !isLocked && onSelect(v)}
-              activeOpacity={isLocked ? 1 : 0.7}
-              disabled={isLocked}
+              style={[styles.option, isSelected && styles.optionSelected]}
+              onPress={() => onSelect(v)}
+              activeOpacity={0.7}
             >
               <View style={styles.optionHeader}>
                 <View style={[styles.radio, isSelected && styles.radioSelected]}>
                   {isSelected && <View style={styles.radioDot} />}
                 </View>
-                <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected, isLocked && styles.optionLabelLocked]}>
+                <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
                   {VARIANT_LABELS[v]}
                 </Text>
-                {isLocked && <Text style={styles.lockIcon}>{'🔒'}</Text>}
               </View>
-              <Text style={[styles.optionNote, isLocked && styles.optionNoteLocked]}>
-                {isLocked ? 'PRO 구독으로 이용 가능' : variantNotes[v]}
-              </Text>
+              <Text style={styles.optionNote}>{variantNotes[v]}</Text>
             </TouchableOpacity>
           );
         })}
@@ -123,23 +116,9 @@ const styles = StyleSheet.create({
   optionLabelSelected: {
     color: colors.primaryBlue,
   },
-  optionLocked: {
-    opacity: 0.5,
-    borderColor: colors.border,
-  },
-  optionLabelLocked: {
-    color: colors.placeholder,
-  },
-  lockIcon: {
-    fontSize: 12,
-    marginLeft: 4,
-  },
   optionNote: {
     ...typography.caption,
     color: colors.textSecondary,
     marginLeft: 30,
-  },
-  optionNoteLocked: {
-    color: colors.placeholder,
   },
 });

@@ -6,7 +6,7 @@ import { resolveDeepEntry, rewriteInitialUrlForDeepEntry } from '../deepEntry';
 describe('guards', () => {
   test('authGuard redirects unauthenticated users', () => {
     const result = authGuard({ isAuthenticated: false, currentPath: '/dashboard' });
-    expect(result).toEqual({ allow: false, redirectTo: '/login' });
+    expect(result).toEqual({ allow: false, redirectTo: '/onboarding/welcome' });
   });
 
   test('onboardingGuard redirects not-completed users', () => {
@@ -48,13 +48,13 @@ describe('guards', () => {
     expect(rewritten).not.toContain('entry=');
   });
 
-  test('deep entry rewrite sends root to login by default', () => {
+  test('deep entry rewrite sends root to welcome by default', () => {
     const rewritten = rewriteInitialUrlForDeepEntry('intoss://taillog-app', 'intoss');
-    expect(rewritten).toContain('/login');
+    expect(rewritten).toContain('/onboarding/welcome');
   });
 
-  test('deep entry rewrite normalizes _404 to login', () => {
+  test('deep entry rewrite normalizes _404 to welcome', () => {
     const rewritten = rewriteInitialUrlForDeepEntry('intoss://taillog-app/_404', 'intoss');
-    expect(rewritten).toContain('/login');
+    expect(rewritten).toContain('/onboarding/welcome');
   });
 });

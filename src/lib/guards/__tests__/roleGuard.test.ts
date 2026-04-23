@@ -58,14 +58,14 @@ describe('evaluatePageGuard + requireRole', () => {
     expect(result).toEqual({ status: 'redirect', redirectTo: '/dashboard' });
   });
 
-  it('미인증 시 requireRole 이전에 auth 가드가 먼저 차단 → /login', () => {
+  it('미인증 시 requireRole 이전에 auth 가드가 먼저 차단 → /onboarding/welcome', () => {
     const result = evaluatePageGuard({
       ...baseInput,
       isAuthenticated: false,
       requireRole: ['trainer'],
       userRole: 'trainer',
     });
-    expect(result).toEqual({ status: 'redirect', redirectTo: '/login' });
+    expect(result).toEqual({ status: 'redirect', redirectTo: '/onboarding/welcome' });
   });
 
   it('b2bOnly feature + user 역할 → 차단', () => {

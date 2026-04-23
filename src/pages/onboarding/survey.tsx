@@ -15,6 +15,7 @@ import type { SurveyData } from 'types/dog';
 
 export const Route = createRoute('/onboarding/survey', {
   component: SurveyPage,
+  screenOptions: { headerShown: false },
 });
 
 function SurveyPage() {
@@ -29,7 +30,7 @@ function SurveyPage() {
 
   const handleComplete = useCallback((data: SurveyData) => {
     if (!user) {
-      navigation.navigate('/login');
+      navigation.navigate('/onboarding/welcome');
       return;
     }
 

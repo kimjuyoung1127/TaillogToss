@@ -251,13 +251,18 @@ grantPromotionRewardForGame({
 
 ## 5. TaillogToss 구현 갭
 
-| 항목 | 현재 구현 | 공식 API | 갭 |
-|------|----------|---------|-----|
-| IAP verify | mock mTLS (`buildVerificationResponse`) | S2S `POST /iap/verify-order` | mTLS 실 인증서로 전환 |
-| IAP restore | `getPendingOrders` → DB 대체 | `getPendingOrders` → `completeProductGrant` | `completeProductGrant()` 호출 추가 |
-| Smart Message | mock mTLS, 쿨다운 구현 완료 | S2S `POST /messenger/send-message` | 템플릿 승인 + mTLS 전환 |
-| 포인트 지급 | mock 3-step | S2S grant-key → grant → result | mTLS 전환 |
-| processProductGrant | 서버 검증 후 true 반환 | 30초 타임아웃 준수 | 타임아웃 검증 필요 |
+> Last updated: 2026-04-21
+
+| 항목 | 현재 구현 | 공식 API | 갭 | 상태 |
+|------|----------|---------|-----|------|
+| IAP verify | mock mTLS (`buildVerificationResponse`) | S2S `POST /iap/verify-order` | mTLS 실 인증서로 전환 | 🔴 미완 |
+| IAP restore | `getPendingOrders` → DB 대체 | `getPendingOrders` → `completeProductGrant` | `completeProductGrant()` 호출 추가 (IAP-001-REV2) | 🔴 미완 |
+| Smart Message 경로 | ~~`/smart-message/send`~~ → `/messenger/send-message` | S2S `POST /messenger/send-message` | ✅ 수정 완료 (2026-04-21) | ✅ |
+| Smart Message 기타 | mock mTLS, 쿨다운 구현 완료 | 템플릿 승인 필요 | 템플릿 승인 + mTLS 전환 | 🔴 미완 |
+| 포인트 지급 | mock 3-step | S2S grant-key → grant → result | mTLS 전환 | 🔴 미완 |
+| processProductGrant 30초 타임아웃 | ~~무제한 대기~~ | 30초 이내 반환 필수 | ✅ index.ts 25s + main.ts 29s 타임아웃 추가 (2026-04-21) | ✅ |
+| SDK 시그니처 정렬 | ~~options.sku, (receipt), onEvent(string)~~ | `sku`, `{ orderId }`, `{ type, result }` | ✅ 수정 완료 (2026-04-21) | ✅ |
+| `onEvent.result` | ~~없음~~ | `PurchaseResult` 포함 | ✅ mock PurchaseResult 추가 (2026-04-21) | ✅ |
 
 ## Sources
 

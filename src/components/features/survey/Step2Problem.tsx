@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 100,
     ...typography.bodySmall,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     textAlignVertical: 'top',
   },
   otherInputContainer: { marginTop: 8 },
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#F2F4F6', // 좀 더 연한 회색 배경
+    backgroundColor: colors.surfaceTertiary, // 좀 더 연한 회색 배경
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
@@ -221,14 +221,14 @@ const styles = StyleSheet.create({
     borderColor: colors.primaryBlue,
   },
   ratingText: { ...typography.bodySmall, color: colors.textSecondary, fontWeight: '600' },
-  ratingTextActive: { color: '#FFFFFF' },
+  ratingTextActive: { color: colors.white },
   severityHint: { ...typography.detail, color: colors.textSecondary, textAlign: 'center', fontSize: 11 },
   divider: { height: 1, backgroundColor: colors.borderLight, marginVertical: 12 },
   // Other trigger
   addTriggerBtn: { marginTop: 12, alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 12 },
   addTriggerText: { ...typography.detail, color: colors.primaryBlue, fontWeight: '600' },
   otherTriggerInput: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  input: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, height: 44, backgroundColor: '#FFFFFF' },
+  input: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, height: 44, backgroundColor: colors.white },
   saveTriggerBtn: { backgroundColor: colors.primaryBlue, borderRadius: 8, paddingHorizontal: 16, justifyContent: 'center' },
-  saveTriggerText: { color: '#FFFFFF', fontWeight: '600' },
+  saveTriggerText: { color: colors.white, fontWeight: '600' },
 });

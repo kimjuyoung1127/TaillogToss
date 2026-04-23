@@ -13,7 +13,6 @@ import {
   createOneTimePurchaseOrder,
   verifyAndGrant,
   recoverPendingOrders,
-  type IAPEvent,
 } from 'lib/api/iap';
 
 export function useCurrentSubscription(userId: string | undefined) {
@@ -52,16 +51,19 @@ export function usePurchaseIAP() {
 
       return new Promise<boolean>((resolve, reject) => {
         const cleanup = createOneTimePurchaseOrder({
-          options: { sku: productId },
-          processProductGrant: async (receipt) => {
-            const ok = await verifyAndGrant(receipt);
-            return ok;
+          sku: productId,
+          processProductGrant: async ({ orderId }) => {
+            return verifyAndGrant({
+              orderId,
+              productId,
+              transactionId: orderId,
+            });
           },
-          onEvent: (event: IAPEvent) => {
-            if (event === 'GRANT_COMPLETED') {
+          onEvent: ({ type }) => {
+            if (type === 'GRANT_COMPLETED') {
               tracker.iapPurchaseSuccess(productId);
               resolve(true);
-            } else if (event === 'GRANT_FAILED') {
+            } else if (type === 'GRANT_FAILED') {
               resolve(false);
             }
           },

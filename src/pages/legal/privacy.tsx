@@ -4,11 +4,13 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet ,TouchableOpacity  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/legal/privacy', {
   component: LegalPrivacyPage,
+  screenOptions: { headerShown: false },
 });
 
 function LegalPrivacyPage() {

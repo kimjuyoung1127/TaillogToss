@@ -6,7 +6,8 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, Share } from 'react-native';
+import { View, Text, ScrollView, StyleSheet ,TouchableOpacity, Share  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useLogList } from 'lib/hooks/useLogs';
 import { useTrainingProgress } from 'lib/hooks/useTraining';
@@ -27,6 +28,7 @@ import { colors, typography, spacing } from 'styles/tokens';
 
 export const Route = createRoute('/dashboard/analysis', {
   component: AnalysisPage,
+  screenOptions: { headerShown: false },
 });
 
 const PERIOD_OPTIONS: { key: ChartPeriod; label: string; days: number }[] = [

@@ -30,6 +30,7 @@ This file only keeps execution rules, priorities, and pointers.
 |---|---|---|
 | CLAUDE.md slimming | daily 08:00 | keep this file pointer-only |
 | docs organizer | daily 22:00 (Asia/Seoul) | `.claude/automations/docs-nightly-organizer.prompt.md` |
+| training data maintenance | weekly Friday 10:00 (Asia/Seoul) | `.claude/automations/training-data-maintenance.prompt.md` |
 
 ## Next Automation (MUST)
 
@@ -102,6 +103,7 @@ Page/feature skill root: `.claude/skills/page-skills/`
 - `Skill("toss-phase13-gate")`
 - `Skill("toss-supabase-mcp")`
 - `Skill("toss-sandbox-metro")`
+- `Skill("toss-dev-server")`
 
 ### Page hardening skills
 - Source of truth: `docs/status/PAGE-UPGRADE-BOARD.md`

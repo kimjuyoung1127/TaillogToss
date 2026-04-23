@@ -4,7 +4,7 @@
   "private": true,
   "description": "TaillogToss — 반려견 행동 교정 SaaS (Toss 미니앱)",
   "scripts": {
-    "dev": "granite dev",
+    "dev": "set -a && source .env 2>/dev/null; set +a; granite dev",
     "build": "ait build",
     "test": "npm run test:app && npm run test:edge",
     "test:app": "jest --config jest.config.js --testPathIgnorePatterns=/supabase/functions/ --passWithNoTests",

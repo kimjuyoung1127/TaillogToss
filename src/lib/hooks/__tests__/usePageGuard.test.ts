@@ -15,7 +15,7 @@ describe('evaluatePageGuard', () => {
       isDogsLoading: false,
     });
 
-    expect(result).toEqual({ status: 'redirect', redirectTo: '/login' });
+    expect(result).toEqual({ status: 'redirect', redirectTo: '/onboarding/welcome' });
   });
 
   test('onboarding guard redirects authenticated but incomplete users', () => {

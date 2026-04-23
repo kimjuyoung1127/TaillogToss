@@ -1,51 +1,94 @@
 /**
  * DogPhotoPicker — 반려견 사진 선택 컴포넌트
- * Granite Native Bridge (pickImage) 연동
+ * @apps-in-toss/native-modules fetchAlbumPhotos 실 SDK 연동
+ * onSelect(localFileUri) → profile.tsx handleSave → uploadDogProfileImage → Supabase Storage
  */
-import React from 'react';
-import { View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, Image, StyleSheet, Text, Alert, ActivityIndicator } from 'react-native';
+import { fetchAlbumPhotos } from '@apps-in-toss/native-modules';
+import { FetchAlbumPhotosPermissionError } from '@apps-in-toss/types';
 import { colors, typography } from 'styles/tokens';
-
-// Granite 네이티브 모듈 임포트 (가정)
-// import { bridge } from '@granite-js/native';
 
 interface Props {
   uri?: string;
   onSelect: (uri: string) => void;
 }
 
-export function DogPhotoPicker({ uri, onSelect: _onSelect }: Props) {
-  const handlePress = async () => {
-    try {
-      // 실제 구현 시 Granite Native Bridge 호출
-      // const result = await bridge.pickImage({
-      //   allowsEditing: true,
-      //   aspect: [1, 1],
-      //   quality: 0.8,
-      // });
-      // if (result.uri) onSelect(result.uri);
+export function DogPhotoPicker({ uri, onSelect }: Props) {
+  const [isLoading, setIsLoading] = useState(false);
 
-      // 테스트용 Mock (실제 환경에서는 브릿지 호출로 대체)
-    } catch (e) {
-      console.error('Image picking failed:', e);
+  const handlePress = async () => {
+    if (isLoading) return;
+    try {
+      setIsLoading(true);
+
+      // 1단계: 권한 확인
+      let permission = await fetchAlbumPhotos.getPermission();
+
+      if (permission === 'denied') {
+        permission = await fetchAlbumPhotos.openPermissionDialog();
+      }
+
+      if (permission !== 'allowed') {
+        Alert.alert(
+          '갤러리 접근 필요',
+          '반려견 사진을 선택하려면 갤러리 접근 권한이 필요해요.\n설정에서 허용해주세요.',
+          [{ text: '확인', style: 'cancel' }]
+        );
+        return;
+      }
+
+      // 2단계: 사진 선택 (1장, 로컬 file:// URI 반환)
+      const images = await fetchAlbumPhotos({
+        base64: false,
+        maxCount: 1,
+        maxWidth: 1024,
+      });
+
+      const first = images[0];
+      if (first != null) {
+        onSelect(first.dataUri);
+      }
+    } catch (error) {
+      if (error instanceof FetchAlbumPhotosPermissionError) {
+        Alert.alert('권한 필요', '갤러리 접근 권한을 허용해주세요.');
+      } else {
+        console.error('[DogPhotoPicker] fetchAlbumPhotos error:', error);
+        Alert.alert('사진 선택 실패', '다시 시도해주세요.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.picker} onPress={handlePress} activeOpacity={0.7}>
-        {uri ? (
+      <TouchableOpacity
+        style={styles.picker}
+        onPress={handlePress}
+        activeOpacity={0.7}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <View style={styles.placeholder}>
+            <ActivityIndicator size="large" color={colors.primaryBlue} />
+          </View>
+        ) : uri ? (
           <Image source={{ uri }} style={styles.image} />
         ) : (
           <View style={styles.placeholder}>
             <Text style={styles.emoji}>{'\uD83D\uDCF7'}</Text>
           </View>
         )}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>+</Text>
-        </View>
+        {!isLoading && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>+</Text>
+          </View>
+        )}
       </TouchableOpacity>
-      <Text style={styles.hint}>반려견 사진을 등록해주세요</Text>
+      <Text style={styles.hint}>
+        {isLoading ? '사진 불러오는 중...' : '반려견 사진을 등록해주세요'}
+      </Text>
     </View>
   );
 }

@@ -1,6 +1,6 @@
 # Supabase Schema Index (Single View)
 
-Last updated: 2026-04-20 (Asia/Seoul)
+Last updated: 2026-04-22 (Asia/Seoul) — `training_step_attempts` 테이블 신규 (20260422100000 마이그레이션 remote 적용 완료)
 Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3) `Backend/app/shared/models.py`
 
 ## 0) 프로젝트 이전 (2026-04-20)
@@ -13,9 +13,9 @@ Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3)
 
 ## 1) Snapshot
 
-- Public schema tables: 38
-- RLS enabled tables: 38 / 38
-- Key B2B helper functions: 7 (is_org_member, is_org_member_with_role, is_parent_of_dog, purge_expired_pii, update_updated_at_column, get_parent_contact + 1)
+- Public schema tables: 40
+- RLS enabled tables: 40 / 40
+- Key B2B helper functions: 9 (is_org_member, is_org_member_with_role, is_parent_of_dog, purge_expired_pii, update_updated_at_column, get_parent_contact, create_organization, verify_parent_phone_last4 + 1)
 - Public enums: 13
 - Applied migrations on remote DB: 1 (신규 프로젝트 초기화 단일 마이그레이션)
 
@@ -34,13 +34,15 @@ Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3)
 ### Behavior/Coaching
 - `behavior_logs`
 - `media_assets`
-- `ai_coaching`
+- `ai_coaching` ← `training_candidate`, `training_quality_score`, `training_approved`, `training_approved_at`, `training_version`, `is_synthetic` 컬럼 추가 (2026-04-21), `dog_id` nullable 변경
 - `action_tracker`
 - `log_summaries`
 - `ai_recommendation_snapshots`
 - `ai_recommendation_feedback`
 - `ai_cost_usage_daily`
 - `ai_cost_usage_monthly`
+- `coaching_training_batches` ← 신규 (Fine-tuning 배치 버전 관리, service_role RLS)
+- `coaching_synthetic_log` ← 신규 (합성 생성 일별 추적, UNIQUE run_date, service_role RLS)
 
 ### Training Content/Execution
 - `content_providers`
@@ -53,6 +55,7 @@ Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3)
 - `training_goals`
 - `training_behavior_snapshots`
 - `user_training_status`
+- `training_step_attempts` ← 신규 (2026-04-22): 스텝별 시행착오 상세 기록, RLS owner+trainer_read, org_id B2B연결
 
 ### B2B Layer
 - `organizations`
@@ -116,6 +119,9 @@ B2B helper functions present:
 - `is_org_member_with_role(uuid, text[]) -> boolean`
 - `get_parent_contact(uuid) -> table(phone_enc bytea, email_enc bytea)`
 - `purge_expired_pii() -> integer`
+- `update_updated_at_column() -> trigger`
+- `create_organization(p_name text, p_type text) -> organizations` ← 신규 (2026-04-21 적용)
+- `verify_parent_phone_last4(p_org_dog_id uuid, p_last4 text) -> boolean` ← 신규 (2026-04-21 적용)
 
 ## 6) Migration Status and Drift Check
 
@@ -136,6 +142,10 @@ B2B helper functions present:
 - `20260228020042_b2b_tables_and_extensions.sql`
 - `20260228124500_dogs_and_dog_env_rls_write_policies.sql`
 - `20260228_b2b_tables.sql` (legacy duplicate form)
+- `20260420010000_verify_parent_phone_last4_rpc.sql`
+- `20260420200000_coaching_training_flywheel.sql` ← **적용 완료** (2026-04-21, psql 직접 적용, ai_coaching 컬럼 6개 + coaching_training_batches + coaching_synthetic_log)
+- `20260420010000_verify_parent_phone_last4_rpc.sql` ← **적용 완료** (2026-04-21, `gxvtgrcqkbdibkyeqyil`에 직접 적용)
+- `20260421100000_create_org_rpc.sql` ← **적용 완료** (2026-04-21, `create_organization(p_name, p_type) RETURNS organizations` RPC, 조직 생성 + owner 멤버 자동 등록)
 
 ### Drift notes (needs sync)
 - Remote has versions not present in local repo: `20260212083318`, `20260212092350`, `20260212095042`, `20260214134529`, `20260301111950`.
@@ -155,6 +165,7 @@ B2B helper functions present:
 | `generate-report` | v3 | verify_jwt=false | B2B 일일/주간 리포트 AI 생성. |
 | `legal` | v1 | verify_jwt=false | 약관/개인정보 HTML 서빙 + toss-disconnect 콜백. |
 | `withdraw-user` | v3 | verify_jwt=false | 본인 계정 실삭제: public.users CASCADE → auth.users. ES256 JWT 호환(Admin API 검증). |
+| `assign-b2b-role` | v2 | verify_jwt=false | B2B 역할 자동 부여 → `auth.users.raw_user_meta_data.b2b_role` 업데이트. 내부 JWT 수동 검증. (2026-04-21 올바른 프로젝트에 재배포) |
 
 ## 8) Recommended Operating Rule
 

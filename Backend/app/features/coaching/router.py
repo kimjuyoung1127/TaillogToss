@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import get_current_user_id
+from app.core.security import get_current_user_id, verify_admin_key
 from app.features.coaching import budget, schemas, service
 from app.shared.utils.ownership import verify_dog_ownership
 
@@ -95,7 +95,7 @@ async def submit_feedback(
     db: AsyncSession = Depends(get_db),
 ):
     """코칭 피드백 제출 (1-5점)"""
-    return await service.submit_feedback(db, coaching_id, data.score)
+    return await service.submit_feedback(db, coaching_id, data.score, user_id)
 
 
 @router.patch("/{coaching_id}/actions/{action_item_id}", response_model=schemas.ActionTrackerResponse)
@@ -117,6 +117,83 @@ async def get_cost_status(
 ):
     """AI 비용 현황 조회"""
     return await service.get_cost_status(db)
+
+
+# ──────────────────────────────────────────────────────
+# Admin 엔드포인트 (service_role 전용 — 내부 자동화용)
+# ──────────────────────────────────────────────────────
+
+@router.post("/admin/generate-synthetic")
+async def generate_synthetic_today(
+    _: None = Depends(verify_admin_key),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    오늘 카테고리 합성 코칭 3건 생성.
+    daily-coaching-synthetic-gen 자동화에서 호출.
+    """
+    from app.features.coaching.synthetic import (
+        generate_synthetic_coaching,
+        get_today_category,
+        is_already_run_today,
+    )
+    from app.features.coaching.training import tag_training_candidate
+    from sqlalchemy import select as sa_select
+    from app.shared.models import AICoaching as AICoachingModel
+    import uuid
+
+    if await is_already_run_today(db):
+        return {"skipped": True, "reason": "already_run_today"}
+
+    category = get_today_category()
+    coaching_ids = await generate_synthetic_coaching(db, category)
+
+    # 생성된 건에 대해 품질 태깅
+    tagged = 0
+    for cid in coaching_ids:
+        q = sa_select(AICoachingModel).where(AICoachingModel.id == uuid.UUID(cid))
+        coaching = (await db.execute(q)).scalar_one_or_none()
+        if coaching:
+            await tag_training_candidate(db, coaching)
+            tagged += 1
+    await db.commit()
+
+    return {
+        "category": category,
+        "generated": len(coaching_ids),
+        "tagged": tagged,
+        "ids": coaching_ids,
+    }
+
+
+@router.post("/admin/tag-candidates")
+async def tag_all_candidates(
+    threshold: int = 70,
+    _: None = Depends(verify_admin_key),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    training_quality_score NULL 레코드 전체 태깅.
+    daily 자동화 step 3에서 호출.
+    """
+    from app.features.coaching.training import tag_unscored_candidates
+    processed = await tag_unscored_candidates(db, threshold=threshold)
+    return {"processed": processed, "threshold": threshold}
+
+
+@router.post("/admin/export-jsonl")
+async def export_jsonl(
+    batch_name: str,
+    _: None = Depends(verify_admin_key),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    approved 레코드 JSONL 변환 + 배치 메타 기록.
+    Fine-tuning 준비 완료 시 수동 실행.
+    """
+    from app.features.coaching.training import export_approved_to_jsonl
+    count, content = await export_approved_to_jsonl(db, batch_name)
+    return {"count": count, "batch_name": batch_name, "content": content}
 
 
 def _seconds_until_midnight() -> int:

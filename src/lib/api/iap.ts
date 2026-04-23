@@ -4,6 +4,7 @@
  * @apps-in-toss/framework 확인 후 실 SDK로 교체 예정
  * Parity: IAP-001, B2B-001
  */
+import { IAP } from '@apps-in-toss/native-modules';
 import { getSupabasePublicConfig, supabase } from './supabase';
 import { tracker } from '../analytics/tracker';
 
@@ -17,11 +18,28 @@ export interface IAPReceipt {
   transactionId: string;
 }
 
-export type IAPEvent =
+export type IAPEventType =
   | 'PURCHASE_STARTED'
   | 'PAYMENT_COMPLETED'
   | 'GRANT_COMPLETED'
   | 'GRANT_FAILED';
+
+/** @deprecated use IAPEventType */
+export type IAPEvent = IAPEventType;
+
+/**
+ * 공식 SDK PurchaseResult — PAYMENT_COMPLETED 이후 이벤트에 포함.
+ * 실 SDK 교체 전까지 result는 mock 값으로 채워진다.
+ */
+export interface PurchaseResult {
+  orderId: string;
+  displayName: string;
+  displayAmount: string;
+  amount: number;
+  currency: string;
+  fraction: number;
+  miniAppIconUrl: string;
+}
 
 /** B2B 구매 검증용 추가 컨텍스트 (optional — B2C 호출 시 생략) */
 export interface B2BGrantContext {
@@ -30,9 +48,12 @@ export interface B2BGrantContext {
 }
 
 export interface CreateOrderOptions {
-  options: { sku: string };
-  processProductGrant: (receipt: IAPReceipt) => Promise<boolean>;
-  onEvent?: (event: IAPEvent) => void;
+  /** 공식 SDK 정렬: sku는 최상위 필드 (구 options.sku → sku) */
+  sku: string;
+  /** 공식 SDK 정렬: orderId만 전달 (구 IAPReceipt → { orderId }) */
+  processProductGrant: (params: { orderId: string }) => Promise<boolean>;
+  /** 공식 SDK 정렬: { type, result? } — result는 PAYMENT_COMPLETED 이후 유효 */
+  onEvent?: (event: { type: IAPEventType; result?: PurchaseResult }) => void;
   onError?: (error: Error) => void;
 }
 
@@ -125,7 +146,7 @@ function getInvokeHttpStatus(error: unknown): number | undefined {
  * Returns cleanup function
  */
 export function createOneTimePurchaseOrder({
-  options,
+  sku,
   processProductGrant,
   onEvent,
   onError,
@@ -134,28 +155,44 @@ export function createOneTimePurchaseOrder({
 
   (async () => {
     try {
-      onEvent?.('PURCHASE_STARTED');
+      onEvent?.({ type: 'PURCHASE_STARTED' });
 
       // TODO(IAP-001): 실 SDK(@apps-in-toss/framework)로 교체 시
-      //   createOneTimePurchaseOrder()가 실제 receipt을 반환.
-      //   현재는 mock receipt으로 Edge Function 검증 플로우만 테스트.
-      const receipt: IAPReceipt = {
-        orderId: `order_${Date.now().toString(36)}`,
-        productId: options.sku,
-        transactionId: `tx_${Date.now().toString(36)}`,
+      //   SDK가 내부적으로 결제 플로우를 처리하고 PurchaseResult(orderId 포함)를 반환.
+      //   현재는 mock 값으로 Edge Function 검증 플로우만 테스트.
+      const orderId = `order_${Date.now().toString(36)}`;
+      const mockResult: PurchaseResult = {
+        orderId,
+        displayName: sku,
+        displayAmount: '0원',
+        amount: 0,
+        currency: 'KRW',
+        fraction: 0,
+        miniAppIconUrl: '',
       };
 
       if (cancelled) return;
-      onEvent?.('PAYMENT_COMPLETED');
+      onEvent?.({ type: 'PAYMENT_COMPLETED', result: mockResult });
 
-      // processProductGrant: 서버 검증 + 상품 지급
-      const granted = await processProductGrant(receipt);
+      // processProductGrant: 서버 검증 + 상품 지급 (공식: orderId만 전달)
+      const granted = await processProductGrant({ orderId });
+
+      // 서버 지급 완료 후 영수증 소비 신호 — 실 SDK 호출
+      if (granted) {
+        try {
+          await IAP.completeProductGrant({ params: { orderId } });
+        } catch (e) {
+          if (__DEV__) {
+            console.warn('[IAP-001] completeProductGrant failed (non-fatal):', e);
+          }
+        }
+      }
 
       if (cancelled) return;
       if (granted) {
-        tracker.iapPurchaseSuccess(options.sku);
+        tracker.iapPurchaseSuccess(sku);
       }
-      onEvent?.(granted ? 'GRANT_COMPLETED' : 'GRANT_FAILED');
+      onEvent?.({ type: granted ? 'GRANT_COMPLETED' : 'GRANT_FAILED' });
     } catch (err) {
       if (!cancelled) {
         onError?.(err instanceof Error ? err : new Error(String(err)));

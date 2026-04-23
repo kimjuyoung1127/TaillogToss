@@ -7,7 +7,9 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { ICONS } from 'lib/data/iconSources';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useDashboard } from 'lib/hooks/useDashboard';
 import { useDeleteLog } from 'lib/hooks/useLogs';
@@ -23,9 +25,12 @@ import { SkeletonDashboard } from 'components/features/dashboard/SkeletonDashboa
 import { CoachingPreviewCard } from 'components/features/dashboard/CoachingPreviewCard';
 import type { BehaviorLog } from 'types/log';
 import { colors, typography, spacing } from 'styles/tokens';
+import { useAuth } from 'stores/AuthContext';
+import { isB2BRole } from 'stores/OrgContext';
 
 export const Route = createRoute('/dashboard', {
   component: DashboardPage,
+  screenOptions: { headerShown: false },
 });
 
 /** 최근 7일 기록에서 카테고리별 Top 3 집계 */
@@ -60,7 +65,9 @@ function toLocalDateKey(value: string | Date): string {
 function DashboardPage() {
   const { activeDog, dogs } = useActiveDog();
   const navigation = useNavigation();
+  const { user } = useAuth();
   const { isReady } = usePageGuard({ currentPath: '/dashboard' });
+  const isB2B = isB2BRole(user?.role);
 
   const today = useMemo(() => toLocalDateKey(new Date()), []);
   const {
@@ -114,6 +121,20 @@ function DashboardPage() {
 
   const recordContent = (
     <View style={styles.tabContent}>
+      {isB2B && (
+        <TouchableOpacity
+          style={styles.b2bBanner}
+          onPress={() => navigation.navigate('/ops/today' as never)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.b2bBannerLeft}>
+            <Text style={styles.b2bBannerTitle}>센터 운영 대시보드</Text>
+            <Text style={styles.b2bBannerSub}>오늘의 강아지 현황 보기</Text>
+          </View>
+          <Text style={styles.b2bBannerArrow}>{'→'}</Text>
+        </TouchableOpacity>
+      )}
+
       {displayDog && (
         <DogCard
           dog={displayDog}
@@ -213,7 +234,18 @@ function DashboardPage() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.body}>
-          <TabLayout title="테일로그" tabs={tabs} defaultTab="record" />
+          <TabLayout
+            title="테일로그"
+            tabs={tabs}
+            defaultTab="record"
+            headerLeft={
+              <Image
+                source={{ uri: ICONS['ic-stage-adult'] }}
+                style={{ width: 28, height: 28 }}
+                resizeMode="contain"
+              />
+            }
+          />
         </View>
         <BottomNavBar activeTab="home" />
       </View>
@@ -332,5 +364,37 @@ const styles = StyleSheet.create({
   analysisArrow: {
     ...typography.subtitle,
     color: colors.textSecondary,
+  },
+  // B2B 배너
+  b2bBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.blue50,
+    borderWidth: 1,
+    borderColor: colors.primaryBlue,
+    borderRadius: 12,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.lg,
+    marginHorizontal: spacing.screenHorizontal,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  b2bBannerLeft: {
+    flex: 1,
+  },
+  b2bBannerTitle: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: colors.primaryBlue,
+  },
+  b2bBannerSub: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  b2bBannerArrow: {
+    ...typography.subtitle,
+    color: colors.primaryBlue,
+    marginLeft: spacing.sm,
   },
 });

@@ -29,9 +29,11 @@ import { tracker } from 'lib/analytics/tracker';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import type { CoachingResult } from 'types/coaching';
+import { AnalysisBadge } from 'components/features/coaching/AnalysisBadge';
 
 export const Route = createRoute('/coaching/result', {
   component: CoachingResultPage,
+  screenOptions: { headerShown: false },
 });
 
 type TabKey = 'latest' | 'history';
@@ -313,8 +315,16 @@ function CoachingResultPage() {
 
       {/* 코칭 상세 (최신 탭 or 히스토리에서 선택) */}
       {(activeTab === 'latest' || selectedHistoryCoaching) && displayCoaching && (
-        <CoachingDetailContent
-          coaching={displayCoaching}
+        <>
+          {displayCoaching.analytics_metadata && (
+            <AnalysisBadge
+              logCount={displayCoaching.analytics_metadata.log_count}
+              analysisDays={displayCoaching.analytics_metadata.analysis_days}
+              topBehavior={displayCoaching.analytics_metadata.top_behavior}
+            />
+          )}
+          <CoachingDetailContent
+            coaching={displayCoaching}
           isPro={isPro ?? false}
           activeDog={activeDog}
           onToggleActionItem={handleToggleActionItem}
@@ -330,6 +340,7 @@ function CoachingResultPage() {
           generateError={generateError}
           usage={usage}
         />
+        </>
       )}
     </DetailLayout>
   );
@@ -443,6 +454,13 @@ function CoachingDetailContent({
       >
         <Text style={styles.analysisLinkText}>📊 분석 자세히 보기</Text>
       </TouchableOpacity>
+
+      {/* AI 생성물 명시 */}
+      <View style={styles.aiDisclaimer}>
+        <Text style={styles.aiDisclaimerText}>
+          🤖 이 코칭 결과는 AI가 생성한 내용으로, 전문 수의사 또는 훈련사의 조언을 대체하지 않습니다.
+        </Text>
+      </View>
 
       {/* 피드백 */}
       {existingFeedback != null ? (
@@ -638,7 +656,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   shareIcon: {
-    fontSize: 20,
+    ...typography.sectionTitle,
   },
   // Insight summary header
   insightSummary: {
@@ -657,7 +675,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   insightSummaryIcon: {
-    fontSize: 24,
+    ...typography.iconLg,
     marginRight: spacing.md,
   },
   insightSummaryTextWrap: {
@@ -713,7 +731,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   proNudgeIcon: {
-    fontSize: 24,
+    ...typography.iconLg,
     marginRight: spacing.md,
   },
   proNudgeTextWrap: {
@@ -744,6 +762,20 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primaryBlue,
     fontWeight: '500',
+  },
+  // AI Disclaimer
+  aiDisclaimer: {
+    marginTop: spacing.lg,
+    marginHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.grey100,
+    borderRadius: 8,
+  },
+  aiDisclaimerText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
   // Feedback
   feedbackSection: {

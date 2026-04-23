@@ -18,6 +18,7 @@ from app.core.exceptions import BadRequestException, NotFoundException
 from app.features.coaching import budget, prompts, rule_engine, schemas
 from app.shared.clients.openai_client import OpenAIError, openai_client
 from app.shared.models import AICoaching, BehaviorLog, Dog, DogEnv
+from app.shared.utils.ownership import verify_dog_ownership
 
 logger = logging.getLogger(__name__)
 
@@ -71,17 +72,18 @@ async def generate_coaching(
             dog.name, issues, triggers, total_logs, avg_intensity,
         )
         await budget.record_cost(db, 0, 0, 0, is_rule=True)
+        analytics_metadata = {"log_count": total_logs, "analysis_days": 30, "top_behavior": None}
     else:
         # AI 생성 시도
         try:
-            logs_summary = _build_logs_summary(logs_result)
+            behavior_analytics_text, analytics_metadata = await _build_behavior_analytics_text(db, dog_id, logs_result)
             age_months = 0
             if dog.birth_date:
                 age_months = int((date.today() - dog.birth_date).days / 30)
 
             user_prompt = prompts.build_user_prompt(
                 dog.name, dog.breed or "믹스", age_months,
-                issues, triggers, logs_summary, request.report_type,
+                issues, triggers, behavior_analytics_text, request.report_type,
                 previous_coaching_summary=prev_summary,
             )
             result = await openai_client.generate(
@@ -91,17 +93,19 @@ async def generate_coaching(
 
             parsed = _parse_ai_response(result["content"])
             blocks = schemas.CoachingBlocks(**parsed)
+            blocks = _apply_safety_filter(blocks)  # 앱인토스 AI 심사 필수: 위험 콘텐츠 사후 필터
             ai_tokens_used = result["input_tokens"] + result["output_tokens"]
 
             await budget.record_cost(
                 db, result["input_tokens"], result["output_tokens"], result["cost_usd"],
             )
-        except (OpenAIError, json.JSONDecodeError, Exception) as e:
+        except (OpenAIError, json.JSONDecodeError, KeyError, ValueError) as e:
             logger.warning("AI coaching failed, falling back to rules: %s", e)
             blocks = rule_engine.generate_rule_based_blocks(
                 dog.name, issues, triggers, total_logs, avg_intensity,
             )
             await budget.record_cost(db, 0, 0, 0, is_rule=True)
+            analytics_metadata = {"log_count": total_logs, "analysis_days": 30, "top_behavior": None}
 
     # 5. DB 저장
     coaching = AICoaching(
@@ -111,6 +115,15 @@ async def generate_coaching(
         ai_tokens_used=ai_tokens_used,
     )
     db.add(coaching)
+    await db.flush()
+
+    # 6. 훈련 후보 품질 태깅 (비동기 — 실패해도 코칭 응답에 영향 없음)
+    try:
+        from app.features.coaching.training import tag_training_candidate
+        await tag_training_candidate(db, coaching)
+    except Exception as e:
+        logger.warning("training candidate tagging failed: %s", e)
+
     await db.commit()
     await db.refresh(coaching)
 
@@ -122,6 +135,7 @@ async def generate_coaching(
         feedback_score=coaching.feedback_score,
         ai_tokens_used=ai_tokens_used,
         created_at=coaching.created_at,
+        analytics_metadata=analytics_metadata,
     )
 
 
@@ -156,13 +170,15 @@ async def get_latest_coaching(
 
 
 async def submit_feedback(
-    db: AsyncSession, coaching_id: UUID, score: int,
+    db: AsyncSession, coaching_id: UUID, score: int, user_id: str,
 ) -> schemas.FeedbackResponse:
-    """코칭 피드백 제출 (1-5점)"""
+    """코칭 피드백 제출 (1-5점) — dog 소유권 검증 포함"""
     q = select(AICoaching).where(AICoaching.id == coaching_id)
     result = (await db.execute(q)).scalars().first()
     if not result:
         raise NotFoundException("Coaching not found")
+
+    await verify_dog_ownership(db, result.dog_id, user_id=user_id)
 
     result.feedback_score = score
     await db.commit()
@@ -248,6 +264,7 @@ def _to_response(coaching: AICoaching) -> schemas.CoachingResponse:
         feedback_score=coaching.feedback_score,
         ai_tokens_used=coaching.ai_tokens_used or 0,
         created_at=coaching.created_at,
+        analytics_metadata=None,
     )
 
 
@@ -303,3 +320,163 @@ def _extract_list(data, key: str) -> list:
     if isinstance(data, dict):
         return data.get(key, [])
     return []
+
+
+# 위험 키워드 — 인간 안전 (앱인토스 AI 서비스 심사 필수 요건)
+_HUMAN_SAFETY_KEYWORDS: list[str] = [
+    "자살", "자해", "자살방법", "자해방법", "죽는방법", "목숨",
+    "마약", "약물남용", "코카인", "헤로인", "필로폰",
+    "살인", "살해", "범죄방법", "폭발물",
+    "혐오", "인종차별",
+]
+
+# 위험 키워드 — 반려견 학대
+_DOG_ABUSE_KEYWORDS: list[str] = [
+    "굶기", "굶겨", "굶어", "체벌", "때리", "발로차", "학대",
+    "전기충격", "쇼크칼라", "목조르", "묶어두",
+]
+
+_SAFETY_RECOMMENDATION = "즉시 수의사 또는 전문 훈련사와 상담하세요. 이 내용은 AI가 생성한 제안이며 전문적인 조언을 대체하지 않습니다."
+_SAFETY_SIGNAL = {
+    "type": "SAFETY_FILTER_TRIGGERED",
+    "description": "AI 안전 필터가 적용되었습니다. 전문가 상담을 권장합니다.",
+    "severity": "high",
+    "recommendation": _SAFETY_RECOMMENDATION,
+}
+
+
+def _contains_unsafe_content(text: str) -> tuple[bool, str]:
+    """텍스트에서 위험 키워드 감지. (감지됨, 카테고리) 반환."""
+    lower = text.replace(" ", "")
+    for kw in _HUMAN_SAFETY_KEYWORDS:
+        if kw in lower:
+            return True, "human_safety"
+    for kw in _DOG_ABUSE_KEYWORDS:
+        if kw in lower:
+            return True, "dog_abuse"
+    return False, ""
+
+
+def _apply_safety_filter(blocks: schemas.CoachingBlocks) -> schemas.CoachingBlocks:
+    """AI 응답 사후 안전 필터 — 위험 콘텐츠 감지 시 risk_signals 강제 조정."""
+    # 모든 텍스트 필드 수집해서 검사
+    check_texts = [
+        blocks.insight.summary if blocks.insight else "",
+        blocks.dog_voice.message if blocks.dog_voice else "",
+        " ".join(
+            item.description for item in (blocks.action_plan.items if blocks.action_plan else [])
+        ),
+        " ".join(
+            signal.description for signal in (
+                blocks.risk_signals.signals if blocks.risk_signals else []
+            )
+        ),
+    ]
+    combined = " ".join(t for t in check_texts if t)
+
+    flagged, category = _contains_unsafe_content(combined)
+    if not flagged:
+        return blocks
+
+    logger.warning("Safety filter triggered (category=%s) — overriding risk_signals", category)
+
+    # risk_signals를 critical로 강제 조정
+    from app.features.coaching.schemas import RiskSignalsBlock, RiskSignal
+    safe_signals = RiskSignalsBlock(
+        signals=[RiskSignal(**_SAFETY_SIGNAL)],
+        overall_risk="critical",
+    )
+
+    blocks_data = blocks.model_dump()
+    blocks_data["risk_signals"] = safe_signals.model_dump()
+    return schemas.CoachingBlocks(**blocks_data)
+
+
+async def _build_behavior_analytics_text(
+    db: AsyncSession, dog_id: UUID, logs: list
+) -> tuple[str, dict]:
+    """behavior_logs 기반 구조화된 분석 텍스트 생성 (프롬프트 주입용)"""
+    if not logs:
+        return "No recent behavior logs", {"log_count": 0, "analysis_days": 30, "top_behavior": None}
+
+    # behavior 집계
+    behavior_groups: dict[str, list] = {}
+    hour_counts: dict[int, int] = {}
+
+    from datetime import datetime, timedelta, timezone
+    cutoff_30 = datetime.now(timezone.utc) - timedelta(days=30)
+
+    for log in logs[:50]:  # 최대 50개
+        key = log.behavior or log.quick_category or "unknown"
+        behavior_groups.setdefault(key, []).append(log)
+        if log.occurred_at:
+            h = log.occurred_at.hour
+            hour_counts[h] = hour_counts.get(h, 0) + 1
+
+    total = len(logs)
+    lines = [f"[행동 패턴 분석 (최근 30일)] 총 {total}회 기록"]
+
+    top_behavior = None
+    for behavior, blogs in sorted(behavior_groups.items(), key=lambda x: len(x[1]), reverse=True):
+        intensities = [l.intensity for l in blogs if l.intensity is not None]
+        avg_int = round(sum(intensities) / len(intensities), 1) if intensities else 0.0
+
+        # peak hour for this behavior
+        bh: dict[int, int] = {}
+        for l in blogs:
+            if l.occurred_at:
+                bh[l.occurred_at.hour] = bh.get(l.occurred_at.hour, 0) + 1
+        peak = max(bh, key=lambda h: bh[h]) if bh else None
+        peak_str = f", {peak:02d}시 집중" if peak is not None else ""
+
+        lines.append(f"- {behavior}: {len(blogs)}회, 평균 강도 {avg_int}/10{peak_str}")
+
+        if top_behavior is None:
+            top_behavior = behavior
+
+    # weekly trend (이번주 vs 지난주)
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    two_weeks_ago = datetime.now(timezone.utc) - timedelta(days=14)
+    trend_lines = []
+
+    def safe_dt(l):
+        if l.occurred_at is None:
+            return None
+        if l.occurred_at.tzinfo is None:
+            return l.occurred_at.replace(tzinfo=timezone.utc)
+        return l.occurred_at
+
+    for behavior, blogs in list(behavior_groups.items())[:3]:
+        this_w = [
+            l.intensity
+            for l in blogs
+            if safe_dt(l) and safe_dt(l) >= week_ago and l.intensity is not None
+        ]
+        last_w = [
+            l.intensity
+            for l in blogs
+            if safe_dt(l) and two_weeks_ago <= safe_dt(l) < week_ago and l.intensity is not None
+        ]
+
+        if this_w and last_w:
+            ta = sum(this_w) / len(this_w)
+            la = sum(last_w) / len(last_w)
+            delta = ta - la
+            arrow = "▲ 악화" if delta >= 0.5 else ("▼ 개선" if delta <= -0.5 else "→ 유지")
+            trend_lines.append(f"{behavior}: 지난주 {la:.1f} → 이번주 {ta:.1f} ({arrow})")
+
+    if trend_lines:
+        lines.append("[추이] " + ", ".join(trend_lines))
+
+    # peak hour overall
+    if hour_counts:
+        peak_h = max(hour_counts, key=lambda h: hour_counts[h])
+        lines.append(f"[피크 시간대] {peak_h:02d}시")
+
+    analytics_text = "\n".join(lines)
+    metadata = {
+        "log_count": total,
+        "analysis_days": 30,
+        "top_behavior": top_behavior,
+    }
+    return analytics_text, metadata

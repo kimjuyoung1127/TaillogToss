@@ -268,7 +268,10 @@ async function upsertPublicUser(
   pepperVersion: number,
   nowIso: string,
 ): Promise<{ createdAt?: string; updatedAt?: string }> {
-  const response = await fetch(`${supabaseUrl}/rest/v1/users`, {
+  // columns 파라미터로 role을 UPDATE 대상에서 제외.
+  // 신규 유저: DB DEFAULT 'user' 적용. 기존 유저: role 변경 없음.
+  const upsertUrl = `${supabaseUrl}/rest/v1/users?columns=id,toss_user_key,status,timezone,pepper_version,last_login_at,updated_at`;
+  const response = await fetch(upsertUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -280,7 +283,6 @@ async function upsertPublicUser(
       {
         id: userId,
         toss_user_key: tossUserKey,
-        role: 'user',
         status: 'active',
         timezone: 'Asia/Seoul',
         pepper_version: pepperVersion,

@@ -1,6 +1,9 @@
 /**
  * verify-iap-order main — 내부 JWT 검증(auth/v1/user) 기반 IAP 검증 엔트리.
  * Parity: IAP-001
+ *
+ * mTLS 모드: TOSS_CLIENT_CERT_BASE64 + TOSS_CLIENT_KEY_BASE64 환경변수 존재 시 real,
+ * 없으면 mock (로컬 개발 안전). TOSS_MTLS_MODE=real|mock 으로 명시 가능.
  */
 
 type UserRole =
@@ -90,6 +93,10 @@ interface TossOrderPersistedRow {
   created_at: string;
   updated_at: string;
 }
+
+import { createMTLSClient } from '../_shared/mTLSClient.ts';
+import { resolveMtlsMode } from '../_shared/mtlsMode.ts';
+import { iapCircuitBreaker, retryOnServerError } from '../_shared/circuitBreaker.ts';
 
 const APP_ROLES = new Set<UserRole>(['user', 'trainer', 'org_owner', 'org_staff', 'service_role']);
 const ALLOWED_ROLES = new Set<UserRole>([...APP_ROLES, 'authenticated']);
@@ -293,53 +300,26 @@ async function upsertTossOrder(
   return { ok: true, row };
 }
 
-function buildVerificationResponse(request: VerifyIapOrderRequest, userId: string): VerifyIapOrderResponse {
-  const now = new Date().toISOString();
-  let tossStatus: VerifyIapOrderResponse['toss_status'] = 'PAYMENT_COMPLETED';
-  let errorCode: string | null = null;
-  let amount = request.productId.includes('token') ? 1900 : 4900;
 
-  if (request.orderId.includes('not-found')) {
-    tossStatus = 'NOT_FOUND';
-    amount = 0;
-  } else if (request.orderId.includes('refund')) {
-    tossStatus = 'REFUNDED';
-  } else if (request.orderId.includes('fail')) {
-    tossStatus = 'FAILED';
-    amount = 0;
-    errorCode = 'IAP_VERIFY_FAILED';
-  }
-
-  const grantStatus: VerifyIapOrderResponse['grant_status'] =
-    tossStatus === 'PAYMENT_COMPLETED'
-      ? 'granted'
-      : tossStatus === 'REFUNDED'
-        ? 'refunded'
-        : tossStatus === 'FAILED' || tossStatus === 'NOT_FOUND'
-          ? 'grant_failed'
-          : 'pending';
-
-  return {
-    id: `ord_${request.orderId}`,
-    // Never trust caller-provided userId. Always bind order to the verified JWT user.
-    user_id: userId,
-    product_id: request.productId,
-    idempotency_key: request.idempotencyKey,
-    toss_status: tossStatus,
-    grant_status: grantStatus,
-    amount,
-    toss_order_id: request.orderId,
-    error_code: errorCode,
-    retry_count: 0,
-    created_at: now,
-    updated_at: now,
-  };
-}
+/** 요청 전체 타임아웃 — processProductGrant 30초 한도보다 1초 마진 */
+const REQUEST_TIMEOUT_MS = 29_000;
 
 Deno.serve(async (request: Request) => {
   if (request.method !== 'POST') {
     return toJsonResponse(fail('METHOD_NOT_ALLOWED', `Unsupported method: ${request.method}`, 405));
   }
+
+  const timeoutResponse = new Promise<Response>((resolve) => {
+    setTimeout(
+      () => resolve(toJsonResponse(fail('IAP_TIMEOUT', 'Request exceeded 30s processProductGrant limit', 504))),
+      REQUEST_TIMEOUT_MS,
+    );
+  });
+
+  return Promise.race([handleRequest(request), timeoutResponse]);
+});
+
+async function handleRequest(request: Request): Promise<Response> {
 
   const token = readBearerToken(request);
   if (!token) {
@@ -374,17 +354,42 @@ Deno.serve(async (request: Request) => {
     );
   }
 
-  const verification = buildVerificationResponse(body, auth.user.id);
+  // mTLS 실 검증 — cert/key 환경변수 존재 시 real, 없으면 mock (로컬 안전)
+  const mTLSClient = createMTLSClient(resolveMtlsMode());
+  let tossResult: { tossStatus: VerifyIapOrderResponse['toss_status']; amount: number; tossOrderId: string; errorCode?: string };
+  try {
+    tossResult = await iapCircuitBreaker.execute(
+      'verify-iap-order',
+      () => retryOnServerError(
+        () => mTLSClient.verifyIapOrder({
+          orderId: body.orderId,
+          productId: body.productId,
+          transactionId: body.transactionId,
+        }),
+        { maxRetries: 2, baseDelayMs: 150 }
+      )
+    );
+  } catch (err) {
+    const status = typeof err === 'object' && err !== null && 'status' in err ? Number((err as { status: unknown }).status) : 502;
+    return toJsonResponse(fail('IAP_VERIFY_FAILED', 'Toss IAP verification failed', status));
+  }
+
+  const grantStatus: VerifyIapOrderResponse['grant_status'] =
+    tossResult.tossStatus === 'PAYMENT_COMPLETED' ? 'granted'
+    : tossResult.tossStatus === 'REFUNDED' ? 'refunded'
+    : tossResult.tossStatus === 'FAILED' || tossResult.tossStatus === 'NOT_FOUND' ? 'grant_failed'
+    : 'pending';
+
   const persisted = await upsertTossOrder(token, {
     user_id: auth.user.id,
     product_id: body.productId,
     idempotency_key: body.idempotencyKey,
-    toss_status: verification.toss_status,
-    grant_status: verification.grant_status,
-    amount: verification.amount,
-    toss_order_id: body.orderId,
-    error_code: verification.error_code,
-    retry_count: verification.retry_count,
+    toss_status: tossResult.tossStatus,
+    grant_status: grantStatus,
+    amount: tossResult.amount,
+    toss_order_id: tossResult.tossOrderId,
+    error_code: tossResult.errorCode ?? null,
+    retry_count: 0,
   });
 
   if (!persisted.ok) {
@@ -407,4 +412,4 @@ Deno.serve(async (request: Request) => {
   };
 
   return toJsonResponse(ok(response));
-});
+}

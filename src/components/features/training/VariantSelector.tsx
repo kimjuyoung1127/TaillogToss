@@ -1,30 +1,39 @@
 /**
- * VariantSelector — Plan A/B/C 탭 전환 (SegmentedControl 패턴)
+ * VariantSelector — Plan A/B/C 탭 전환 + 철학 배지 (SegmentedControl 패턴)
  * Parity: UI-001
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import type { PlanVariant } from 'types/training';
+import type { PlanVariant, PlanMeta } from 'types/training';
 import { colors, typography } from 'styles/tokens';
 
 interface VariantSelectorProps {
   current: PlanVariant;
   onChange: (variant: PlanVariant) => void;
   isPro: boolean;
+  planMeta?: Record<PlanVariant, PlanMeta>;
 }
 
-const VARIANTS: { key: PlanVariant; label: string; proOnly: boolean }[] = [
-  { key: 'A', label: 'Plan A', proOnly: false },
-  { key: 'B', label: 'Plan B', proOnly: false },
-  { key: 'C', label: 'Plan C', proOnly: true },
+const VARIANTS: { key: PlanVariant; label: string; proOnly: boolean; emoji: string }[] = [
+  { key: 'A', label: 'Plan A', proOnly: false, emoji: '🎯' },
+  { key: 'B', label: 'Plan B', proOnly: false, emoji: '🎮' },
+  { key: 'C', label: 'Plan C', proOnly: false, emoji: '🔄' },
 ];
 
-export function VariantSelector({ current, onChange, isPro }: VariantSelectorProps) {
+const PHILOSOPHY_LABEL: Record<string, string> = {
+  Focus: '집중형',
+  PlayBased: '놀이형',
+  Adaptive: '맞춤형',
+};
+
+export function VariantSelector({ current, onChange, isPro, planMeta }: VariantSelectorProps) {
+  const activeMeta = planMeta?.[current];
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>훈련 방법</Text>
       <View style={styles.segmented}>
-        {VARIANTS.map(({ key, label, proOnly }) => {
+        {VARIANTS.map(({ key, label, proOnly, emoji }) => {
           const isActive = current === key;
           const isDisabled = proOnly && !isPro;
 
@@ -40,6 +49,7 @@ export function VariantSelector({ current, onChange, isPro }: VariantSelectorPro
               activeOpacity={isDisabled ? 1 : 0.7}
               disabled={isDisabled}
             >
+              <Text style={styles.segmentEmoji}>{emoji}</Text>
               <Text
                 style={[
                   styles.segmentText,
@@ -54,6 +64,18 @@ export function VariantSelector({ current, onChange, isPro }: VariantSelectorPro
           );
         })}
       </View>
+      {activeMeta && (
+        <View style={styles.metaRow}>
+          <View style={styles.philosophyBadge}>
+            <Text style={styles.philosophyText}>
+              {PHILOSOPHY_LABEL[activeMeta.philosophy] ?? activeMeta.philosophy}
+            </Text>
+          </View>
+          <Text style={styles.idealForText} numberOfLines={1}>
+            {activeMeta.ideal_for}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -107,5 +129,30 @@ const styles = StyleSheet.create({
   },
   lockIcon: {
     ...typography.badge,
+  },
+  segmentEmoji: {
+    fontSize: 14,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  philosophyBadge: {
+    backgroundColor: colors.primaryBlue,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  philosophyText: {
+    ...typography.badge,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  idealForText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
   },
 });

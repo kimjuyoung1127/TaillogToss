@@ -4,18 +4,22 @@
  * Parity: B2B-001
  */
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Modal, StyleSheet, SafeAreaView } from 'react-native';
-import { createRoute } from '@granite-js/react-native';
+import { View, Modal, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useOrg } from 'stores/OrgContext';
+import { useAuth } from 'stores/AuthContext';
 import { useOrgDogs } from 'lib/hooks/useOrg';
 import { useCreateQuickLog } from 'lib/hooks/useLogs';
+import { useGenerateReport, useSendReport, useUpdateReport } from 'lib/hooks/useReport';
 import { tracker } from 'lib/analytics/tracker';
 import { OpsList } from 'components/features/ops/OpsList';
 import { OpsBottomInfo } from 'components/features/ops/OpsBottomInfo';
 import { BulkActionBar } from 'components/features/ops/BulkActionBar';
 import { RecordModal } from 'components/features/ops/RecordModal';
 import { BulkPresetSheet } from 'components/features/ops/BulkPresetSheet';
+import { ReportPreviewSheet } from 'components/features/ops/ReportPreviewSheet';
 import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { TabLayout } from 'components/shared/layouts/TabLayout';
@@ -23,22 +27,35 @@ import { BottomNavBar } from 'components/shared/BottomNavBar';
 import { PRESET_OPTIONS } from 'lib/data/presets';
 import type { OpsItem } from 'components/features/ops/OpsListItem';
 import type { OpsStatus } from 'components/features/ops/OpsBadge';
-import { colors } from 'styles/tokens';
+import type { DailyReport } from 'types/b2b';
+import { colors, typography, spacing } from 'styles/tokens';
 
-export const Route = createRoute('/ops/today', { component: OpsTodayPage });
+export const Route = createRoute('/ops/today', {
+  component: OpsTodayPage,
+  screenOptions: { headerShown: false },
+});
 
 function OpsTodayPage() {
+  const navigation = useNavigation();
   const { isReady } = usePageGuard({
     currentPath: '/ops/today',
     requireFeature: 'b2bOnly',
   });
   const { org } = useOrg();
+  const { user } = useAuth();
   const { data: orgDogs, isLoading, isError, refetch } = useOrgDogs(org?.id);
   const createQuickLog = useCreateQuickLog();
+  const generateReport = useGenerateReport();
+  const sendReport = useSendReport();
+  const updateReport = useUpdateReport();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [recordModalItem, setRecordModalItem] = useState<OpsItem | null>(null);
   const [showBulkSheet, setShowBulkSheet] = useState(false);
+  // 리포트 관련 상태
+  const [reportSourceItem, setReportSourceItem] = useState<OpsItem | null>(null);
+  const [reportForPreview, setReportForPreview] = useState<DailyReport | null>(null);
+  const [generatingDogId, setGeneratingDogId] = useState<string | null>(null);
 
   // OrgDogWithStatus[] → OpsItem[] 변환 (실 데이터 JOIN 결과 사용)
   const allItems: OpsItem[] = useMemo(() => {
@@ -97,6 +114,70 @@ function OpsTodayPage() {
     }
   }, [selectedIds.size]);
 
+  // 리포트 탭 — 아이템 탭 → 리포트 생성 후 미리보기
+  const handleReportItemPress = useCallback((item: OpsItem) => {
+    if (selectedIds.size > 0) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(item.orgDogId)) next.delete(item.orgDogId);
+        else next.add(item.orgDogId);
+        return next;
+      });
+      return;
+    }
+    if (generatingDogId) return; // 생성 중 중복 방지
+
+    const today = new Date().toISOString().slice(0, 10);
+    setReportSourceItem(item);
+    setGeneratingDogId(item.dogId);
+
+    generateReport.mutate(
+      {
+        dog_id: item.dogId,
+        report_date: today,
+        template_type: 'daycare_general',
+        created_by_org_id: org?.id,
+        created_by_trainer_id: user?.id,
+      },
+      {
+        onSuccess: (report) => {
+          setReportForPreview(report);
+          setGeneratingDogId(null);
+          tracker.reportGenerated('daycare_general');
+        },
+        onError: () => {
+          Alert.alert('생성 실패', '리포트 생성에 실패했어요. 다시 시도해주세요.');
+          setGeneratingDogId(null);
+          setReportSourceItem(null);
+        },
+      },
+    );
+  }, [selectedIds.size, generatingDogId, org?.id, user?.id, generateReport]);
+
+  const handleReportSend = useCallback((reportId: string) => {
+    sendReport.mutate(reportId, {
+      onSuccess: () => {
+        tracker.reportSent('toss');
+        setReportForPreview(null);
+        setReportSourceItem(null);
+        void refetch();
+        Alert.alert('발송 완료', '보호자에게 리포트가 발송되었어요.');
+      },
+      onError: () => {
+        Alert.alert('발송 실패', '리포트 발송에 실패했어요. 다시 시도해주세요.');
+      },
+    });
+  }, [sendReport, refetch]);
+
+  const handleReportUpdate = useCallback((reportId: string, updates: { behavior_summary?: string; condition_notes?: string }) => {
+    updateReport.mutate({ reportId, updates });
+  }, [updateReport]);
+
+  const handleReportClose = useCallback(() => {
+    setReportForPreview(null);
+    setReportSourceItem(null);
+  }, []);
+
   const handleItemLongPress = useCallback((item: OpsItem) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -110,16 +191,26 @@ function OpsTodayPage() {
   const handleRecordSave = useCallback((data: { dogId: string; presetId: string; memo: string; intensity: number }) => {
     const preset = PRESET_OPTIONS.find((p) => p.id === data.presetId);
     if (!preset) return;
-    createQuickLog.mutate({
-      dog_id: data.dogId,
-      category: 'other_behavior',
-      intensity: data.intensity as any,
-      occurred_at: new Date().toISOString(),
-      memo: data.memo,
-    });
-    tracker.opsLogCreated('preset', false);
-    setRecordModalItem(null);
-  }, [createQuickLog]);
+    createQuickLog.mutate(
+      {
+        dog_id: data.dogId,
+        category: 'other_behavior',
+        intensity: data.intensity as any,
+        occurred_at: new Date().toISOString(),
+        memo: data.memo,
+        org_id: org?.id,
+      },
+      {
+        onSuccess: () => {
+          tracker.opsLogCreated('preset', false);
+          setRecordModalItem(null);
+        },
+        onError: () => {
+          Alert.alert('저장 실패', '기록을 저장하지 못했어요. 다시 시도해주세요.');
+        },
+      },
+    );
+  }, [createQuickLog, org?.id]);
 
   // 저장 & 다음
   const handleRecordSaveAndNext = useCallback((data: { dogId: string; presetId: string; memo: string; intensity: number }) => {
@@ -143,6 +234,7 @@ function OpsTodayPage() {
         intensity: intensity as any,
         occurred_at: new Date().toISOString(),
         memo,
+        org_id: org?.id,
       });
     });
     tracker.opsBulkSaved(selectedIds.size);
@@ -183,8 +275,8 @@ function OpsTodayPage() {
       label: `리포트(${unreportedItems.length})`,
       content: (
         <OpsList items={unreportedItems} selectedIds={selectedIds}
-          onItemPress={handleItemPress} onItemLongPress={handleItemLongPress}
-          ListEmptyComponent={<EmptyState title="미발송 리포트가 없어요" description="" icon={'\uD83D\uDCE8'} />} />
+          onItemPress={handleReportItemPress} onItemLongPress={handleItemLongPress}
+          ListEmptyComponent={<EmptyState title="미발송 리포트가 없어요" description="기록이 있는 강아지 리포트를 탭해서 생성하세요" icon={'\uD83D\uDCE8'} />} />
       ),
     },
     {
@@ -199,6 +291,7 @@ function OpsTodayPage() {
   ], [
     unrecordedItems, attentionItems, unreportedItems, myItems,
     isLoading, selectedIds, handleItemPress, handleItemLongPress,
+    handleReportItemPress, generatingDogId,
   ]);
 
   if (!isReady) return null;
@@ -219,7 +312,7 @@ function OpsTodayPage() {
           onBulkRecord={() => setShowBulkSheet(true)}
           onCancel={() => setSelectedIds(new Set())}
         />
-        <TabLayout title="Ops 대시보드" tabs={tabs} defaultTab="unrecorded" />
+        <TabLayout title="오늘의 운영" tabs={tabs} defaultTab="unrecorded" />
         <OpsBottomInfo totalCount={allItems.length} completedCount={completedCount} />
       </View>
 
@@ -244,6 +337,30 @@ function OpsTodayPage() {
         />
       </Modal>
 
+      {/* 리포트 미리보기/발송 모달 */}
+      <Modal visible={!!reportForPreview} animationType="slide" presentationStyle="pageSheet">
+        {reportForPreview && (
+          <ReportPreviewSheet
+            report={reportForPreview}
+            dogName={reportSourceItem?.dogName ?? '강아지'}
+            onSend={handleReportSend}
+            onUpdate={handleReportUpdate}
+            onClose={handleReportClose}
+          />
+        )}
+      </Modal>
+
+      {/* 강아지 등록 FAB */}
+      {selectedIds.size === 0 && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('/ops/dog-add' as never)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.fabText}>+ 강아지 등록</Text>
+        </TouchableOpacity>
+      )}
+
       <BottomNavBar activeTab="ops" />
     </SafeAreaView>
   );
@@ -256,5 +373,24 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 144, // BottomNavBar(88) + OpsBottomInfo(44) + gap(12)
+    right: spacing.screenHorizontal,
+    backgroundColor: colors.primaryBlue,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    shadowColor: colors.primaryBlue,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabText: {
+    ...typography.bodySmall,
+    fontWeight: '700',
+    color: colors.white,
   },
 });

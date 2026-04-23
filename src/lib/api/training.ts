@@ -455,3 +455,88 @@ export async function getStepFeedback(
     },
   );
 }
+
+/** 행동 분석 데이터 조회 (로그 기반 추천 엔진용) */
+export async function getBehaviorAnalytics(dogId: string, days = 30): Promise<{
+  total_logs: number;
+  top_behaviors: string[];
+  avg_intensity_by_behavior: Record<string, number>;
+  weekly_trend: Record<string, string>;
+  peak_hour: number | null;
+} | null> {
+  try {
+    return await requestBackend(`/api/v1/dogs/${dogId}/behavior-analytics?days=${days}`);
+  } catch {
+    return null;
+  }
+}
+
+/** 시행착오 기록 조회 */
+export async function getStepAttempts(
+  dogId: string,
+  stepId?: string,
+): Promise<import('types/training').StepAttempt[]> {
+  try {
+    const url = stepId
+      ? `/api/v1/dogs/${dogId}/step-attempts?step_id=${encodeURIComponent(stepId)}`
+      : `/api/v1/dogs/${dogId}/step-attempts`;
+    const rows = await requestBackend<
+      Array<{
+        id: string;
+        step_id: string;
+        curriculum_id: string;
+        day_number: number;
+        attempt_number: number;
+        reaction?: string;
+        situation_tags?: string[];
+        method_used?: string;
+        what_worked?: string;
+        what_didnt_work?: string;
+        created_at: string;
+      }>
+    >(url);
+    if (!Array.isArray(rows)) return [];
+    return rows.map((r) => ({
+      id: r.id,
+      dog_id: dogId,
+      step_id: r.step_id,
+      curriculum_id: r.curriculum_id,
+      day_number: r.day_number,
+      attempt_number: r.attempt_number,
+      reaction: r.reaction as import('types/training').DogReaction | undefined,
+      situation_tags: r.situation_tags ?? [],
+      method_used: r.method_used ?? undefined,
+      what_worked: r.what_worked ?? undefined,
+      what_didnt_work: r.what_didnt_work ?? undefined,
+      created_at: r.created_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** 시행착오 상세 기록 저장 */
+export async function submitStepAttempt(
+  dogId: string,
+  data: {
+    step_id: string;
+    curriculum_id: string;
+    day_number: number;
+    attempt_number?: number;
+    reaction?: string;
+    situation_tags?: string[];
+    method_used?: string;
+    what_worked?: string;
+    what_didnt_work?: string;
+  }
+): Promise<void> {
+  const { error } = await supabase
+    .from('training_step_attempts')
+    .insert({
+      dog_id: dogId,
+      ...data,
+      attempt_number: data.attempt_number ?? 1,
+    });
+  if (error) throw error;
+  return undefined;
+}

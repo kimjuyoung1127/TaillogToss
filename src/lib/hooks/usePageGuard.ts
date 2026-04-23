@@ -88,9 +88,8 @@ export function usePageGuard(options: UsePageGuardOptions): { isReady: boolean }
           isSubscriptionLoading,
         });
       }
-      const isAuthFallback =
-        evaluated.redirectTo === '/onboarding/welcome' || evaluated.redirectTo === '/login';
-      if (isAuthFallback && currentPath !== '/login' && currentPath !== '/onboarding/welcome') {
+      const isAuthFallback = evaluated.redirectTo === '/onboarding/welcome';
+      if (isAuthFallback && currentPath !== '/onboarding/welcome') {
         setPostLoginRedirect(currentPath);
       }
 

@@ -9,12 +9,14 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 import * as authApi from 'lib/api/auth';
 import { useAuth } from 'stores/AuthContext';
 import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
@@ -22,6 +24,8 @@ import { LottieAnimation } from 'components/shared/LottieAnimation';
 import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { tracker } from 'lib/analytics/tracker';
+import { isB2BRole } from 'stores/OrgContext';
+import type { UserRole } from 'types/auth';
 
 export const Route = createRoute('/onboarding/welcome', {
   component: WelcomePage,
@@ -45,6 +49,7 @@ function WelcomePage() {
   const { login, syncOnboardingStatus } = useAuth();
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
+  const [isB2BLoading, setIsB2BLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const readEdgeFailureMeta = useCallback(async (cause: unknown): Promise<EdgeFailureMeta | null> => {
@@ -88,6 +93,45 @@ function WelcomePage() {
     if (normalized.includes('bridge_session_not_established')) return '로그인 세션 생성에 실패했어요. 앱을 재시작해주세요.';
     return '로그인에 실패했어요. 다시 시도해주세요.';
   }, [readEdgeFailureMeta]);
+
+  /**
+   * B2B 셀프 가입 — 토스 로그인 후 org_owner 역할 자동 부여 → /ops/today 이동
+   * 이미 B2B 역할이면 역할 부여 건너뜀.
+   */
+  const handleB2BLogin = useCallback(async () => {
+    setIsB2BLoading(true);
+    setError(null);
+    try {
+      const { authorizationCode, referrer } = await appLogin();
+      const loginResult = await authApi.loginWithToss(authorizationCode, referrer);
+      const sessionEstablished = await authApi.setSessionFromBridgeResponse(loginResult);
+      if (!sessionEstablished) throw new Error('BRIDGE_SESSION_NOT_ESTABLISHED');
+
+      // 이미 B2B 역할이면 역할 부여 생략
+      if (!isB2BRole(loginResult.user.role as UserRole)) {
+        await authApi.assignB2BRole('org_owner');
+      }
+
+      // 갱신된 세션으로 AuthContext 업데이트
+      const updatedSession = await authApi.getSession();
+      const updatedUser = {
+        ...loginResult.user,
+        role: (updatedSession?.user?.user_metadata?.role ?? 'org_owner') as UserRole,
+      };
+      login(updatedUser);
+
+      navigation.navigate('/ops/today' as never);
+    } catch (cause) {
+      const edgeMeta = await readEdgeFailureMeta(cause);
+      console.error('[B2B-LOGIN] handleB2BLogin failed', {
+        message: cause instanceof Error ? cause.message : String(cause ?? ''),
+        edgeMeta,
+      });
+      setError(await getLoginErrorMessage(cause));
+    } finally {
+      setIsB2BLoading(false);
+    }
+  }, [getLoginErrorMessage, login, navigation, readEdgeFailureMeta]);
 
   const handleTossLogin = useCallback(async () => {
     setIsLoading(true);
@@ -150,17 +194,17 @@ function WelcomePage() {
 
           <View style={styles.features}>
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>⚡</Text>
+              <Image source={{ uri: ICONS['ic-bolt'] }} style={styles.featureIconImg} />
               <Text style={styles.featureTitle}>원탭 기록</Text>
               <Text style={styles.featureDesc}>간단한 칩 터치로 빠르게</Text>
             </View>
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>📊</Text>
+              <Image source={{ uri: ICONS['ic-analysis'] }} style={styles.featureIconImg} />
               <Text style={styles.featureTitle}>AI 분석</Text>
               <Text style={styles.featureDesc}>패턴과 트리거를 자동 분석</Text>
             </View>
             <View style={styles.featureCard}>
-              <Text style={styles.featureIcon}>🎯</Text>
+              <Image source={{ uri: ICONS['ic-target'] }} style={styles.featureIconImg} />
               <Text style={styles.featureTitle}>맞춤 훈련</Text>
               <Text style={styles.featureDesc}>7종 커리큘럼 맞춤 추천</Text>
             </View>
@@ -185,6 +229,20 @@ function WelcomePage() {
               <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.ctaText}>토스로 시작하기</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* B2B 셀프 가입 링크 */}
+          <TouchableOpacity
+            style={styles.b2bLink}
+            onPress={handleB2BLogin}
+            disabled={isB2BLoading || isLoading}
+            activeOpacity={0.6}
+          >
+            {isB2BLoading ? (
+              <ActivityIndicator color={colors.textTertiary} size="small" />
+            ) : (
+              <Text style={styles.b2bLinkText}>센터·훈련사 관계자이신가요?</Text>
             )}
           </TouchableOpacity>
 
@@ -244,7 +302,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 8,
   },
-  featureIcon: { ...typography.t3, marginBottom: 8 },
+  featureIconImg: { width: 40, height: 40, marginBottom: 8 },
   featureTitle: { ...typography.caption, fontWeight: '700', color: colors.textDark, marginBottom: 4 },
   featureDesc: { ...typography.badge, color: colors.textSecondary, textAlign: 'center' },
   bottomSection: {
@@ -288,11 +346,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.2,
   },
+  b2bLink: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 12,
+  },
+  b2bLinkText: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    textDecorationLine: 'underline',
+  },
   termsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 8,
   },
   termsLink: {
     ...typography.caption,

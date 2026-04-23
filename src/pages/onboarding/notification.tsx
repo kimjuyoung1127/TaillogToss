@@ -5,7 +5,8 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet ,TouchableOpacity, Switch  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useUpdateSettings } from 'lib/hooks/useSettings';
 import { tracker } from 'lib/analytics/tracker';
@@ -15,6 +16,7 @@ import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/notification', {
   component: NotificationPage,
+  screenOptions: { headerShown: false },
 });
 
 interface NotifPref {
@@ -40,7 +42,7 @@ function NotificationPage() {
 
   const completeOnboardingFlow = useCallback(async () => {
     if (!user) {
-      navigation.navigate('/login');
+      navigation.navigate('/onboarding/welcome');
       return;
     }
 
@@ -62,7 +64,7 @@ function NotificationPage() {
 
   const handleAllow = useCallback(async () => {
     if (!user) {
-      navigation.navigate('/login');
+      navigation.navigate('/onboarding/welcome');
       return;
     }
 
@@ -199,25 +201,24 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   bellArea: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: colors.orange50,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
   bellEmoji: { fontSize: 40 },
   heading: {
-    fontSize: 24,
+    ...typography.t3,
     fontWeight: '700',
     color: colors.textPrimary,
     textAlign: 'center',
-    lineHeight: 34,
     marginBottom: 8,
   },
   subtitle: {

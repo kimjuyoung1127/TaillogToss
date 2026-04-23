@@ -5,6 +5,7 @@
 import { authGuard, onboardingGuard, featureGuard } from 'lib/guards';
 import type { FeatureRequirement, GuardResult, GuardRoute } from 'lib/guards';
 import type { UserRole } from 'types/auth';
+import { isDevGuardBypassed } from 'lib/devGuardBypass';
 
 export interface EvaluatePageGuardInput {
   currentPath: string;
@@ -27,6 +28,9 @@ export type GuardEvaluation =
   | { status: 'redirect'; redirectTo: GuardRoute };
 
 export function evaluatePageGuard(input: EvaluatePageGuardInput): GuardEvaluation {
+  // __DEV__ 전용: DevMenu 우회 토글이 활성화된 경우 모든 가드를 건너뜀
+  if (isDevGuardBypassed()) return { status: 'allow' };
+
   const {
     currentPath,
     skipAuth,

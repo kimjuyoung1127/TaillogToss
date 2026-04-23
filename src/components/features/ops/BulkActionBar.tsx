@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: colors.primaryBlueLight,
     borderBottomWidth: 1,
-    borderBottomColor: '#BFDBFE',
+    borderBottomColor: colors.blue200,
   },
   cancelText: {
     ...typography.detail,

@@ -4,11 +4,11 @@
  * Parity: UI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Dog } from 'types/dog';
 import { colors, typography } from 'styles/tokens';
 
-type DashboardDog = Pick<Dog, 'id' | 'name' | 'breed'>;
+type DashboardDog = Pick<Dog, 'id' | 'name' | 'breed' | 'profile_image_url'>;
 
 export interface DogCardProps {
   dog: DashboardDog;
@@ -21,7 +21,11 @@ export function DogCard({ dog, todayLogCount, onPress, onSwitchPress }: DogCardP
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7} disabled={!onPress}>
       <View style={styles.avatar}>
-        <Text style={styles.avatarEmoji}>{'\uD83D\uDC36'}</Text>
+        {dog.profile_image_url ? (
+          <Image source={{ uri: dog.profile_image_url }} style={styles.avatarImage} />
+        ) : (
+          <Text style={styles.avatarEmoji}>{'\uD83D\uDC36'}</Text>
+        )}
       </View>
       <View style={styles.info}>
         <View style={styles.nameRow}>
@@ -59,6 +63,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  avatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   avatarEmoji: {
     fontSize: 24,

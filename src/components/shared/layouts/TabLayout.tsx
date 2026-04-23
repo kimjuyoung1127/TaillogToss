@@ -3,7 +3,7 @@
  * 대시보드 3탭, 분석 주간/월간/전체 등에 사용
  */
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface TabItem {
@@ -17,32 +17,43 @@ export interface TabLayoutProps {
   tabs: TabItem[];
   defaultTab?: string;
   headerRight?: React.ReactNode;
+  /** 타이틀 왼쪽에 표시할 아이콘/로고 */
+  headerLeft?: React.ReactNode;
 }
 
-export function TabLayout({ title, tabs, defaultTab, headerRight }: TabLayoutProps) {
+export function TabLayout({ title, tabs, defaultTab, headerRight, headerLeft }: TabLayoutProps) {
   const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.key ?? '');
   const activeContent = tabs.find((t) => t.key === activeTab)?.content;
 
   return (
     <View style={styles.safe}>
-      {title && (
+      {(title || headerLeft) && (
         <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
+          <View style={styles.headerLeft}>
+            {headerLeft}
+            {title && <Text style={styles.title}>{title}</Text>}
+          </View>
           {headerRight && <View>{headerRight}</View>}
         </View>
       )}
-      <View style={styles.tabBar}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.tabBarWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabBar}
+        >
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
       <View style={styles.content}>{activeContent}</View>
     </View>
@@ -58,11 +69,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenHorizontal,
     paddingVertical: spacing.lg,
   },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   title: { ...typography.sectionTitle, fontWeight: '700', color: colors.textPrimary },
-  tabBar: {
-    flexDirection: 'row',
+  tabBarWrapper: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  tabBar: {
+    flexDirection: 'row',
     paddingHorizontal: spacing.screenHorizontal,
   },
   tab: {

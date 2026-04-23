@@ -109,8 +109,8 @@ export const LEGAL_DOCUMENTS = {
 
   privacy: {
     title: '개인정보 수집·이용 동의',
-    updatedAt: '2026년 2월 27일',
-    effectiveAt: '2026년 2월 27일',
+    updatedAt: '2026년 4월 21일',
+    effectiveAt: '2026년 4월 21일',
     body: `
 <h2>1. 개인정보의 수집 및 이용 목적</h2>
 <p>테일로그(TailLog)는 다음 목적으로 개인정보를 처리합니다. 수집된 정보는 명시된 목적 외에 사용되지 않으며, 목적 변경 시 「개인정보 보호법」 제18조에 따라 별도 동의를 받습니다.</p>
@@ -169,6 +169,19 @@ export const LEGAL_DOCUMENTS = {
 <ul>
 <li>이용자가 사전에 동의한 경우</li>
 <li>법령의 규정에 의하거나, 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우</li>
+</ul>
+
+<h2>5-1. 개인정보 처리 위탁</h2>
+<p>회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리 업무를 위탁하고 있습니다. 위탁 업체는 위탁 목적 외 개인정보를 처리하지 않도록 계약을 통해 관리됩니다.</p>
+<table>
+<tr><th>위탁 업체</th><th>위탁 목적</th><th>보유 및 이용기간</th></tr>
+<tr><td>Supabase Inc. (미국)</td><td>데이터베이스 호스팅, 회원 인증, 파일 스토리지</td><td>서비스 이용 종료 시 + 30일</td></tr>
+<tr><td>OpenAI, Inc. (미국)</td><td>AI 코칭 리포트 생성 (GPT 모델 API 호출)</td><td>API 호출 완료 즉시 (OpenAI는 API 입력값을 학습에 사용하지 않음)</td></tr>
+</table>
+<p><strong>국외 이전 안내</strong>: 위 업체는 미국에 소재하며, 이용자의 개인정보가 미국으로 이전될 수 있습니다. 각 업체의 개인정보 보호 정책이 적용됩니다.</p>
+<ul>
+<li>Supabase 개인정보처리방침: https://supabase.com/privacy</li>
+<li>OpenAI 개인정보처리방침: https://openai.com/policies/privacy-policy</li>
 </ul>
 
 <h2>6. 연결 해제 및 탈퇴 시 데이터 처리</h2>

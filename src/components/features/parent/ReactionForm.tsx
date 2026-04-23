@@ -83,15 +83,15 @@ export function ReactionForm({ onSubmitReaction, onSubmitQuestion }: ReactionFor
 
 const styles = StyleSheet.create({
   container: { padding: 20, borderTopWidth: 1, borderTopColor: colors.border },
-  title: { ...typography.bodySmall, fontWeight: '600', color: '#374151', marginBottom: 12 },
+  title: { ...typography.bodySmall, fontWeight: '600', color: colors.grey800, marginBottom: 12 },
   emojiRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   emojiBtn: {
     alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8,
     borderRadius: 12, backgroundColor: colors.divider,
   },
-  emojiBtnSelected: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: colors.primaryBlue },
+  emojiBtnSelected: { backgroundColor: colors.blue50, borderWidth: 1, borderColor: colors.primaryBlue },
   emoji: { fontSize: 24 },
-  emojiLabel: { ...typography.badge, color: '#6B7280', marginTop: 4 },
+  emojiLabel: { ...typography.badge, color: colors.badgeGrey, marginTop: 4 },
   questionLink: { ...typography.detail, color: colors.primaryBlue, fontWeight: '500' },
   questionForm: { gap: 8 },
   questionInput: {

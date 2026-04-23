@@ -103,6 +103,25 @@ function isAllowedRole(role: EdgeContext['role']): boolean {
   );
 }
 
+/** processProductGrant 공식 요구사항: 30초 이내 반환. S2S 호출은 25초로 제한 (5초 마진). */
+const IAP_VERIFY_TIMEOUT_MS = 25_000;
+
+function withIapTimeout<T>(promise: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      const err = Object.assign(
+        new Error('IAP verify S2S timeout (25s exceeded)'),
+        { code: 'IAP_TIMEOUT', status: 504 }
+      );
+      reject(err);
+    }, IAP_VERIFY_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer !== undefined) clearTimeout(timer);
+  });
+}
+
 export function createVerifyIapOrderHandler(overrides?: Partial<VerifyIapDeps>) {
   const deps = { ...defaultDeps(), ...(overrides ?? {}) };
 
@@ -124,15 +143,17 @@ export function createVerifyIapOrderHandler(overrides?: Partial<VerifyIapDeps>) 
 
     const now = deps.now().toISOString();
     try {
-      const verification = await deps.breaker.execute('verify-iap-order', async () =>
-        retryOnServerError(
-          () =>
-            deps.mTLSClient.verifyIapOrder({
-              orderId: request.orderId,
-              productId: request.productId,
-              transactionId: request.transactionId,
-            }),
-          { maxRetries: 2, baseDelayMs: 150 }
+      const verification = await withIapTimeout(
+        deps.breaker.execute('verify-iap-order', async () =>
+          retryOnServerError(
+            () =>
+              deps.mTLSClient.verifyIapOrder({
+                orderId: request.orderId,
+                productId: request.productId,
+                transactionId: request.transactionId,
+              }),
+            { maxRetries: 2, baseDelayMs: 150 }
+          )
         )
       );
 
@@ -155,6 +176,17 @@ export function createVerifyIapOrderHandler(overrides?: Partial<VerifyIapDeps>) 
       return ok(response);
     } catch (error) {
       deps.idempotency.fail('verify-iap-order', request.idempotencyKey);
+
+      const isTimeout =
+        typeof error === 'object' && error !== null && 'code' in error &&
+        (error as { code: unknown }).code === 'IAP_TIMEOUT';
+
+      if (isTimeout) {
+        return fail('IAP_TIMEOUT', 'processProductGrant exceeded 30s limit', 504, {
+          retryable: false,
+        });
+      }
+
       const retryAfterMs =
         typeof error === 'object' && error !== null && 'retryAfterMs' in error
           ? Number((error as { retryAfterMs: unknown }).retryAfterMs)

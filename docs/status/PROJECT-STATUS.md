@@ -1,6 +1,18 @@
 # TaillogToss Project Status
 
-Last Updated: 2026-04-21 (KST) — ops/settings 실데이터 업그레이드(B2B-002): 센터정보수정(OrgInfoEditForm+useUpdateOrg), 강아지현황카드(DogQuotaCard), 멤버초대피드백(Alert), 플랜카드(PlanCard), B2B_IAP_PRODUCTS 키 케이스 불일치 수정. OrgContext isOrgLoading 추가, OrgBootstrap role체크 제거 → org null 버그 해결. ops/dog-add isOrgLoading 대기+ops/setup 리디렉트. dogs 테이블 vet_name/animal_reg_no/parent_address 컬럼 추가 migration, org_dogs.parent_phone_last4 명문 저장 + verify_parent_phone_last4 RPC 수정. 128/128 테스트 통과.
+Last Updated: 2026-04-23 (KST) — 코드 리뷰: UI-TRAINING-PERSONALIZATION-001 + UI-TRAINING-DETAIL-001 실데이터 연결 이미 완료 확인. `useStepAttempts`, `AttemptHistorySheet`, `StreakBadge`, `ReactionTrendBar` 모두 실 API 연결 상태. 잔여: 실기기 시각 QA만 남음. tsc 0 errors. 이전: PlanSelector 바텀시트 Plan C 잠금 해제, DayTabBar Day 5 잘림 수정.
+
+Previous: 훈련 커리큘럼 철학 재정의 완료 (플랜 A/B/C): `PlanPhilosophy` 타입+`planMeta` 전체 7개 커리큘럼 적용, altB/C 전체 109스텝 100% 채우기(fear_desensitization 포함), `variant_notes` C 레이블 커리큘럼별 갱신(35개), `VariantSelector` 철학 뱃지 UI, `detail.tsx` 5개 컴포넌트 분리(CurriculumHeroCard/DayProgressIndicator/DayTabBar/CelebrationModal/AttemptHistorySheet), `recommendPlan(DogPlanSignals)` 엔진 추가(노령·대형견→C, 불안·반응성→B, 기본→A), `detail.tsx` 훈련 첫 시작 시 dogEnv 기반 자동 Plan 설정, `training-data-maintenance.prompt.md` 자동화 등록. tsc 0 errors.
+
+Previous: 훈련 UX QA 버그픽스 + 아이콘 에셋 교체: ModalLayout SafeArea(iOS 홈인디케이터 34pt) + backdrop dismiss 추가, `GET /step-attempts` 엔드포인트 + `useStepAttempts` hook으로 StepAttemptHistory 실데이터 연결, `getRecommendationsV2` secondary null 폴백 수정(단일 후보 시 미완료 커리큘럼 fallback), RecordModal 훈련탭 footer 조건부, detail.tsx ReactionTrendBar+StreakBadge 렌더링, 커리큘럼 제목 불필요 텍스트 제거([세상 밖 소리], [괜찮아,조금씩!]), `curriculumIconAssets.ts` base64 URI 방식으로 재작성(Granite.js require() 미지원), CurriculumCard/ShowcaseCard/detail heroIcon → `source={{ uri }}` 패턴 교체. tsc 0 errors.
+
+Previous: AI 코칭 강화 + 훈련 추천 개인화 + 시행착오 기록 시스템 완료 (AI-COACHING-ANALYTICS-001, UI-TRAINING-PERSONALIZATION-001, UI-TRAINING-DETAIL-001): `training_step_attempts` DB 마이그레이션 remote 적용, `/behavior-analytics` FastAPI 엔드포인트, `getRecommendationsV2` ScoreBand 엔진, academy 3섹션 UX, StepCompletionSheet 2경로, AnalysisBadge, ReactionTrendBar, StreakBadge, StepAttemptHistory, RecommendedCurriculumCard, RelatedCurriculumCarousel, detail.tsx useSubmitStepAttempt 연결, RecordModal B2B 훈련이력 탭, pytest 5/5 PASS, tsc 0 errors. 실주행 확인: "최근 기록 23개 분석 결과" 실데이터 연결 확인.
+
+Previous: 헤더 통일화: ListLayout에 `style`/`contentContainerStyle` 오버라이드 prop 추가, settings 페이지 로컬 TopBar 제거 → ListLayout 교체(로딩/에러/정상 3경로), TabLayout에 `headerLeft` prop 추가, 대시보드 헤더에 강아지 아이콘 로고 적용(ICONS['ic-stage-adult'] base64 URI 방식). tsc PASS.
+
+Previous: DogPhotoPicker 실 SDK 연동(fetchAlbumPhotos 권한 3단계+갤러리 선택), DogCard 대시보드에 profile_image_url 조건부 렌더링(이모지→실사진), IAP completeProductGrant 실 SDK 연결, coaching/result AI 생성물 disclaimer 추가, Supabase dog-profiles 버킷 생성+진돗개 사진 업로드. tokens.ts dev 전용 토큰 추가, DevMenu 하드코딩 색상 토큰화, tsc PASS.
+
+Previous: ops/settings 실데이터 업그레이드(B2B-002): 센터정보수정(OrgInfoEditForm+useUpdateOrg), 강아지현황카드(DogQuotaCard), 멤버초대피드백(Alert), 플랜카드(PlanCard), B2B_IAP_PRODUCTS 키 케이스 불일치 수정. OrgContext isOrgLoading 추가, OrgBootstrap role체크 제거 → org null 버그 해결. ops/dog-add isOrgLoading 대기+ops/setup 리디렉트. dogs 테이블 vet_name/animal_reg_no/parent_address 컬럼 추가 migration, org_dogs.parent_phone_last4 명문 저장 + verify_parent_phone_last4 RPC 수정. 128/128 테스트 통과.
 
 Previous: Supabase 프로젝트 정합성 복구: CLI를 올바른 프로젝트(`gxvtgrcqkbdibkyeqyil`)에 재연결, `assign-b2b-role` Edge Function 재배포(verify_jwt=false), `create_organization`+`verify_parent_phone_last4` RPC 신규 프로젝트에 적용, `behavior_logs.org_id` 미삽입 버그 수정(QuickLogInput+createQuickLog+ops/today). 전체 40개 테이블 스키마 비교 완료.
 Owner Doc: `CLAUDE.md` (슬림 인덱스), 본 문서는 상태/이력 상세 전용.
@@ -59,6 +71,9 @@ vibehub-media 하네스 이식 완료:
 | UI-001 | 디자인 | In Progress | 52컴포넌트, 토큰 중앙화 70+파일, Lottie 3종, 상태UI 8화면 | 실기기 비주얼 QA |
 | LOG-001 | 행동 기록 | In Progress | 대시보드/빠른기록/상세기록/분석, backend-first 전환 + useDeleteLog 낙관적 삭제 훅 + LogCard 롱프레스 UI (2026-04-20) | FastAPI 로그 API 실기기 E2E |
 | AI-001 | AI 코칭 | In Progress | 6블록 코칭, 피드백, BE-P5, backend-first, 실연동 E2E 완료(2026-04-20): subscriptions drift 수정, max_tokens 1800, ownership 검증, CoachingGenerationLoader 5단계, FreeBlock Plan C | 실기기 QA (typing/Lottie/bg-flash 시각 확인) |
+| AI-COACHING-ANALYTICS-001 | 코칭 행동 분석 | Done | `_build_behavior_analytics_text()`, Behavior Analytics 프롬프트 섹션, `analytics_metadata` 반환, AnalysisBadge 프론트 통합, `/behavior-analytics` API, pytest 5/5 | — |
+| UI-TRAINING-PERSONALIZATION-001 | 훈련 추천 개인화 | QA | `getRecommendationsV2` ScoreBand, `useBehaviorAnalytics` useQuery, academy 3섹션(AI추천/관련훈련/전체), cold start fallback, RecommendedCurriculumCard, RelatedCurriculumCarousel, StreakBadge, `useStepAttempts`+`AttemptHistorySheet` 실데이터 연결 완료(2026-04-23), tsc 0 errors | 실기기 시각 QA (AttemptHistorySheet 렌더 + InsightSummaryBar 애니) |
+| UI-TRAINING-DETAIL-001 | 훈련 상세 UX | QA | `training_step_attempts` DB 마이그레이션+RLS, StepCompletionSheet 2경로, StepAttemptHistory(PRO), ReactionTrendBar(PRO), detail.tsx useSubmitStepAttempt 연결, RecordModal B2B 훈련이력 탭, StreakBadge/ReactionTrendBar/AttemptHistorySheet 실데이터 배치 완료(2026-04-23), tsc 0 errors | 실기기 시각 QA (StreakBadge Day2+ 확인, 반응 그래프, 이력 시트) |
 | AI-TRAIN-001 | 훈련 데이터 플라이휠 | InProgress | 합성 생성(synthetic.py) + 품질 태깅(training.py) + admin API 3개(ADMIN_API_KEY 인증) + migration(training_candidate/quality_score/approved/synthetic 컬럼) + 자동화 2개(daily 08:00 / weekly 일 09:00) | Supabase Edge Function 포팅, ADMIN_API_KEY .env 값 설정, pg_cron 스케줄 등록 |
 | IAP-001 | 결제 | In Progress | 구독 화면, useIsPro, verifyAndGrant, Edge v12, iap.test 9케이스, 서버 3시나리오+복구 재검증 증적 + DB 영속(5건) 확인 | 실기기 결제 UI 3시나리오 증적 정리 |
 | MSG-001 | 알림 | In Progress | Edge v9, 쿨다운, noti_history 영속, 우회차단, 테스트 통과, Sandbox 실발송 완료(2026-04-20, A/B안 발송됨) | 토스팀 검토 승인 후 FastAPI 연동(templateCode: taillog-app-TAILLOG_BEHAVIOR_REMIND) |

@@ -89,6 +89,7 @@ class CoachingResponse(BaseModel):
     feedback_score: Optional[int] = None
     ai_tokens_used: int = 0
     created_at: datetime
+    analytics_metadata: Optional[Dict[str, Any]] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -4,9 +4,9 @@
  * Parity: UI-001
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import type { Curriculum, CurriculumStatus } from 'types/training';
-import { CURRICULUM_ICONS } from 'lib/data/published/runtime';
+import { CURRICULUM_ICON_URIS, CURRICULUM_ICON_FALLBACK_URI } from 'lib/data/curriculumIconAssets';
 import { colors, typography } from 'styles/tokens';
 
 type BadgeStatus = 'recommended' | CurriculumStatus | 'locked';
@@ -47,7 +47,6 @@ export function CurriculumCard({
   const badgeKey: BadgeStatus = isLocked ? 'locked' : isRecommended ? 'recommended' : status;
   const badge = BADGE_CONFIG[badgeKey];
   const progress = totalSteps > 0 ? completedSteps / totalSteps : 0;
-  const icon = CURRICULUM_ICONS[curriculum.id] ?? '📚';
 
   return (
     <TouchableOpacity
@@ -56,7 +55,10 @@ export function CurriculumCard({
       activeOpacity={isLocked ? 0.5 : 0.7}
     >
       <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{icon}</Text>
+        <Image
+          source={{ uri: CURRICULUM_ICON_URIS[curriculum.id] ?? CURRICULUM_ICON_FALLBACK_URI }}
+          style={styles.curriculumIcon}
+        />
       </View>
 
       <View style={[styles.badge, { backgroundColor: badge.bg }]}>
@@ -104,8 +106,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
-  icon: {
-    fontSize: 24,
+  curriculumIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
   badge: {
     alignSelf: 'flex-start',

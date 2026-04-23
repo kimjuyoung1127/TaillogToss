@@ -60,12 +60,12 @@ const styles = StyleSheet.create({
   title: { ...typography.pageTitle, fontWeight: '700', color: colors.textPrimary },
   date: { ...typography.detail, color: colors.textSecondary, marginTop: 4 },
   section: { marginBottom: 20 },
-  sectionTitle: { ...typography.bodySmall, fontWeight: '600', color: '#374151', marginBottom: 8 },
-  text: { ...typography.detail, color: '#4B5563', lineHeight: 22 },
+  sectionTitle: { ...typography.bodySmall, fontWeight: '600', color: colors.grey800, marginBottom: 8 },
+  text: { ...typography.detail, color: colors.grey700, lineHeight: 22 },
   aiSection: {
-    marginBottom: 20, backgroundColor: '#F0F9FF', borderRadius: 12, padding: 16,
+    marginBottom: 20, backgroundColor: colors.aiSectionBg, borderRadius: 12, padding: 16,
     borderLeftWidth: 3, borderLeftColor: colors.primaryBlue,
   },
-  aiText: { ...typography.detail, color: '#1E40AF' },
+  aiText: { ...typography.detail, color: colors.blue800 },
   photoPlaceholder: { ...typography.caption, color: colors.textSecondary },
 });

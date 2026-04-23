@@ -4,14 +4,16 @@
  * Parity: AI-001
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, typography, spacing } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
-const STEPS = [
-  { label: '로그 분석 중', emoji: '📊' },
-  { label: '패턴 추출 중', emoji: '🔍' },
-  { label: '코칭 생성 중', emoji: '🐾' },
+const STEPS: { label: string; icon: string }[] = [
+  { label: '로그 분석 중', icon: ICONS['ic-analysis']! },
+  { label: '패턴 추출 중', icon: ICONS['ic-search']! },
+  { label: '코칭 생성 중', icon: ICONS['ic-paw']! },
 ];
+const FALLBACK_ICON = ICONS['ic-paw']!;
 
 export function CoachingGenerationLoader() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -26,7 +28,7 @@ export function CoachingGenerationLoader() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>{STEPS[currentStep]?.emoji ?? '🐾'}</Text>
+      <Image source={{ uri: STEPS[currentStep]?.icon ?? FALLBACK_ICON }} style={styles.emojiImg} />
       <ActivityIndicator
         size="large"
         color={colors.primaryBlue}
@@ -69,8 +71,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 80,
   },
-  emoji: {
-    ...typography.emoji,
+  emojiImg: {
+    width: 56,
+    height: 56,
     marginBottom: spacing.lg,
   },
   spinner: {

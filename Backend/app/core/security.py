@@ -5,7 +5,7 @@ DogCoach security.py 마이그레이션
 import logging
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from supabase import Client, create_client
 
@@ -38,6 +38,21 @@ async def get_current_user_id(token: str = Depends(oauth2_scheme)) -> str:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def verify_admin_key(
+    x_admin_key: str = Header(default="", alias="x-admin-key"),
+) -> None:
+    """
+    내부 자동화 전용 admin 엔드포인트 인증.
+    X-Admin-Key 헤더가 ADMIN_API_KEY 환경변수와 일치해야 함.
+    ADMIN_API_KEY 미설정 시 항상 403 반환 (fail-safe).
+    """
+    if not settings.ADMIN_API_KEY or x_admin_key != settings.ADMIN_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access denied",
         )
 
 

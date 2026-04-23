@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface ModalLayoutProps {
@@ -13,20 +14,42 @@ export interface ModalLayoutProps {
   bottomCTA?: { label: string; onPress: () => void };
 }
 
-export function ModalLayout({ title, onClose, children, bottomCTA }: ModalLayoutProps) {
+// RN <Modal>은 별도 네이티브 윈도우 — SafeAreaProvider를 내부에 두어야
+// useSafeAreaInsets가 올바른 inset을 반환함
+export function ModalLayout(props: ModalLayoutProps) {
   return (
-    <View style={styles.overlay}>
-      <View style={styles.sheet}>
+    <SafeAreaProvider>
+      <ModalLayoutInner {...props} />
+    </SafeAreaProvider>
+  );
+}
+
+function ModalLayoutInner({ title, onClose, children, bottomCTA }: ModalLayoutProps) {
+  const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom;
+
+  return (
+    <TouchableOpacity
+      style={styles.overlay}
+      onPress={onClose}
+      activeOpacity={1}
+      disabled={!onClose}
+    >
+      {/* inner TouchableOpacity blocks event propagation to backdrop */}
+      <TouchableOpacity activeOpacity={1} onPress={() => undefined} style={styles.sheet}>
         <View style={styles.handle} />
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
           {onClose && (
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeIcon}>X</Text>
+              <Text style={styles.closeIcon}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
-        <ScrollView style={styles.body} contentContainerStyle={styles.content}>
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.lg }]}
+        >
           {children}
         </ScrollView>
         {bottomCTA && (
@@ -36,8 +59,10 @@ export function ModalLayout({ title, onClose, children, bottomCTA }: ModalLayout
             </TouchableOpacity>
           </View>
         )}
-      </View>
-    </View>
+        {/* 홈 인디케이터 / Android 네비게이션 바 영역 확보 */}
+        <View style={{ height: bottomInset }} />
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
 }
 
@@ -71,8 +96,8 @@ const styles = StyleSheet.create({
   title: { ...typography.subtitle, fontWeight: '600', color: colors.textPrimary },
   closeBtn: { padding: spacing.xs },
   closeIcon: { ...typography.label, color: colors.textSecondary },
-  body: { flex: 0 },
-  content: { paddingHorizontal: spacing.screenHorizontal, paddingBottom: spacing.xxl },
+  body: { flexShrink: 1 },
+  content: { paddingHorizontal: spacing.screenHorizontal },
   bottomBar: {
     paddingHorizontal: spacing.screenHorizontal,
     paddingVertical: spacing.md,

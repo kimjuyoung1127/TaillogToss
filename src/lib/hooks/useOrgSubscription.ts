@@ -11,7 +11,6 @@ import {
   createOneTimePurchaseOrder,
   verifyAndGrant,
   recoverPendingOrdersB2B,
-  type IAPEvent,
 } from 'lib/api/iap';
 import type { OrgSubscription } from 'types/b2b';
 
@@ -94,18 +93,18 @@ export function usePurchaseB2BIAP() {
 
       return new Promise<boolean>((resolve, reject) => {
         const cleanup = createOneTimePurchaseOrder({
-          options: { sku: input.product_id },
-          processProductGrant: async (receipt) => {
-            return verifyAndGrant(receipt, {
-              orgId: input.org_id,
-              trainerUserId: input.trainer_user_id,
-            });
+          sku: input.product_id,
+          processProductGrant: async ({ orderId }) => {
+            return verifyAndGrant(
+              { orderId, productId: input.product_id, transactionId: orderId },
+              { orgId: input.org_id, trainerUserId: input.trainer_user_id },
+            );
           },
-          onEvent: (event: IAPEvent) => {
-            if (event === 'GRANT_COMPLETED') {
+          onEvent: ({ type }) => {
+            if (type === 'GRANT_COMPLETED') {
               tracker.iapPurchaseSuccess(input.product_id);
               resolve(true);
-            } else if (event === 'GRANT_FAILED') {
+            } else if (type === 'GRANT_FAILED') {
               resolve(false);
             }
           },

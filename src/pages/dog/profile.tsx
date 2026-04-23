@@ -9,7 +9,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Switch,
@@ -17,6 +16,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { Accordion } from 'components/tds-ext/Accordion';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { DogPhotoPicker } from 'components/features/dog/DogPhotoPicker';
@@ -30,6 +30,7 @@ import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/dog/profile', {
   component: DogProfilePage,
+  screenOptions: { headerShown: false },
 });
 
 /** 행동 트리거 8카테고리 (서베이 Step 6 동일) */

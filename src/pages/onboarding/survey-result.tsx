@@ -5,7 +5,8 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView ,TouchableOpacity  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import {
   BehaviorTypeBadge,
   classifyBehaviorType,
@@ -23,6 +24,7 @@ import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/survey-result', {
   component: SurveyResultPage,
+  screenOptions: { headerShown: false },
 });
 
 function SurveyResultPage() {

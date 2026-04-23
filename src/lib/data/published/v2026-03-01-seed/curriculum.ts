@@ -396,7 +396,7 @@ const separationAnxiety: Curriculum = {
 
 const reactivityManagement: Curriculum = {
   id: 'reactivity_management',
-  title: '[세상 밖 소리] 마음 근육 튼튼 프로젝트',
+  title: '마음 근육 튼튼 프로젝트',
   description: '외부 소음에 예민한 아이를 위한 둔감화 및 긍정 전환 가이드',
   access: 'pro',
   total_days: 5,
@@ -712,7 +712,7 @@ const socialization: Curriculum = {
 
 const fearDesensitization: Curriculum = {
   id: 'fear_desensitization',
-  title: '[괜찮아, 조금씩!] 용기 내기 수업',
+  title: '용기 내기 수업',
   description: '두려움은 작게, 용기는 크게! 세상과 천천히 마주하는 과정',
   access: 'pro',
   total_days: 5,

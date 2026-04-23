@@ -6,11 +6,13 @@
  */
 import type { AdPlacement } from 'types/ads';
 
-/** Ad Group ID 매핑 (사업자등록 후 Developers Console에서 발급) */
+/** Ad Group ID 매핑 (사업자등록 후 Developers Console에서 발급)
+ * 환경변수 AIT_AD_R1/R2/R3 설정 시 실 ID 사용, 없으면 테스트 ID fallback
+ */
 const AD_GROUP_IDS: Record<AdPlacement, string> = {
-  R1: 'ait-ad-test-rewarded-id', // survey-result
-  R2: 'ait-ad-test-rewarded-id', // dashboard/analysis
-  R3: 'ait-ad-test-rewarded-id', // coaching-result
+  R1: process.env.AIT_AD_R1 || 'ait-ad-test-rewarded-id', // survey-result
+  R2: process.env.AIT_AD_R2 || 'ait-ad-test-rewarded-id', // dashboard/analysis
+  R3: process.env.AIT_AD_R3 || 'ait-ad-test-rewarded-id', // coaching-result
 };
 
 export function getAdGroupId(placement: AdPlacement): string {

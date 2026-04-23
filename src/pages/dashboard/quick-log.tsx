@@ -7,7 +7,8 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography } from 'styles/tokens';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useCreateQuickLog, useCreateDetailedLog } from 'lib/hooks/useLogs';
@@ -21,6 +22,7 @@ import type { QuickLogInput, DetailedLogInput } from 'types/log';
 
 export const Route = createRoute('/dashboard/quick-log', {
   component: QuickLogPage,
+  screenOptions: { headerShown: false },
 });
 
 type TabKey = 'quick' | 'detailed';

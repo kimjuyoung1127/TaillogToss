@@ -3,7 +3,8 @@
  * 코칭 결과, 프로필, 구독 비교 등에 사용. AppBar + ScrollView + BottomCTA
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView ,TouchableOpacity  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from '../../../styles/tokens';
 
 export interface DetailLayoutProps {

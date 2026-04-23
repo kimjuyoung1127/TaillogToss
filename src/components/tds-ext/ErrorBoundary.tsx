@@ -4,7 +4,8 @@
  * Parity: UI-001
  */
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet  } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from '../../styles/tokens';
 
 interface Props {

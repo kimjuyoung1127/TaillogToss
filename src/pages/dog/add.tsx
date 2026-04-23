@@ -10,7 +10,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   TextInput,
@@ -18,6 +17,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useAuth } from 'stores/AuthContext';

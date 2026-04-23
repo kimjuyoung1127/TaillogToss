@@ -19,6 +19,7 @@ import type { Dog } from 'types/dog';
 
 export const Route = createRoute('/dog/switcher', {
   component: DogSwitcherPage,
+  screenOptions: { headerShown: false },
 });
 
 function DogSwitcherPage() {

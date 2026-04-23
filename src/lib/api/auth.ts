@@ -127,3 +127,26 @@ export async function getSession() {
   if (error) throw error;
   return data.session;
 }
+
+/**
+ * B2B 역할 자동 부여 — 셀프 가입 플로우.
+ * assign-b2b-role Edge Function 호출 후 세션 갱신.
+ * 갱신된 세션의 user_metadata.role에 새 역할이 반영됨.
+ */
+export async function assignB2BRole(role: 'org_owner' | 'trainer' = 'org_owner'): Promise<void> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) throw new Error('NO_SESSION');
+
+  const { error, data } = await supabase.functions.invoke('assign-b2b-role', {
+    body: { role },
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (error) throw error;
+  if (!(data as { ok?: boolean })?.ok) {
+    throw new Error((data as { error?: { code?: string } })?.error?.code ?? 'ASSIGN_ROLE_FAILED');
+  }
+
+  // 세션 갱신 → user_metadata.role이 새 역할로 업데이트됨
+  await supabase.auth.refreshSession();
+}

@@ -18,6 +18,12 @@ export interface CoachingResult {
   feedback_score: 1 | 2 | 3 | 4 | 5 | null;
   ai_tokens_used: number;
   created_at: string;
+  /** 행동 분석 메타데이터 (AI 생성 시만 포함) */
+  analytics_metadata?: {
+    log_count: number;
+    analysis_days: number;
+    top_behavior: string | null;
+  } | null;
 }
 
 /** 코칭 6블록 구조 */

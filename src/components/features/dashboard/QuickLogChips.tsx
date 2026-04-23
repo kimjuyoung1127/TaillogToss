@@ -4,31 +4,31 @@
  * Parity: UI-001, LOG-001
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Chip } from 'components/tds-ext/Chip';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import type { QuickLogCategory, DailyActivityCategory } from 'types/log';
-import { colors, typography } from 'styles/tokens';
+import { colors, typography, spacing } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 /** 행동 카테고리 라벨 매핑 */
-const BEHAVIOR_CHIPS: { key: QuickLogCategory; label: string }[] = [
-  { key: 'barking', label: '짖음/울음' },
-  { key: 'aggression', label: '공격성' },
-  { key: 'anxiety', label: '분리불안' },
-  { key: 'destructive', label: '파괴행동' },
-  { key: 'biting', label: '마운팅' },
-  { key: 'jumping', label: '과잉흥분' },
-  { key: 'pulling', label: '배변문제' },
-  { key: 'other_behavior', label: '공포/회피' },
+const BEHAVIOR_CHIPS: { key: QuickLogCategory; label: string; icon: string }[] = [
+  { key: 'barking', label: '짖음/울음', icon: ICONS['ic-cat-barking']! },
+  { key: 'aggression', label: '공격성', icon: ICONS['ic-cat-aggression']! },
+  { key: 'anxiety', label: '분리불안', icon: ICONS['ic-cat-anxiety']! },
+  { key: 'destructive', label: '파괴행동', icon: ICONS['ic-cat-destructive']! },
+  { key: 'biting', label: '마운팅', icon: ICONS['ic-cat-mounting']! },
+  { key: 'jumping', label: '과잉흥분', icon: ICONS['ic-cat-excitement']! },
+  { key: 'pulling', label: '배변문제', icon: ICONS['ic-cat-toilet']! },
+  { key: 'other_behavior', label: '공포/회피', icon: ICONS['ic-cat-fear']! },
 ];
 
 /** 일상 활동 카테고리 라벨 매핑 */
-const ACTIVITY_CHIPS: { key: DailyActivityCategory; label: string }[] = [
-  { key: 'walk', label: '산책' },
-  { key: 'meal', label: '식사' },
-  { key: 'training', label: '훈련' },
-  { key: 'play', label: '놀이' },
-  { key: 'rest', label: '휴식' },
-  { key: 'grooming', label: '그루밍' },
+const ACTIVITY_CHIPS: { key: DailyActivityCategory; label: string; icon: string }[] = [
+  { key: 'walk', label: '산책', icon: ICONS['ic-cat-walk']! },
+  { key: 'meal', label: '식사', icon: ICONS['ic-cat-meal']! },
+  { key: 'training', label: '훈련', icon: ICONS['ic-cat-train']! },
+  { key: 'play', label: '놀이', icon: ICONS['ic-cat-play']! },
+  { key: 'rest', label: '휴식', icon: ICONS['ic-cat-rest']! },
+  { key: 'grooming', label: '그루밍', icon: ICONS['ic-cat-grooming']! },
 ];
 
 export interface QuickLogChipsProps {
@@ -43,24 +43,34 @@ export function QuickLogChips({ onSelectBehavior, onSelectActivity, selectedKey 
       <Text style={styles.sectionLabel}>행동 문제</Text>
       <View style={styles.chipRow}>
         {BEHAVIOR_CHIPS.map((chip) => (
-          <Chip
+          <TouchableOpacity
             key={chip.key}
-            label={chip.label}
-            selected={selectedKey === chip.key}
+            style={[styles.iconChip, selectedKey === chip.key && styles.iconChipSelected]}
             onPress={() => onSelectBehavior(chip.key)}
-          />
+            activeOpacity={0.7}
+          >
+            <Image source={{ uri: chip.icon }} style={styles.chipIcon} />
+            <Text style={[styles.chipText, selectedKey === chip.key && styles.chipTextSelected]}>
+              {chip.label}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>일상 활동</Text>
       <View style={styles.chipRow}>
         {ACTIVITY_CHIPS.map((chip) => (
-          <Chip
+          <TouchableOpacity
             key={chip.key}
-            label={chip.label}
-            selected={selectedKey === chip.key}
+            style={[styles.iconChip, selectedKey === chip.key && styles.iconChipSelected]}
             onPress={() => onSelectActivity(chip.key)}
-          />
+            activeOpacity={0.7}
+          >
+            <Image source={{ uri: chip.icon }} style={styles.chipIcon} />
+            <Text style={[styles.chipText, selectedKey === chip.key && styles.chipTextSelected]}>
+              {chip.label}
+            </Text>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
@@ -83,5 +93,30 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  iconChip: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.divider,
+    borderRadius: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 4,
+  },
+  iconChipSelected: {
+    backgroundColor: colors.primaryBlue,
+  },
+  chipIcon: {
+    width: 24,
+    height: 24,
+  },
+  chipText: {
+    ...typography.badge,
+    color: colors.grey700,
+  },
+  chipTextSelected: {
+    color: colors.white,
+    fontWeight: '600',
   },
 });

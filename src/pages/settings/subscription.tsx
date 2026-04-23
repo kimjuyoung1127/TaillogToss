@@ -8,12 +8,13 @@ import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { useAuth } from 'stores/AuthContext';
 import { isB2BRole } from 'stores/OrgContext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
@@ -24,18 +25,19 @@ import { IAP_PRODUCTS, DOG_LIMITS } from 'types/subscription';
 import { B2B_IAP_PRODUCTS } from 'types/b2b';
 import type { IAPProduct } from 'types/subscription';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 export const Route = createRoute('/settings/subscription', {
   component: SubscriptionPage,
 });
 
-const PRO_FEATURES = [
+const PRO_FEATURES: Array<{ icon: string; iconSource?: string; label: string }> = [
   { icon: '🤖', label: 'AI 코칭 무제한' },
-  { icon: '🐕', label: `멀티독 최대 ${DOG_LIMITS.PRO}마리` },
-  { icon: '📋', label: '전체 커리큘럼 7종 접근' },
-  { icon: '📊', label: '상세 분석 리포트' },
+  { icon: '🐕', iconSource: ICONS['ic-dog'], label: `멀티독 최대 ${DOG_LIMITS.PRO}마리` },
+  { icon: '📋', iconSource: ICONS['ic-report'], label: '전체 커리큘럼 7종 접근' },
+  { icon: '📊', iconSource: ICONS['ic-analysis'], label: '상세 분석 리포트' },
   { icon: '📅', label: '7일 훈련 계획 + Plan B/C' },
-] as const;
+];
 
 const FREE_FEATURES = [
   { label: 'AI 코칭', free: '광고 시청 시 1회', pro: '무제한' },
@@ -146,7 +148,11 @@ function SubscriptionPage() {
             <View style={styles.featureList}>
               {PRO_FEATURES.map((f) => (
                 <View key={f.label} style={styles.featureRow}>
-                  <Text style={styles.featureIcon}>{f.icon}</Text>
+                  {f.iconSource ? (
+                    <Image source={{ uri: f.iconSource }} style={styles.featureIconImg} />
+                  ) : (
+                    <Text style={styles.featureIcon}>{f.icon}</Text>
+                  )}
                   <Text style={styles.featureLabel}>{f.label}</Text>
                 </View>
               ))}
@@ -304,6 +310,7 @@ const styles = StyleSheet.create({
   featureList: { marginBottom: 20 },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   featureIcon: { ...typography.label, marginRight: 10 },
+  featureIconImg: { width: 20, height: 20, marginRight: 10 },
   featureLabel: { ...typography.bodySmall, color: colors.textDark },
   purchaseButton: {
     backgroundColor: colors.primaryBlue,

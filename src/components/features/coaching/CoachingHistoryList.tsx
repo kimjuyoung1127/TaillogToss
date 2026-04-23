@@ -9,6 +9,7 @@ import type { CoachingResult } from 'types/coaching';
 import { useCoachingList } from 'lib/hooks/useCoaching';
 import { EmptyState } from 'components/tds-ext/EmptyState';
 import { colors, typography, spacing } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 const TREND_ICON: Record<string, string> = {
   improving: '📈',
@@ -54,7 +55,7 @@ export function CoachingHistoryList({ dogId, onSelectCoaching }: CoachingHistory
       <EmptyState
         title="아직 코칭 기록이 없어요"
         description="AI 코칭을 받으면 여기에 기록이 쌓여요"
-        icon="📋"
+        iconSource={ICONS['illust-empty-coaching']!}
       />
     );
   }

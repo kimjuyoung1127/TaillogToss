@@ -28,9 +28,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 /** 강도 라벨 + 색상 */
 function getIntensityBadge(intensity: number): { label: string; color: string; bg: string } {
-  if (intensity >= 8) return { label: '높음', color: '#E02020', bg: '#FEECEC' };
-  if (intensity >= 5) return { label: '보통', color: '#FF8800', bg: '#FFF4E5' };
-  return { label: '낮음', color: '#00B860', bg: '#E6F9EF' };
+  if (intensity >= 8) return { label: '높음', color: colors.badgeRed, bg: colors.badgeRedBg };
+  if (intensity >= 5) return { label: '보통', color: colors.badgeAmber, bg: colors.badgeAmberBg };
+  return { label: '낮음', color: colors.badgeGreen, bg: colors.badgeGreenBg };
 }
 
 export interface LogCardProps {

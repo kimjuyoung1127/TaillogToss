@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str | None = None
 
+    # Admin API (내부 자동화 전용 — X-Admin-Key 헤더)
+    ADMIN_API_KEY: str = ""
+
     # OpenAI (AI Coaching)
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
@@ -49,12 +52,12 @@ class Settings(BaseSettings):
     AI_TTL_7D_HOURS: int = 72
     AI_TTL_15D_HOURS: int = 168
     AI_TTL_30D_HOURS: int = 168
-    AI_LLM_TIMEOUT_SEC: int = 8
+    AI_LLM_TIMEOUT_SEC: int = 30
     AI_MAX_RETRIES: int = 1
     AI_TEMPERATURE: float = 0.2
     AI_TOP_P: float = 1.0
     AI_MAX_INPUT_TOKENS: int = 1200
-    AI_MAX_OUTPUT_TOKENS: int = 260
+    AI_MAX_OUTPUT_TOKENS: int = 1800
 
     @property
     def is_production(self) -> bool:

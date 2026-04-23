@@ -5,7 +5,7 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { DetailLayout } from 'components/shared/layouts/DetailLayout';
 import { LottieAnimation } from 'components/shared/LottieAnimation';
 import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
@@ -14,11 +14,20 @@ import { VariantSelector } from 'components/features/training/VariantSelector';
 import { PlanSelector } from 'components/features/coaching/PlanSelector';
 import { StepCompletionSheet } from 'components/features/training/StepCompletionSheet';
 import { DaySummarySheet } from 'components/features/training/DaySummarySheet';
+import { CurriculumHeroCard } from 'components/features/training/CurriculumHeroCard';
+import { DayProgressIndicator } from 'components/features/training/DayProgressIndicator';
+import { DayTabBar } from 'components/features/training/DayTabBar';
+import { CelebrationModal } from 'components/features/training/CelebrationModal';
+import { AttemptHistorySheet } from 'components/features/training/AttemptHistorySheet';
 import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { Toast } from 'components/tds-ext/Toast';
-import { getCurriculumById, CURRICULUM_ICONS } from 'lib/data/published/runtime';
-import { useTrainingProgress, useCompleteStep, useUncompleteStep, useStartTraining, useStepFeedback, useSubmitStepFeedback } from 'lib/hooks/useTraining';
+import { getCurriculumById } from 'lib/data/published/runtime';
+import { useTrainingProgress, useCompleteStep, useUncompleteStep, useStartTraining, useStepFeedback, useSubmitStepFeedback, useSubmitStepAttempt, useStepAttempts } from 'lib/hooks/useTraining';
+import { useDogEnv } from 'lib/hooks/useDogs';
+import { recommendPlan } from 'lib/data/recommendation/engine';
+import { ReactionTrendBar } from 'components/features/training/ReactionTrendBar';
+import { StreakBadge } from 'components/features/training/StreakBadge';
 import { useIsPro } from 'lib/hooks/useSubscription';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { tracker } from 'lib/analytics/tracker';
@@ -30,6 +39,7 @@ import { colors, typography, spacing } from 'styles/tokens';
 export const Route = createRoute('/training/detail', {
   validateParams: (params) => params as { curriculum_id: CurriculumId },
   component: TrainingDetailPage,
+  screenOptions: { headerShown: false },
 });
 
 function TrainingDetailPage() {
@@ -39,53 +49,77 @@ function TrainingDetailPage() {
   const navigation = useNavigation();
   const { isReady } = usePageGuard({ currentPath: '/training/detail' });
   const { data: progressList, isLoading, isError, refetch } = useTrainingProgress(activeDog?.id);
+  const { data: dogEnv } = useDogEnv(activeDog?.id);
 
   const { curriculum_id: curriculumId } = Route.useParams();
   const [showCelebration, setShowCelebration] = useState(false);
 
   const curriculum = useMemo(() => getCurriculumById(curriculumId), [curriculumId]);
 
-  // 현재 커리큘럼의 progress 찾기
   const progress = useMemo<TrainingProgress | null>(() => {
     if (!Array.isArray(progressList)) return null;
     return progressList.find((p: TrainingProgress) => p.curriculum_id === curriculumId) ?? null;
   }, [progressList, curriculumId]);
 
-  // State
   const [selectedDay, setSelectedDay] = useState(1);
   const [variant, setVariant] = useState<PlanVariant>('A');
   const [showPlanSelector, setShowPlanSelector] = useState(false);
   const [hasSyncedProgress, setHasSyncedProgress] = useState(false);
 
-  // progress 로드 후 selectedDay/variant 동기화 (초기 1회)
   useEffect(() => {
-    if (progress && !hasSyncedProgress) {
+    if (hasSyncedProgress) return;
+    if (progress) {
       setSelectedDay(progress.current_day);
       setVariant(progress.current_variant);
       setHasSyncedProgress(true);
+      return;
     }
-  }, [progress, hasSyncedProgress]);
+    // 훈련 첫 시작 — dogEnv 로드 완료 후 Plan 자동 추천
+    if (!isLoading && dogEnv !== undefined) {
+      const env = dogEnv as any;
+      const recommended = recommendPlan({
+        birthDate: activeDog?.birth_date,
+        weightKg: activeDog?.weight_kg,
+        hasPain: env?.health_meta?.physical_stats?.has_pain,
+        energyScore: env?.activity_meta?.energy_score,
+        playReward: env?.activity_meta?.rewards_meta?.play,
+        noiseSensitivity: env?.household_info?.noise_sensitivity,
+        behaviors: env?.health_meta?.chronic_issues,
+      });
+      setVariant(recommended);
+      setHasSyncedProgress(true);
+    }
+  }, [progress, hasSyncedProgress, isLoading, activeDog, dogEnv]);
 
-  // Feedback state
   const [feedbackStepId, setFeedbackStepId] = useState<string | null>(null);
   const [showDaySummary, setShowDaySummary] = useState(false);
   const [dayReactions, setDayReactions] = useState<DogReaction[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showAttemptHistory, setShowAttemptHistory] = useState(false);
 
-  // Mutations
   const startTraining = useStartTraining();
   const completeStep = useCompleteStep();
   const uncompleteStep = useUncompleteStep();
   const submitFeedback = useSubmitStepFeedback();
-  useStepFeedback(activeDog?.id, curriculumId);
+  const submitStepAttempt = useSubmitStepAttempt();
+  const { data: stepFeedbackList } = useStepFeedback(activeDog?.id, curriculumId);
+  const [attemptStepId, setAttemptStepId] = useState<string | undefined>(undefined);
+  const { data: stepAttempts } = useStepAttempts(activeDog?.id, attemptStepId);
 
-  const currentDay = useMemo(() => {
-    return curriculum?.days.find((d) => d.day_number === selectedDay) ?? null;
-  }, [curriculum, selectedDay]);
+  const streakDays = useMemo(() => (progress ? Math.max(0, progress.current_day - 1) : 0), [progress]);
+
+  const recentReactions = useMemo(
+    () => stepFeedbackList?.map((f) => f.reaction).filter((r): r is DogReaction => !!r) ?? [],
+    [stepFeedbackList],
+  );
+
+  const currentDay = useMemo(
+    () => curriculum?.days.find((d) => d.day_number === selectedDay) ?? null,
+    [curriculum, selectedDay],
+  );
 
   const completedStepIds = useMemo(() => {
     if (!progress) return [];
-    // 현재 day의 step만 필터 (step id에 day 번호 포함)
     return progress.completed_steps.filter((id) => id.includes(`_d${selectedDay}_`));
   }, [progress, selectedDay]);
 
@@ -94,20 +128,15 @@ function TrainingDetailPage() {
     return currentDay.steps.every((s) => completedStepIds.includes(s.id));
   }, [currentDay, completedStepIds]);
 
-  const handleBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+  const handleBack = useCallback(() => navigation.goBack(), [navigation]);
 
   const handleToggleStep = useCallback(
     (stepId: string) => {
       if (!activeDog?.id) return;
-
-      // 더블탭 방어
       if (startTraining.isPending || completeStep.isPending || uncompleteStep.isPending) return;
 
       if (!progress) {
-        // 훈련 미시작 → 시작 후 해당 스텝 자동 완료
-        setFeedbackStepId(stepId); // 바텀시트 즉시 표시
+        setFeedbackStepId(stepId);
         startTraining.mutate(
           { dogId: activeDog.id, curriculumId, variant },
           {
@@ -121,7 +150,7 @@ function TrainingDetailPage() {
                 onSuccess: () => tracker.trainingStepCompleted(curriculumId, stepId),
               });
             },
-            onError: () => setFeedbackStepId(null), // 실패 시 시트 닫기
+            onError: () => setFeedbackStepId(null),
           },
         );
         return;
@@ -129,14 +158,12 @@ function TrainingDetailPage() {
 
       const isAlreadyCompleted = progress.completed_steps.includes(stepId);
       if (isAlreadyCompleted) {
-        // 체크 해제
         uncompleteStep.mutate({ stepId, dogId: activeDog.id }, {
           onSuccess: () => setToastMessage('체크 해제됨'),
         });
         return;
       }
 
-      // 스텝 완료 — 바텀시트 즉시 표시 (optimistic)
       setFeedbackStepId(stepId);
       tracker.trainingStepCompleted(curriculumId, stepId);
       completeStep.mutate({
@@ -150,43 +177,50 @@ function TrainingDetailPage() {
   );
 
   const handleFeedbackSubmit = useCallback(
-    (reaction: DogReaction, memo: string | null) => {
+    (
+      reaction: DogReaction,
+      memo: string | null,
+      detailData?: { situationTags: string[]; whatWorked: string; whatDidntWork: string },
+    ) => {
       if (!feedbackStepId || !activeDog?.id) return;
-      submitFeedback.mutate({
-        dogId: activeDog.id,
-        stepId: feedbackStepId,
-        reaction,
-        memo,
-      });
+      submitFeedback.mutate({ dogId: activeDog.id, stepId: feedbackStepId, reaction, memo });
+      if (detailData) {
+        submitStepAttempt.mutate({
+          dogId: activeDog.id,
+          data: {
+            step_id: feedbackStepId,
+            curriculum_id: curriculumId,
+            day_number: selectedDay,
+            reaction,
+            situation_tags: detailData.situationTags.length > 0 ? detailData.situationTags : undefined,
+            what_worked: detailData.whatWorked || undefined,
+            what_didnt_work: detailData.whatDidntWork || undefined,
+          },
+        });
+      }
       setDayReactions((prev) => [...prev, reaction]);
-
-      // 시트 내부에서 "저장됐어요" 확인 표시 후 1초 뒤 닫기
-      const closingStepId = feedbackStepId;
-      setTimeout(() => {
-        setFeedbackStepId(null);
-
-        // Check if all day steps are now completed (including this one)
-        if (currentDay) {
-          const updatedCompleted = [...completedStepIds, closingStepId];
-          const allDone = currentDay.steps.every((s) => updatedCompleted.includes(s.id));
-          if (allDone) {
-            setShowDaySummary(true);
-          }
-        }
-      }, 1000);
     },
-    [feedbackStepId, activeDog?.id, submitFeedback, currentDay, completedStepIds],
+    [feedbackStepId, activeDog?.id, submitFeedback, submitStepAttempt, curriculumId, selectedDay],
   );
+
+  const handleFeedbackSaved = useCallback(() => {
+    const closingStepId = feedbackStepId;
+    setFeedbackStepId(null);
+    if (currentDay && closingStepId) {
+      const updatedCompleted = [...completedStepIds, closingStepId];
+      if (currentDay.steps.every((s) => updatedCompleted.includes(s.id))) {
+        setShowDaySummary(true);
+      }
+    }
+  }, [feedbackStepId, currentDay, completedStepIds]);
 
   const handleFeedbackSkip = useCallback(() => {
     const skippedStepId = feedbackStepId;
     setFeedbackStepId(null);
     setToastMessage('훈련 완료');
-
     if (currentDay && skippedStepId) {
       const updatedCompleted = [...completedStepIds, skippedStepId];
-      const allDone = currentDay.steps.every((s) => updatedCompleted.includes(s.id));
-      if (allDone) {
+      if (currentDay.steps.every((s) => updatedCompleted.includes(s.id))) {
         setShowDaySummary(true);
       }
     }
@@ -213,25 +247,12 @@ function TrainingDetailPage() {
     handleMissionComplete();
   }, [handleMissionComplete]);
 
-  const handleCelebrationClose = useCallback(() => {
-    setShowCelebration(false);
-    navigation.navigate('/training/academy');
-  }, [navigation]);
-
-  const handleCelebrationToCoaching = useCallback(() => {
-    setShowCelebration(false);
-    navigation.navigate('/coaching/result');
-  }, [navigation]);
-
   if (!isReady) return null;
 
   if (!curriculum) {
     return (
       <DetailLayout title="훈련" onBack={handleBack}>
-        <EmptyState
-          title="커리큘럼을 찾을 수 없어요"
-          icon="📚"
-        />
+        <EmptyState title="커리큘럼을 찾을 수 없어요" icon="📚" />
       </DetailLayout>
     );
   }
@@ -277,63 +298,34 @@ function TrainingDetailPage() {
           : undefined
       }
     >
-      {/* 히어로 이미지 (placeholder) */}
-      <View style={styles.heroContainer}>
-        <View style={styles.heroPlaceholder}>
-          <Text style={styles.heroEmoji}>{CURRICULUM_ICONS[curriculumId] ?? '\u{1F4DA}'}</Text>
-          <Text style={styles.heroTitle}>{curriculum.title}</Text>
-          <Text style={styles.heroSub}>{curriculum.difficulty === 'beginner' ? '초급' : curriculum.difficulty === 'intermediate' ? '중급' : '고급'}</Text>
-        </View>
-      </View>
+      <CurriculumHeroCard
+        curriculumId={curriculumId}
+        title={curriculum.title}
+        difficulty={curriculum.difficulty}
+      />
 
-      {/* Day 진행 상태 */}
-      <View style={styles.dayIndicator}>
-        <Text style={styles.dayIndicatorText}>
-          Day {selectedDay} / {curriculum.total_days}
-        </Text>
-        <View style={styles.dayProgress}>
-          <View
-            style={[
-              styles.dayProgressFill,
-              { width: `${(selectedDay / curriculum.total_days) * 100}%` },
-            ]}
-          />
-        </View>
-      </View>
+      <StreakBadge streakDays={streakDays} />
 
-      {/* Day 선택 탭 */}
-      <View style={styles.dayTabs}>
-        {curriculum.days.map((day) => {
-          const isActive = day.day_number === selectedDay;
-          return (
-            <TouchableOpacity
-              key={day.day_number}
-              style={[styles.dayTab, isActive && styles.dayTabActive]}
-              onPress={() => setSelectedDay(day.day_number)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.dayTabText, isActive && styles.dayTabTextActive]}>
-                Day {day.day_number}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <DayProgressIndicator selectedDay={selectedDay} totalDays={curriculum.total_days} />
 
-      {/* 현재 Day 정보 */}
+      <DayTabBar
+        days={curriculum.days}
+        selectedDay={selectedDay}
+        onSelect={setSelectedDay}
+      />
+
       {currentDay && (
         <>
           <Text style={styles.dayTitle}>{currentDay.title}</Text>
           <Text style={styles.dayDescription}>{currentDay.description}</Text>
 
-          {/* Plan A/B/C 전환 */}
           <VariantSelector
             current={variant}
             onChange={setVariant}
             isPro={isPro ?? false}
+            planMeta={curriculum?.planMeta}
           />
 
-          {/* 스텝 체크리스트 */}
           <MissionChecklist
             steps={currentDay.steps}
             completedStepIds={completedStepIds}
@@ -341,7 +333,10 @@ function TrainingDetailPage() {
             onToggleStep={handleToggleStep}
           />
 
-          {/* "어려워요?" 링크 → Plan B/C 바텀시트 */}
+          {recentReactions.length > 0 && (
+            <ReactionTrendBar reactions={recentReactions} isPro={isPro ?? false} />
+          )}
+
           <TouchableOpacity
             style={styles.difficultyLink}
             onPress={() => setShowPlanSelector(true)}
@@ -350,27 +345,35 @@ function TrainingDetailPage() {
             <Text style={styles.difficultyLinkText}>어려워요? 다른 방법 보기</Text>
           </TouchableOpacity>
 
-          {/* Plan 선택 바텀시트 */}
+          <TouchableOpacity
+            style={styles.historyLink}
+            onPress={() => {
+              setAttemptStepId(feedbackStepId ?? undefined);
+              setShowAttemptHistory(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.historyLinkText}>시도 이력 보기</Text>
+          </TouchableOpacity>
+
           <PlanSelector
             visible={showPlanSelector}
             currentVariant={variant}
             variantNotes={currentDay.variant_notes}
-            isPro={isPro ?? false}
             onSelect={handleVariantChange}
             onClose={() => setShowPlanSelector(false)}
           />
         </>
       )}
 
-      {/* 스텝 완료 피드백 시트 */}
       <StepCompletionSheet
         visible={!!feedbackStepId}
         dogName={activeDog?.name ?? '강아지'}
         onSubmit={handleFeedbackSubmit}
         onSkip={handleFeedbackSkip}
+        onSaved={handleFeedbackSaved}
       />
 
-      {/* Day 완료 요약 시트 */}
       <DaySummarySheet
         visible={showDaySummary}
         dayNumber={selectedDay}
@@ -379,68 +382,35 @@ function TrainingDetailPage() {
         onNext={handleDaySummaryNext}
       />
 
-      {/* 저장 확인 토스트 */}
       <Toast
         message={toastMessage ?? ''}
         visible={!!toastMessage}
         onDismiss={() => setToastMessage(null)}
       />
 
-      {/* 커리큘럼 완료 축하 모달 */}
-      <Modal visible={showCelebration} transparent animationType="fade">
-        <View style={styles.celebrationOverlay}>
-          <View style={styles.celebrationCard}>
-            <LottieAnimation asset="cute-doggie" size={120} loop={false} />
-            <Text style={styles.celebrationTitle}>축하합니다!</Text>
-            <Text style={styles.celebrationDescription}>
-              {curriculum.title} 커리큘럼을 모두 완료했어요!
-            </Text>
-            <TouchableOpacity
-              style={styles.celebrationButton}
-              onPress={handleCelebrationClose}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.celebrationButtonText}>아카데미로 돌아가기</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.coachingCTA}
-              onPress={handleCelebrationToCoaching}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.coachingCTAText}>새로운 AI 코칭 받아보기</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <AttemptHistorySheet
+        visible={showAttemptHistory}
+        attempts={stepAttempts ?? []}
+        onClose={() => setShowAttemptHistory(false)}
+      />
+
+      <CelebrationModal
+        visible={showCelebration}
+        curriculumTitle={curriculum.title}
+        onClose={() => {
+          setShowCelebration(false);
+          navigation.navigate('/training/academy');
+        }}
+        onCoaching={() => {
+          setShowCelebration(false);
+          navigation.navigate('/coaching/result');
+        }}
+      />
     </DetailLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  heroContainer: {
-    marginBottom: spacing.lg,
-  },
-  heroPlaceholder: {
-    height: 160,
-    borderRadius: 16,
-    backgroundColor: colors.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.sm,
-  },
-  heroTitle: {
-    ...typography.sectionTitle,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  heroSub: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
   loadingContainer: {
     paddingVertical: 20,
   },
@@ -457,48 +427,6 @@ const styles = StyleSheet.create({
   loadingSkeleton: {
     marginTop: 20,
     gap: 8,
-  },
-  dayIndicator: {
-    marginBottom: 16,
-  },
-  dayIndicatorText: {
-    ...typography.caption,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  dayProgress: {
-    height: 4,
-    backgroundColor: colors.divider,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  dayProgressFill: {
-    height: '100%',
-    backgroundColor: colors.primaryBlue,
-    borderRadius: 2,
-  },
-  dayTabs: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
-  dayTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.divider,
-  },
-  dayTabActive: {
-    backgroundColor: colors.primaryBlue,
-  },
-  dayTabText: {
-    ...typography.caption,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  dayTabTextActive: {
-    color: colors.white,
   },
   dayTitle: {
     ...typography.sectionTitle,
@@ -521,57 +449,14 @@ const styles = StyleSheet.create({
     color: colors.primaryBlue,
     fontWeight: '500',
   },
-  celebrationOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+  historyLink: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.sm,
+    paddingVertical: 4,
   },
-  celebrationCard: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 32,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 320,
-  },
-  celebrationLottie: {
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  celebrationTitle: {
-    ...typography.pageTitle,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 8,
-  },
-  celebrationDescription: {
-    ...typography.bodySmall,
-    color: colors.grey700,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  celebrationButton: {
-    backgroundColor: colors.primaryBlue,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    width: '100%',
-    alignItems: 'center',
-  },
-  celebrationButtonText: {
-    ...typography.label,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  coachingCTA: {
-    marginTop: spacing.md,
-    paddingVertical: 10,
-  },
-  coachingCTAText: {
-    ...typography.bodySmall,
-    color: colors.primaryBlue,
-    fontWeight: '500',
+  historyLinkText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textDecorationLine: 'underline',
   },
 });

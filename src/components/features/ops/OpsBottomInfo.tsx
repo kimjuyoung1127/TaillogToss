@@ -17,7 +17,7 @@ export function OpsBottomInfo({ totalCount, completedCount }: OpsBottomInfoProps
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
-        총 {totalCount}건 / 오늘 완료 {completedCount}건 ({rate}%)
+        총 {totalCount}마리 / 오늘 완료 {completedCount}마리 ({rate}%)
       </Text>
     </View>
   );

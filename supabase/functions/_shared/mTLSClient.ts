@@ -290,7 +290,7 @@ class RealMTLSClient implements MTLSClient {
   }): Promise<SmartMessageResult> {
     return this.request<SmartMessageResult>(
       'POST',
-      `${TOSS_APP_PATH}/smart-message/send`,
+      `${TOSS_APP_PATH}/messenger/send-message`,
       { body: request },
     );
   }

@@ -16,9 +16,9 @@ import {
 import { useNavigation } from '@granite-js/react-native';
 import { useAuth } from 'stores/AuthContext';
 import { colors, typography } from 'styles/tokens';
+import { isDevGuardBypassed, setDevGuardBypass } from 'lib/devGuardBypass';
 
 const DEV_ROUTES = [
-  { path: '/login', label: 'Login', group: 'Auth' },
   { path: '/onboarding/welcome', label: 'Welcome', group: 'Onboarding' },
   { path: '/onboarding/survey', label: 'Survey', group: 'Onboarding' },
   { path: '/onboarding/survey-result', label: 'Survey Result', group: 'Onboarding' },
@@ -54,8 +54,15 @@ const GROUP_COLORS: Record<string, string> = {
 
 export function DevMenu() {
   const [visible, setVisible] = useState(false);
+  const [guardBypassed, setGuardBypassed] = useState(isDevGuardBypassed());
   const navigation = useNavigation();
   const { user } = useAuth();
+
+  const toggleGuardBypass = useCallback(() => {
+    const next = !guardBypassed;
+    setDevGuardBypass(next);
+    setGuardBypassed(next);
+  }, [guardBypassed]);
 
   const handleNavigate = useCallback(
     (path: string) => {
@@ -88,6 +95,15 @@ export function DevMenu() {
             <Text style={styles.infoText}>
               User: {user?.id?.slice(0, 8) ?? 'none'} | Role: {user?.role ?? '-'}
             </Text>
+            <TouchableOpacity
+              style={[styles.bypassToggle, guardBypassed && styles.bypassToggleActive]}
+              onPress={toggleGuardBypass}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.bypassToggleText}>
+                {guardBypassed ? '🔓 가드 우회 ON (B2B 접근 가능)' : '🔒 가드 우회 OFF'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.list}>
@@ -155,9 +171,21 @@ const styles = StyleSheet.create({
   userInfo: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#FFF3CD',
+    backgroundColor: colors.devWarningBg,
   },
-  infoText: { fontSize: 12, color: '#856404', fontFamily: 'monospace' },
+  infoText: { fontSize: 12, color: colors.devWarningText, fontFamily: 'monospace' },
+  bypassToggle: {
+    marginTop: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    backgroundColor: colors.grey200,
+    alignSelf: 'flex-start',
+  },
+  bypassToggleActive: {
+    backgroundColor: colors.badgeGreenBg,
+  },
+  bypassToggleText: { fontSize: 11, color: colors.grey700, fontWeight: '600' },
   list: { flex: 1 },
   item: {
     flexDirection: 'row',
