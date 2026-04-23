@@ -323,18 +323,29 @@ def _extract_list(data, key: str) -> list:
 
 
 # 위험 키워드 — 인간 안전 (앱인토스 AI 서비스 심사 필수 요건)
+# "자해" / "혐오"는 반려견 행동 문맥에서 정상 사용됨(자해 행동, 혐오 반응 훈련) → 제외
 _HUMAN_SAFETY_KEYWORDS: list[str] = [
-    "자살", "자해", "자살방법", "자해방법", "죽는방법", "목숨",
+    "자살", "자살방법", "죽는방법",
     "마약", "약물남용", "코카인", "헤로인", "필로폰",
     "살인", "살해", "범죄방법", "폭발물",
-    "혐오", "인종차별",
+    "인종차별",
 ]
 
-# 위험 키워드 — 반려견 학대
+# 위험 키워드 — 반려견 학대 (긍정 강화 금지 행동 직접 지시 패턴만)
+# 동사 활용형 포함: "때리" + "때려" (때려서/때려라), "굶겨" 등
 _DOG_ABUSE_KEYWORDS: list[str] = [
-    "굶기", "굶겨", "굶어", "체벌", "때리", "발로차", "학대",
+    "굶기", "굶겨", "굶어", "체벌", "때리", "때려", "발로차", "학대",
     "전기충격", "쇼크칼라", "목조르", "묶어두",
 ]
+
+# 부정 표현 — 키워드 주변 25자 이내에 있으면 false positive로 무시
+_NEGATION_MARKERS: list[str] = [
+    "마세요", "하지마", "하지 마", "면 안", "면안", "하면안",
+    "않습니다", "안됩니다", "역효과", "절대", "금지", "피하세요",
+]
+
+# 키워드 직후 조건/원인 어미 — 지시가 아닌 묘사 문맥으로 판단
+_CONDITIONAL_SUFFIXES: tuple[str, ...] = ("면", "으면", "아서", "어서", "면서")
 
 _SAFETY_RECOMMENDATION = "즉시 수의사 또는 전문 훈련사와 상담하세요. 이 내용은 AI가 생성한 제안이며 전문적인 조언을 대체하지 않습니다."
 _SAFETY_SIGNAL = {
@@ -345,51 +356,96 @@ _SAFETY_SIGNAL = {
 }
 
 
+def _keyword_matches_affirmative(text: str, kw: str) -> bool:
+    """키워드가 부정/조건 표현 없이 긍정/지시 문맥에서 등장하면 True."""
+    start = 0
+    while True:
+        idx = text.find(kw, start)
+        if idx == -1:
+            return False
+        suffix = text[idx + len(kw): idx + len(kw) + 3]
+        if any(suffix.startswith(s) for s in _CONDITIONAL_SUFFIXES):
+            start = idx + 1
+            continue
+        window = text[max(0, idx - 25): idx + len(kw) + 15]
+        if not any(neg in window for neg in _NEGATION_MARKERS):
+            return True
+        start = idx + 1
+
+
 def _contains_unsafe_content(text: str) -> tuple[bool, str]:
-    """텍스트에서 위험 키워드 감지. (감지됨, 카테고리) 반환."""
-    lower = text.replace(" ", "")
+    """텍스트에서 위험 키워드 감지. 부정 표현 주변은 무시한다."""
     for kw in _HUMAN_SAFETY_KEYWORDS:
-        if kw in lower:
+        if _keyword_matches_affirmative(text, kw):
             return True, "human_safety"
     for kw in _DOG_ABUSE_KEYWORDS:
-        if kw in lower:
+        if _keyword_matches_affirmative(text, kw):
             return True, "dog_abuse"
     return False, ""
 
 
-def _apply_safety_filter(blocks: schemas.CoachingBlocks) -> schemas.CoachingBlocks:
-    """AI 응답 사후 안전 필터 — 위험 콘텐츠 감지 시 risk_signals 강제 조정."""
-    # 모든 텍스트 필드 수집해서 검사
-    check_texts = [
-        blocks.insight.summary if blocks.insight else "",
-        blocks.dog_voice.message if blocks.dog_voice else "",
-        " ".join(
-            item.description for item in (blocks.action_plan.items if blocks.action_plan else [])
-        ),
-        " ".join(
-            signal.description for signal in (
-                blocks.risk_signals.signals if blocks.risk_signals else []
-            )
-        ),
-    ]
-    combined = " ".join(t for t in check_texts if t)
+def _collect_all_block_text(blocks: schemas.CoachingBlocks) -> str:
+    """CoachingBlocks 전체 텍스트 필드 수집."""
+    parts: list[str] = []
+    if blocks.insight:
+        parts += [blocks.insight.title, blocks.insight.summary] + blocks.insight.key_patterns
+    if blocks.action_plan:
+        parts.append(blocks.action_plan.title)
+        parts += [item.description for item in blocks.action_plan.items]
+    if blocks.dog_voice:
+        parts.append(blocks.dog_voice.message)
+    if blocks.next_7_days:
+        for day in blocks.next_7_days.days:
+            parts.append(day.focus)
+            parts += day.tasks
+    if blocks.risk_signals:
+        parts += [s.description for s in blocks.risk_signals.signals]
+    if blocks.consultation_questions:
+        parts += blocks.consultation_questions.questions
+    return " ".join(p for p in parts if p)
 
+
+def _apply_safety_filter(blocks: schemas.CoachingBlocks) -> schemas.CoachingBlocks:
+    """AI 응답 사후 안전 필터 — 위험 콘텐츠 감지 시 전체 블록 교체."""
+    combined = _collect_all_block_text(blocks)
     flagged, category = _contains_unsafe_content(combined)
     if not flagged:
         return blocks
 
-    logger.warning("Safety filter triggered (category=%s) — overriding risk_signals", category)
+    logger.warning("Safety filter triggered (category=%s) — replacing all blocks", category)
 
-    # risk_signals를 critical로 강제 조정
-    from app.features.coaching.schemas import RiskSignalsBlock, RiskSignal
-    safe_signals = RiskSignalsBlock(
-        signals=[RiskSignal(**_SAFETY_SIGNAL)],
-        overall_risk="critical",
+    # 유해 텍스트를 그대로 두지 않고 전체 블록을 안전한 내용으로 교체
+    return schemas.CoachingBlocks(
+        insight=schemas.InsightBlock(
+            title="전문가 상담 안내",
+            summary="안전한 훈련을 위해 전문 훈련사 또는 수의사 상담을 권장합니다.",
+            key_patterns=[],
+            trend="stable",
+        ),
+        action_plan=schemas.ActionPlanBlock(
+            title="전문가 상담",
+            items=[
+                schemas.ActionItem(
+                    id="safety_1",
+                    description="수의사 또는 공인 훈련사와 직접 상담하세요.",
+                    priority="high",
+                )
+            ],
+        ),
+        dog_voice=schemas.DogVoiceBlock(
+            message="저는 전문가의 도움이 필요해요. 함께 올바른 방법을 찾아봐요.",
+            emotion="hopeful",
+        ),
+        next_7_days=schemas.Next7DaysBlock(days=[]),
+        risk_signals=schemas.RiskSignalsBlock(
+            signals=[schemas.RiskSignal(**_SAFETY_SIGNAL)],
+            overall_risk="critical",
+        ),
+        consultation_questions=schemas.ConsultationQuestionsBlock(
+            questions=["전문 훈련사 또는 수의 행동학 전문의 상담을 받아보세요."],
+            recommended_specialist="trainer",
+        ),
     )
-
-    blocks_data = blocks.model_dump()
-    blocks_data["risk_signals"] = safe_signals.model_dump()
-    return schemas.CoachingBlocks(**blocks_data)
 
 
 async def _build_behavior_analytics_text(
