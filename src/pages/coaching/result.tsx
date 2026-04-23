@@ -9,6 +9,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { colors, typography, spacing } from 'styles/tokens';
 import { DetailLayout } from 'components/shared/layouts/DetailLayout';
 import { CoachingBlockList } from 'components/features/coaching/CoachingBlockList';
+import { RewardedAdButton } from 'components/shared/ads/RewardedAdButton';
 import { CoachingHistoryList } from 'components/features/coaching/CoachingHistoryList';
 import { CoachingGenerationLoader } from 'components/features/coaching/CoachingGenerationLoader';
 import { SkeletonCoaching } from 'components/features/coaching/SkeletonCoaching';
@@ -257,7 +258,7 @@ function CoachingResultPage() {
               onPress={handleNavigateToSubscription}
               activeOpacity={0.7}
             >
-              <Text style={styles.proUpgradeLinkText}>PRO로 업그레이드하면 하루 10회까지 가능해요</Text>
+              <Text style={styles.proUpgradeLinkText}>광고 제거 + 하루 10회 — PRO 업그레이드</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -385,6 +386,7 @@ function CoachingDetailContent({
   generateError,
   usage,
 }: CoachingDetailContentProps) {
+  const navigation = useNavigation();
   const completedCount = coaching.blocks.action_plan.items.filter((i) => i.is_completed).length;
   const totalCount = coaching.blocks.action_plan.items.length;
   const trend = coaching.blocks.insight.trend;
@@ -420,6 +422,17 @@ function CoachingDetailContent({
         </View>
       )}
 
+      {/* R3 광고 — 무료 유저만 */}
+      {!isPro && (
+        <View style={styles.adBanner}>
+          <RewardedAdButton
+            placement="R3"
+            label="광고 보고 코칭 결과 확인하기"
+            onRewarded={() => {}}
+          />
+        </View>
+      )}
+
       {/* 6블록 */}
       <CoachingBlockList
         blocks={coaching.blocks}
@@ -430,21 +443,20 @@ function CoachingDetailContent({
         dogImageUrl={activeDog?.profile_image_url}
       />
 
-      {/* PRO 업그레이드 넛지 — 비PRO + 잠금 블록 아래 */}
-      {!isPro && (
-        <TouchableOpacity
-          style={styles.proNudge}
-          onPress={onNavigateToSubscription}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.proNudgeIcon}>✨</Text>
-          <View style={styles.proNudgeTextWrap}>
-            <Text style={styles.proNudgeTitle}>PRO로 전체 코칭 열기</Text>
-            <Text style={styles.proNudgeDesc}>7일 플랜, 위험 분석, 전문가 질문까지</Text>
-          </View>
-          <Text style={styles.proNudgeArrow}>›</Text>
-        </TouchableOpacity>
-      )}
+      {/* 인사이트 리포트 CTA — Pro: 리포트 진입 / 무료: 구독 유도 */}
+      <TouchableOpacity
+        style={styles.insightCTA}
+        onPress={isPro
+          ? () => navigation.navigate('/coaching/insights', { coachingId: coaching.id })
+          : onNavigateToSubscription
+        }
+        activeOpacity={0.8}
+      >
+        <Text style={styles.insightCTAText}>
+          {isPro ? '📊 심화 인사이트 리포트 보기' : '✨ PRO — 광고 제거 + 심화 인사이트'}
+        </Text>
+        <Text style={styles.insightCTAArrow}>›</Text>
+      </TouchableOpacity>
 
       {/* 분석 링크 */}
       <TouchableOpacity
@@ -720,34 +732,28 @@ const styles = StyleSheet.create({
     minWidth: 55,
     textAlign: 'right',
   },
-  // PRO nudge
-  proNudge: {
+  // 광고 배너 (무료 유저)
+  adBanner: {
+    marginBottom: spacing.md,
+  },
+  // 인사이트 CTA
+  insightCTA: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.blue50,
     borderRadius: 14,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
   },
-  proNudgeIcon: {
-    ...typography.iconLg,
-    marginRight: spacing.md,
-  },
-  proNudgeTextWrap: {
+  insightCTAText: {
     flex: 1,
-  },
-  proNudgeTitle: {
     ...typography.bodySmall,
     fontWeight: '700',
     color: colors.primaryBlue,
   },
-  proNudgeDesc: {
-    ...typography.caption,
-    color: colors.grey600,
-    marginTop: 2,
-  },
-  proNudgeArrow: {
+  insightCTAArrow: {
     ...typography.sectionTitle,
     color: colors.primaryBlue,
     marginLeft: spacing.sm,

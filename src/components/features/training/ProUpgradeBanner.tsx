@@ -1,6 +1,6 @@
 /**
  * ProUpgradeBanner — PRO 구독 유도 시각적 카드
- * "문제행동 맞춤 솔루션을 모두 만나보세요"
+ * "광고 없이, 더 깊이 분석해보세요"
  * Parity: UI-001
  */
 import React from 'react';
@@ -15,11 +15,11 @@ export function ProUpgradeBanner() {
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.icon}>{'✨'}</Text>
-        <Text style={styles.title}>문제행동 맞춤 솔루션을 모두 만나보세요</Text>
+        <Text style={styles.title}>광고 없이, 더 깊이 분석해보세요</Text>
         <View style={styles.benefitList}>
-          <Text style={styles.benefit}>{'•'} 6개 추가 커리큘럼 잠금 해제</Text>
-          <Text style={styles.benefit}>{'•'} Plan C 고급 훈련법 이용</Text>
-          <Text style={styles.benefit}>{'•'} 훈련 인사이트 리포트</Text>
+          <Text style={styles.benefit}>{'•'} 광고 없이 이용</Text>
+          <Text style={styles.benefit}>{'•'} 심화 인사이트 리포트</Text>
+          <Text style={styles.benefit}>{'•'} 하루 코칭 10회 (무료 3회)</Text>
         </View>
         <TouchableOpacity
           style={styles.ctaButton}

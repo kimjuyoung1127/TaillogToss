@@ -10,4 +10,5 @@ Journey D (Deep-Dive): dashboard → analysis → coaching-result → training
 
 | 파일 | 용도 | 레이아웃 |
 |------|------|---------|
-| `result.tsx` | 6블록 코칭 결과 (무료3 + PRO3 잠금) + SpeechBubble + PlanSelector | B (상세형) |
+| `result.tsx` | 6블록 코칭 결과 (전체 공개) + 광고(무료) + 인사이트 CTA | B (상세형) |
+| `insights.tsx` | 심화 인사이트 리포트 (Pro 전용) — 6블록 통합 뷰 | B (상세형) |
