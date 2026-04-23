@@ -16,7 +16,6 @@ import {
 
 interface CoachingBlockListProps {
   blocks: CoachingBlocks;
-  isPro: boolean;
   onToggleActionItem?: (itemId: string) => void;
   onNavigateToTraining?: () => void;
   dogName?: string;

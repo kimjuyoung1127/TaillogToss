@@ -8,13 +8,13 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { colors, typography, spacing } from 'styles/tokens';
 import { DetailLayout } from 'components/shared/layouts/DetailLayout';
-import { CoachingBlockList } from 'components/features/coaching/CoachingBlockList';
-import { RewardedAdButton } from 'components/shared/ads/RewardedAdButton';
 import { CoachingHistoryList } from 'components/features/coaching/CoachingHistoryList';
 import { CoachingGenerationLoader } from 'components/features/coaching/CoachingGenerationLoader';
 import { SkeletonCoaching } from 'components/features/coaching/SkeletonCoaching';
 import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
+import { AnalysisBadge } from 'components/features/coaching/AnalysisBadge';
+import { CoachingDetailContent } from './CoachingDetailContent';
 import {
   useLatestCoaching,
   useSubmitFeedback,
@@ -30,7 +30,6 @@ import { tracker } from 'lib/analytics/tracker';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import type { CoachingResult } from 'types/coaching';
-import { AnalysisBadge } from 'components/features/coaching/AnalysisBadge';
 
 export const Route = createRoute('/coaching/result', {
   component: CoachingResultPage,
@@ -38,18 +37,6 @@ export const Route = createRoute('/coaching/result', {
 });
 
 type TabKey = 'latest' | 'history';
-
-const TREND_LABEL: Record<string, string> = {
-  improving: '개선 중',
-  stable: '유지 중',
-  worsening: '주의 필요',
-};
-
-const TREND_ICON: Record<string, string> = {
-  improving: '📈',
-  stable: '➡️',
-  worsening: '📉',
-};
 
 function CoachingResultPage() {
   const { user } = useAuth();
@@ -71,12 +58,10 @@ function CoachingResultPage() {
   const trackedRequestRef = useRef(false);
   const trackedCoachingIdRef = useRef<string | null>(null);
 
-  // 표시할 코칭 데이터 (히스토리에서 선택하면 그것, 아니면 최신)
   const displayCoaching = activeTab === 'history' && selectedHistoryCoaching
     ? selectedHistoryCoaching
     : coaching;
 
-  // 코칭이 바뀌면 피드백 상태 리셋
   useEffect(() => {
     setSelectedScore(0);
     setFeedbackSubmitted(false);
@@ -198,7 +183,6 @@ function CoachingResultPage() {
     );
   }
 
-  // ── 코칭 생성 중 ──
   if (generateCoaching.isPending) {
     return (
       <DetailLayout title="AI 행동 진단" onBack={handleBack}>
@@ -207,7 +191,6 @@ function CoachingResultPage() {
     );
   }
 
-  // ── 생성 실패 상태 (코칭 데이터 없고 에러 발생) ──
   if (!coaching && generateError) {
     return (
       <DetailLayout title="AI 행동 진단" onBack={handleBack}>
@@ -227,7 +210,6 @@ function CoachingResultPage() {
     );
   }
 
-  // ── 빈 상태: 코칭 생성 CTA ──
   if (!coaching) {
     const dailyLimit = isPro ? 10 : 3;
     const dailyUsed = usage?.used ?? 0;
@@ -266,7 +248,6 @@ function CoachingResultPage() {
     );
   }
 
-  // ── 탭 구조: 최신 / 기록 ──
   return (
     <DetailLayout
       title="AI 행동 진단"
@@ -277,7 +258,6 @@ function CoachingResultPage() {
           : undefined
       }
     >
-      {/* 탭 헤더 + 공유 버튼 */}
       <View style={styles.topBar}>
         <View style={styles.tabRow}>
           <TouchableOpacity
@@ -306,7 +286,6 @@ function CoachingResultPage() {
         )}
       </View>
 
-      {/* 히스토리 탭 — 리스트 또는 선택한 코칭 상세 */}
       {activeTab === 'history' && !selectedHistoryCoaching && (
         <CoachingHistoryList
           dogId={activeDog?.id}
@@ -314,7 +293,6 @@ function CoachingResultPage() {
         />
       )}
 
-      {/* 코칭 상세 (최신 탭 or 히스토리에서 선택) */}
       {(activeTab === 'latest' || selectedHistoryCoaching) && displayCoaching && (
         <>
           {displayCoaching.analytics_metadata && (
@@ -326,241 +304,28 @@ function CoachingResultPage() {
           )}
           <CoachingDetailContent
             coaching={displayCoaching}
-          isPro={isPro ?? false}
-          activeDog={activeDog}
-          onToggleActionItem={handleToggleActionItem}
-          onNavigateToTraining={handleNavigateToAcademy}
-          onNavigateToAnalysis={handleNavigateToAnalysis}
-          onNavigateToSubscription={handleNavigateToSubscription}
-          onStarPress={handleStarPress}
-          selectedScore={selectedScore}
-          feedbackSubmitted={feedbackSubmitted}
-          isSubmittingFeedback={submitFeedback.isPending}
-          onGenerate={handleGenerate}
-          isGenerating={generateCoaching.isPending}
-          generateError={generateError}
-          usage={usage}
-        />
+            isPro={isPro ?? false}
+            activeDog={activeDog}
+            onToggleActionItem={handleToggleActionItem}
+            onNavigateToTraining={handleNavigateToAcademy}
+            onNavigateToAnalysis={handleNavigateToAnalysis}
+            onNavigateToSubscription={handleNavigateToSubscription}
+            onStarPress={handleStarPress}
+            selectedScore={selectedScore}
+            feedbackSubmitted={feedbackSubmitted}
+            isSubmittingFeedback={submitFeedback.isPending}
+            onGenerate={handleGenerate}
+            isGenerating={generateCoaching.isPending}
+            generateError={generateError}
+            usage={usage}
+          />
         </>
       )}
     </DetailLayout>
   );
 }
 
-// ──────────────────────────────────────
-// 코칭 상세 콘텐츠 (최신/히스토리 공용)
-// ──────────────────────────────────────
-
-interface CoachingDetailContentProps {
-  coaching: CoachingResult;
-  isPro: boolean;
-  activeDog: { id: string; name: string; profile_image_url?: string | null } | null;
-  onToggleActionItem: (itemId: string) => void;
-  onNavigateToTraining: () => void;
-  onNavigateToAnalysis: () => void;
-  onNavigateToSubscription: () => void;
-  onStarPress: (score: 1 | 2 | 3 | 4 | 5) => void;
-  selectedScore: number;
-  feedbackSubmitted: boolean;
-  isSubmittingFeedback: boolean;
-  onGenerate: () => void;
-  isGenerating: boolean;
-  generateError: string | null;
-  usage?: { used: number; limit: number } | null;
-}
-
-function CoachingDetailContent({
-  coaching,
-  isPro,
-  activeDog,
-  onToggleActionItem,
-  onNavigateToTraining,
-  onNavigateToAnalysis,
-  onNavigateToSubscription,
-  onStarPress,
-  selectedScore,
-  feedbackSubmitted,
-  isSubmittingFeedback,
-  onGenerate,
-  isGenerating,
-  generateError,
-  usage,
-}: CoachingDetailContentProps) {
-  const navigation = useNavigation();
-  const completedCount = coaching.blocks.action_plan.items.filter((i) => i.is_completed).length;
-  const totalCount = coaching.blocks.action_plan.items.length;
-  const trend = coaching.blocks.insight.trend;
-  const existingFeedback = coaching.feedback_score;
-
-  return (
-    <>
-      {/* 인사이트 요약 헤더 카드 */}
-      <View style={styles.insightSummary}>
-        <View style={styles.insightSummaryLeft}>
-          <Text style={styles.insightSummaryIcon}>{TREND_ICON[trend]}</Text>
-          <View style={styles.insightSummaryTextWrap}>
-            <Text style={styles.insightSummaryTitle} numberOfLines={1}>
-              {coaching.blocks.insight.title}
-            </Text>
-            <Text style={styles.insightSummaryTrend}>
-              {TREND_LABEL[trend]} · {formatReportType(coaching.report_type)} 코칭
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.dateTextCompact}>{formatDate(coaching.created_at)}</Text>
-      </View>
-
-      {/* 진행률 */}
-      {totalCount > 0 && (
-        <View style={styles.progressSection}>
-          <View style={styles.progressBar}>
-            <View
-              style={[styles.progressFill, { width: `${(completedCount / totalCount) * 100}%` }]}
-            />
-          </View>
-          <Text style={styles.progressText}>{completedCount}/{totalCount} 완료</Text>
-        </View>
-      )}
-
-      {/* R3 광고 — 무료 유저만 */}
-      {!isPro && (
-        <View style={styles.adBanner}>
-          <RewardedAdButton
-            placement="R3"
-            label="광고 보고 코칭 결과 확인하기"
-            onRewarded={() => {}}
-          />
-        </View>
-      )}
-
-      {/* 6블록 */}
-      <CoachingBlockList
-        blocks={coaching.blocks}
-        isPro={isPro}
-        onToggleActionItem={onToggleActionItem}
-        onNavigateToTraining={onNavigateToTraining}
-        dogName={activeDog?.name}
-        dogImageUrl={activeDog?.profile_image_url}
-      />
-
-      {/* 인사이트 리포트 CTA — Pro: 리포트 진입 / 무료: 구독 유도 */}
-      <TouchableOpacity
-        style={styles.insightCTA}
-        onPress={isPro
-          ? () => navigation.navigate('/coaching/insights', { coachingId: coaching.id })
-          : onNavigateToSubscription
-        }
-        activeOpacity={0.8}
-      >
-        <Text style={styles.insightCTAText}>
-          {isPro ? '📊 심화 인사이트 리포트 보기' : '✨ PRO — 광고 제거 + 심화 인사이트'}
-        </Text>
-        <Text style={styles.insightCTAArrow}>›</Text>
-      </TouchableOpacity>
-
-      {/* 분석 링크 */}
-      <TouchableOpacity
-        style={styles.analysisLink}
-        onPress={onNavigateToAnalysis}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.analysisLinkText}>📊 분석 자세히 보기</Text>
-      </TouchableOpacity>
-
-      {/* AI 생성물 명시 */}
-      <View style={styles.aiDisclaimer}>
-        <Text style={styles.aiDisclaimerText}>
-          🤖 이 코칭 결과는 AI가 생성한 내용으로, 전문 수의사 또는 훈련사의 조언을 대체하지 않습니다.
-        </Text>
-      </View>
-
-      {/* 피드백 */}
-      {existingFeedback != null ? (
-        <View style={styles.feedbackSection}>
-          <Text style={styles.feedbackDoneText}>
-            {'★'.repeat(existingFeedback)}{'☆'.repeat(5 - existingFeedback)} 평가 완료
-          </Text>
-        </View>
-      ) : feedbackSubmitted ? (
-        <View style={styles.feedbackSection}>
-          <Text style={styles.feedbackThankTitle}>피드백 감사합니다!</Text>
-          <Text style={styles.feedbackThankDesc}>
-            {'★'.repeat(selectedScore)}{'☆'.repeat(5 - selectedScore)} 더 나은 코칭을 위해 반영할게요
-          </Text>
-        </View>
-      ) : (
-        <View style={styles.feedbackSection}>
-          <Text style={styles.feedbackTitle}>이 코칭이 도움이 되었나요?</Text>
-          <View style={styles.feedbackStars}>
-            {([1, 2, 3, 4, 5] as const).map((star) => (
-              <TouchableOpacity
-                key={star}
-                onPress={() => onStarPress(star)}
-                activeOpacity={0.7}
-                disabled={isSubmittingFeedback}
-              >
-                <Text style={[styles.star, star <= selectedScore && styles.starSelected]}>
-                  {star <= selectedScore ? '★' : '☆'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* 새 코칭 생성 */}
-      <View style={styles.regenerateSection}>
-        <TouchableOpacity
-          style={styles.regenerateButton}
-          onPress={onGenerate}
-          activeOpacity={0.7}
-          disabled={isGenerating}
-        >
-          <Text style={styles.regenerateButtonText}>
-            {isGenerating ? '생성 중...' : '새 코칭 받기'}
-          </Text>
-        </TouchableOpacity>
-        {usage && (
-          <Text style={styles.usageTextSmall}>
-            오늘 {usage.used}/{usage.limit}회 사용
-          </Text>
-        )}
-        {generateError && (
-          <Text style={styles.generateErrorText}>{generateError}</Text>
-        )}
-      </View>
-    </>
-  );
-}
-
-// ──────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────
-
-function formatReportType(type: string): string {
-  const labels: Record<string, string> = {
-    DAILY: '일간',
-    WEEKLY: '주간',
-    INSIGHT: '인사이트',
-  };
-  return labels[type] ?? type;
-}
-
-function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  } catch {
-    return iso;
-  }
-}
-
-// ──────────────────────────────────────
-// Styles
-// ──────────────────────────────────────
-
 const styles = StyleSheet.create({
-  // Empty/Generate
   emptyContainer: {
     alignItems: 'center',
     paddingBottom: spacing.xxl,
@@ -597,7 +362,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  // Error container (generation failure)
   errorContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -630,7 +394,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.white,
   },
-  // Top bar (tabs + share)
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -669,188 +432,5 @@ const styles = StyleSheet.create({
   },
   shareIcon: {
     ...typography.sectionTitle,
-  },
-  // Insight summary header
-  insightSummary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surfaceSecondary,
-    borderRadius: 14,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  insightSummaryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  insightSummaryIcon: {
-    ...typography.iconLg,
-    marginRight: spacing.md,
-  },
-  insightSummaryTextWrap: {
-    flex: 1,
-  },
-  insightSummaryTitle: {
-    ...typography.bodySmall,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  insightSummaryTrend: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  dateTextCompact: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  // Progress
-  progressSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
-  },
-  progressBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: colors.grey100,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.green500,
-    borderRadius: 3,
-  },
-  progressText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    minWidth: 55,
-    textAlign: 'right',
-  },
-  // 광고 배너 (무료 유저)
-  adBanner: {
-    marginBottom: spacing.md,
-  },
-  // 인사이트 CTA
-  insightCTA: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.blue50,
-    borderRadius: 14,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  insightCTAText: {
-    flex: 1,
-    ...typography.bodySmall,
-    fontWeight: '700',
-    color: colors.primaryBlue,
-  },
-  insightCTAArrow: {
-    ...typography.sectionTitle,
-    color: colors.primaryBlue,
-    marginLeft: spacing.sm,
-  },
-  // Analysis link
-  analysisLink: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    marginTop: spacing.sm,
-  },
-  analysisLinkText: {
-    ...typography.bodySmall,
-    color: colors.primaryBlue,
-    fontWeight: '500',
-  },
-  // AI Disclaimer
-  aiDisclaimer: {
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.grey100,
-    borderRadius: 8,
-  },
-  aiDisclaimerText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  // Feedback
-  feedbackSection: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    marginTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  feedbackTitle: {
-    ...typography.bodySmall,
-    fontWeight: '600',
-    color: colors.textDark,
-    marginBottom: spacing.md,
-  },
-  feedbackStars: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  star: {
-    ...typography.heroTitle,
-    color: colors.grey300,
-  },
-  starSelected: {
-    color: colors.orange500,
-  },
-  feedbackThankTitle: {
-    ...typography.bodySmall,
-    fontWeight: '700',
-    color: colors.green500,
-    marginBottom: spacing.xs,
-  },
-  feedbackThankDesc: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  feedbackDoneText: {
-    ...typography.caption,
-    color: colors.orange500,
-    fontWeight: '500',
-  },
-  // Regenerate
-  regenerateSection: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  regenerateButton: {
-    borderWidth: 1,
-    borderColor: colors.primaryBlue,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-  },
-  regenerateButtonText: {
-    ...typography.bodySmall,
-    color: colors.primaryBlue,
-    fontWeight: '600',
-  },
-  usageTextSmall: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  generateErrorText: {
-    ...typography.caption,
-    color: colors.red500,
-    marginTop: spacing.sm,
-    textAlign: 'center',
   },
 });
