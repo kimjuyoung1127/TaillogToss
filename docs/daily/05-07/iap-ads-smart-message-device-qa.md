@@ -252,6 +252,15 @@ Deployment: `019e01b9-3c4c-7677-b6b9-d80529a2d868`
 
 Conclusion: app JS and the official Apps in Toss wrapper are healthy under Metro. The remaining failure is isolated to the uploaded standalone private deployment path when Metro is off.
 
+## Post-Push Elimination: Sandbox App Version
+
+- [x] Official docs recheck: Apps in Toss sandbox docs say RN 0.84 testing should use the latest sandbox app, and the current Android sandbox build listed in the docs is `2026-04-22`.
+- [x] Device package check: installed `viva.republica.toss.test` shows `firstInstallTime=2026-04-02 18:54:21`, `lastUpdateTime=2026-04-03 00:16:44`, `versionCode=100000`, `versionName=1.0.0`.
+- [x] Scheme resolver check: `intoss-private://taillog-app?...` resolves to `viva.republica.toss.test/.MiniAppSchemeActivity`, so the direct private scheme is being handled by the sandbox app.
+- [x] Official `AppsInToss.registerApp(AppContainer, { context })` example confirms the current wrapper shape is valid; missing `appName` in `_app.tsx` is not the likely cause.
+
+Conclusion: the strongest remaining cause is an outdated sandbox app host. The installed Android sandbox app predates the official current Android sandbox build, while Metro succeeds because it bypasses the uploaded standalone host path.
+
 ## Daily Sync
 
 - `docs/status/PROJECT-STATUS.md`: updated to QA state for IAP/MSG/AD
