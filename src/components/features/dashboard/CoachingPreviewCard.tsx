@@ -4,14 +4,15 @@
  * Parity: AI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useLatestCoaching } from 'lib/hooks/useCoaching';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography, spacing } from 'styles/tokens';
 
-const TREND_ICON: Record<string, string> = {
-  improving: '📈',
-  stable: '➡️',
-  worsening: '📉',
+const TREND_ICON_SOURCE: Record<string, string> = {
+  improving: ICONS['ic-analysis']!,
+  stable: ICONS['ic-target']!,
+  worsening: ICONS['ic-bolt']!,
 };
 
 const TREND_LABEL: Record<string, string> = {
@@ -48,7 +49,7 @@ export function CoachingPreviewCard({ dogId, onNavigateToCoaching, dailyUsed, da
         onPress={onNavigateToCoaching}
         activeOpacity={0.7}
       >
-        <Text style={styles.ctaIcon}>🤖</Text>
+        <Image source={{ uri: ICONS['ic-coaching'] }} style={styles.ctaIcon} />
         <View style={styles.ctaContent}>
           <Text style={styles.ctaTitle}>AI 맞춤 코칭 받기</Text>
           <Text style={styles.ctaDesc}>행동 기록을 분석해 맞춤 코칭을 제공해요</Text>
@@ -68,7 +69,7 @@ export function CoachingPreviewCard({ dogId, onNavigateToCoaching, dailyUsed, da
       onPress={onNavigateToCoaching}
       activeOpacity={0.7}
     >
-      <Text style={styles.ctaIcon}>{TREND_ICON[trend]}</Text>
+      <Image source={{ uri: TREND_ICON_SOURCE[trend] ?? ICONS['ic-coaching'] }} style={styles.ctaIcon} />
       <View style={styles.ctaContent}>
         <Text style={styles.previewTitle} numberOfLines={1}>{title}</Text>
         <Text style={styles.previewTrend}>{TREND_LABEL[trend]} · 상세 보기</Text>
@@ -90,7 +91,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   ctaIcon: {
-    fontSize: 28,
+    width: 32,
+    height: 32,
     marginRight: spacing.md,
   },
   ctaContent: {

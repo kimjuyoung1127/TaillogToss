@@ -4,9 +4,10 @@
  * Parity: UI-001
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@granite-js/react-native';
 import { colors, typography, spacing } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 export function ProUpgradeBanner() {
   const navigation = useNavigation();
@@ -14,7 +15,7 @@ export function ProUpgradeBanner() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.icon}>{'✨'}</Text>
+        <Image source={{ uri: ICONS['badge-pro'] }} style={styles.icon} resizeMode="contain" />
         <Text style={styles.title}>광고 없이, 더 깊이 분석해보세요</Text>
         <View style={styles.benefitList}>
           <Text style={styles.benefit}>{'•'} 광고 없이 이용</Text>
@@ -45,7 +46,8 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   icon: {
-    fontSize: 28,
+    width: 32,
+    height: 32,
     marginBottom: spacing.md,
   },
   title: {

@@ -1,6 +1,6 @@
 # TaillogToss 누락 플랜 + 미구현 목록
 
-> 작성일: 2026-02-28 | 최종 업데이트: 2026-04-23 | 기준: 수익화 재설계 반영
+> 작성일: 2026-02-28 | 최종 업데이트: 2026-05-07 | 기준: 수익화 재설계 반영 + 실기기 QA
 
 ## 0. 수익화 배치 확정 대기 (Deferred — 모든 기능 완료 후 결정)
 
@@ -20,9 +20,9 @@
 ### 광고 집행 전 필수 선행 작업
 
 아래가 완료되어야 광고 배치 확정 가능:
-1. `useRewardedAd.ts` — mock Promise → 이벤트 콜백 전환 (`AD-001`)
-2. 콘솔 AdGroup ID 발급 (사업자 심사 2-3 영업일)
-3. `AIT-ADS-SDK-REFERENCE.md §7` 체크리스트 이행
+1. ✅ `useRewardedAd.ts` — mock Promise → 이벤트 콜백 전환 (`AD-001`)
+2. ✅ 콘솔 AdGroup ID 발급 및 live ID 7종 코드 fallback 반영
+3. `AIT-ADS-SDK-REFERENCE.md §7` 체크리스트 이행: 새 `.ait` 업로드 후 실노출 최종 확인
 
 레퍼런스: `docs/ref/AIT-ADS-SDK-REFERENCE.md` (광고), `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md §5` (IAP)
 
@@ -107,9 +107,9 @@
 | UI-001 | ~~토큰화/Lottie/상태UI/UX라이팅~~ → 완료. 실기기 비주얼 QA (23화면) |
 | LOG-001 | FastAPI 로그 API 실기기 E2E 증적 |
 | AI-001 | ~~Backend/ 미존재~~ → BE-P5 완료. FastAPI 코칭 API backend-first 전환 완료, 실연동 E2E 증적 필요 |
-| IAP-001 | 결제/복구/실패 3시나리오 앱 UI 증적 정리 |
-| MSG-001 | Smart Message 신청/승인 완료 후 Sandbox 실발송 검증 |
-| AD-001 | 실 Ad Group ID 교체, Sandbox 광고 검증 |
+| IAP-001 | 3시나리오 패널/실패/복구 증적 확보. false-success/loading 잔여 버그 수정 완료. 새 AIT 업로드 후 성공 테스트 실패 피드백 + 버튼 복귀 확인. Edge/proxy 404 원인 정리 잔여 |
+| MSG-001 | `TAILLOG_BEHAVIOR_REMIND` HTTP 200 + noti_history success=true 확보. 추가 캠페인 등록 잔여 |
+| AD-001 | 실 Ad Group ID 교체 + 상수 fallback 완료. 새 AIT 업로드 후 mock fallback 제거 + B1 real SDK `ad_error` 확인. render success/no-fill 사유 세부값 확보 잔여 |
 | B2B-001 | 40마리 FlatList 성능, 공유 링크 실기기, B2C 회귀 테스트, verify_parent_phone_last4 RPC |
 
 ---
@@ -121,13 +121,30 @@
 
 | 항목 | 위치 | 현재 | 전환 필요 |
 |------|------|------|----------|
-| Ads SDK | `src/lib/ads/config.ts` | mock SDK (Promise 패턴) | `loadFullScreenAd`/`showFullScreenAd` 이벤트 콜백 패턴으로 전환 + 실 Ad Group ID 교체 |
-| IAP | `src/lib/api/iap.ts` | 래퍼 구현 완료 | 실 SDK 교체 + `completeProductGrant()` 복원 호출 추가 |
+| Ads SDK | `src/lib/ads/config.ts` | ✅ real FullScreen SDK wrapper + live Ad Group ID 7종 상수 fallback 적용. 새 AIT `019e00c2...` test ad id 0개, B1 real SDK `ad_error` 확인 | render success 또는 no-fill 사유 세부값 확보 |
+| IAP | `src/lib/api/iap.ts` | ✅ 실 SDK `createOneTimePurchaseOrder`/`getPendingOrders`/`completeProductGrant` 연결. 서버 grant 실패 시 `GRANT_FAILED` 처리 | 새 AIT 업로드 후 성공 UI 최종 재검증 |
 | generate-report | `supabase/functions/generate-report/` | 배포 완료(v3), mock/real 스위치(`REPORT_AI_MODE`) + staff role guard | OpenAI 실키 검증 (BE-P7) |
-| verify-iap-order | `supabase/functions/verify-iap-order/` | mock mTLS | real mTLS 전환 |
-| send-smart-message | `supabase/functions/send-smart-message/` | mock mTLS | real mTLS 전환 |
+| verify-iap-order | `supabase/functions/verify-iap-order/` | real mTLS | Sandbox order 검증 404 원인 확인 및 성공 경로 재검증 |
+| send-smart-message | `supabase/functions/send-smart-message/` | ✅ real mTLS + `toss_user_key` 해석 후 실발송 200 확인 | 추가 캠페인 등록/회귀 발송 |
 | grant-toss-points | `supabase/functions/grant-toss-points/` | mock mTLS | real mTLS 전환 |
-| IAP 복원 | `src/lib/api/subscription.ts:62` | DB 조회 대체 | Toss IAP 복원 API 공개 대기 |
+| IAP 복원 | `src/lib/api/iap.ts`, `src/lib/hooks/useSubscription.ts` | ✅ SDK `getPendingOrders()` 우선 + DB fallback | 서버 검증 성공 order로 복원 완료 증적 추가 |
+
+### 4.1 2026-05-05 실기기 QA 반영
+
+| 항목 | 위치 | 확인/조치 | 잔여 |
+|------|------|-----------|------|
+| Subscription API 500 | `Backend/app/features/subscription/router.py` | `next_billing_date`/`created_at`/`updated_at` 응답 타입을 실제 `date/datetime`과 맞춰 수정. 실기기 `/settings/subscription` 200 확인 | 없음 |
+| IAP Jest harness | `src/lib/api/__tests__/iap.test.ts` | `@apps-in-toss/native-modules` mock 추가. `npm test` 전체 통과 | 실기기 Sandbox 결제/복구/실패 증적 필요 |
+| Edge remote drift | `supabase/functions/{send-smart-message,grant-toss-points,generate-report}` | Supabase CLI로 배포. `supabase functions list` 기준 9개 ACTIVE 확인 | `REPORT_AI_MODE=real`, mTLS real, Smart Message 승인 후 happy-path 검증 |
+| Root/404 리다이렉트 | `src/pages/index.tsx`, `src/pages/_404.tsx` | 인증/온보딩 상태 기반 리다이렉트로 대기 화면 고착 수정 | 딥링크 전체 route sweep 추가 권장 |
+| 텍스트 이모지 아이콘 | onboarding stage1/2/3/notification/survey-result, coaching result, training detail, dashboard/dog common avatars, subscription | 기존 `iconSources.ts` custom asset으로 1차 교체. Stage1/2/3 칩, notification hero, survey-result/header, legacy survey profile/container/deep labels, `/training/detail` widgets/sheets, coaching trend/locked/error/empty icons, common empty/error/speech fallback, dashboard/dog avatar fallback, subscription PRO features 교체 완료 | DevMenu 개발 표식, 보호자 리포트 reaction emoji, 별점/닫기/체크 같은 의미형 텍스트 컨트롤은 의도 잔여. 전용 imagegen icon set 적용 시 2차 정리 |
+| DevMenu FAB 가림 | `src/lib/devTools.ts`, `src/_app.tsx`, `src/components/shared/DevMenu.tsx` | ✅ `EXPO_PUBLIC_SHOW_DEV_MENU=true`일 때만 DevMenu/플랜 override/가드 bypass/DEV IAP bypass 활성. 새 AIT에서 `isDevToolsEnabled() -> return false` 확인 | 업로드 후 FAB 미노출 실기기 확인 |
+| AIT standalone host error | `src/_app.tsx`, `granite.config.ts`, `taillog-app.ait` | ⚠️ `brand.icon` 로컬 경로/data URI 후보와 `Granite.registerApp` 직접 사용 후보 소거 완료. 콘솔 HTTPS 로고 URL + 공식 `AppsInToss.registerApp` 적용 후 API deploy `019e01b9-3c4c-7677-b6b9-d80529a2d868` 성공, 번들 스캔/문법검사/tsc 통과. 그러나 Metro-off standalone에서 JS 진입 전 host error가 계속 재현됨 | Toss 개발자 커뮤니티/지원에 deploymentId `019e01b9...`, CLI URL, no-JS-marker logcat, UI error text를 전달해 test host/deployment 실행, 샌드박스앱 버전, QR 실행 경로 차이를 확인 요청 |
+| Dog Profile route crash | `src/pages/dog/profile.tsx` | ✅ `dogEnv.triggers` live shape 정규화 완료. DEV_LOCAL 재진입 PASS | 회귀 테스트 유지 |
+| Shared report dynamic route | `src/pages/report/[shareToken].tsx` | ✅ React Navigation raw params로 bracket/colon strict mismatch 회피. 잘못된 토큰은 정상 empty/error state 표시 | 실제 share token happy-path 검증 필요 |
+| Onboarding direct-entry fallback | `src/pages/onboarding/stage2-form.tsx`, `src/pages/onboarding/stage3-form.tsx` | ✅ `activeDog` fallback + dog id 부재 submit guard 추가. 단독 딥링크 `undefined` 문구 제거 | 신규 유저 dog 없음 상태 UX 확인 필요 |
+| Settings AI persona | `src/pages/settings/index.tsx`, `Backend/app/features/coaching/*` | ✅ DB 저장 확인 후 backend coaching prompt/ask-coach 컨텍스트에 `ai_persona` 반영 | 실제 OpenAI 응답 톤 차이 샘플 증적 추가 권장 |
+| IAP/Ads/Smart Message 실기기 QA | `src/lib/api/iap.ts`, `src/lib/ads/config.ts`, `supabase/functions/send-smart-message/index.ts` | ✅ IAP 3시나리오 패널 진입, 실패/복구 UI 증적, false-success/loading 수정 및 새 AIT 버튼 복귀 확인. ✅ Smart Message 200 + noti_history success. ✅ Ads live ID 상수 fallback + 새 AIT test id 0개 + B1 real SDK `ad_error` | Ads render success/no-fill 사유 세부값 + IAP Edge/proxy 404 원인 정리 |
 
 ---
 

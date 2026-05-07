@@ -4,6 +4,7 @@
 FE api/subscription.ts 매핑
 Parity: IAP-001
 """
+from datetime import date, datetime
 from typing import Any, Optional
 from uuid import UUID
 
@@ -29,9 +30,9 @@ class SubscriptionResponse(BaseModel):
     is_active: bool
     ai_tokens_remaining: int = 0
     ai_tokens_total: int = 0
-    next_billing_date: Optional[str] = None
-    created_at: str
-    updated_at: str
+    next_billing_date: Optional[datetime | date] = None
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -42,7 +43,7 @@ class OrderHistoryResponse(BaseModel):
     toss_status: str
     grant_status: str
     amount: int
-    created_at: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

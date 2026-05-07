@@ -247,7 +247,8 @@ function DashboardPage() {
         onPress={() => navigation.navigate('/dashboard/analysis')}
         activeOpacity={0.7}
       >
-        <Text style={styles.chartLinkText}>📊 행동 차트 자세히 보기</Text>
+        <Image source={{ uri: ICONS['ic-analysis'] }} style={styles.chartLinkIcon} resizeMode="contain" />
+        <Text style={styles.chartLinkText}>행동 차트 자세히 보기</Text>
         <Text style={styles.chartLinkArrow}>›</Text>
       </TouchableOpacity>
 
@@ -387,6 +388,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textPrimary,
     flex: 1,
+  },
+  chartLinkIcon: {
+    width: 24,
+    height: 24,
+    marginRight: spacing.sm,
   },
   chartLinkArrow: {
     ...typography.sectionTitle,

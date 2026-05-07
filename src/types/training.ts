@@ -81,7 +81,6 @@ export type DogReaction = 'enjoyed' | 'neutral' | 'sensitive';
 /** 반응 옵션 메타 (UI 표시용) */
 export interface ReactionOption {
   value: DogReaction;
-  emoji: string;
   label: string;
   effect: string;
   color: string;
@@ -90,21 +89,18 @@ export interface ReactionOption {
 export const REACTION_OPTIONS: ReactionOption[] = [
   {
     value: 'enjoyed',
-    emoji: '\u{1F606}',
     label: '재밌어했어요',
     effect: '다음 훈련 난이도가 한 단계 올라가요',
     color: 'successGreen',
   },
   {
     value: 'neutral',
-    emoji: '\u{1F610}',
     label: '평소와 같아요',
     effect: '현재 난이도를 유지하며 반복 훈련해요',
     color: 'warningAmber',
   },
   {
     value: 'sensitive',
-    emoji: '\u{1F623}',
     label: '여전히 예민해요',
     effect: '다음 훈련이 더 부드럽게 조정돼요',
     color: 'errorRed',
@@ -172,14 +168,13 @@ export interface StepAttempt {
 export interface SituationChipOption {
   id: string;
   label: string;
-  emoji: string;
   sentiment: 'positive' | 'neutral' | 'negative';
 }
 
 export const SITUATION_CHIPS: SituationChipOption[] = [
-  { id: 'went_well', label: '잘 됐어요', emoji: '🟢', sentiment: 'positive' },
-  { id: 'took_time', label: '처음엔 어려워했지만', emoji: '🟡', sentiment: 'neutral' },
-  { id: 'no_response', label: '반응 없었어요', emoji: '🔴', sentiment: 'negative' },
-  { id: 'anxious', label: '불안해했어요', emoji: '😰', sentiment: 'negative' },
-  { id: 'tried_different', label: '다른 방법으로 해봤어요', emoji: '💡', sentiment: 'neutral' },
+  { id: 'went_well', label: '잘 됐어요', sentiment: 'positive' },
+  { id: 'took_time', label: '처음엔 어려워했지만', sentiment: 'neutral' },
+  { id: 'no_response', label: '반응 없었어요', sentiment: 'negative' },
+  { id: 'anxious', label: '불안해했어요', sentiment: 'negative' },
+  { id: 'tried_different', label: '다른 방법으로 해봤어요', sentiment: 'neutral' },
 ];

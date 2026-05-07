@@ -33,3 +33,10 @@ Decision-complete mapping between page skills, code touch points, and required r
 - Load one page skill + up to two feature skills.
 - Keep context inputs narrow to route-specific files and docs.
 - Update `PAGE-UPGRADE-BOARD.md` status and date at task end.
+
+## Global Ops Skills
+
+| skill | purpose | primary_docs | acceptance_checks |
+|---|---|---|---|
+| `toss-runtime-mode-ops` | `DEV_LOCAL` / `SANDBOX_REAL` / `PROD_READY` runtime mode 판정과 AIT, Supabase CLI, mTLS, Ads, IAP, Smart Message, Report AI 토글 분리 | `docs/status/MISSING-AND-UNIMPLEMENTED.md`, `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md`, `docs/ref/AIT-ADS-SDK-REFERENCE.md` | mode snapshot, toggle matrix, PASS/PARTIAL/BLOCKED gate |
+| `toss-ait-build-ops` | `.ait` 빌드/업로드/standalone private launch 패턴, env/runtime setup 검증, `brand.icon` HTTPS URL 우선 규칙, host error escalation | `docs/daily/05-07/iap-ads-smart-message-device-qa.md`, `docs/daily/05-07/ait-private-standalone-launch.md`, `docs/ref/AIT-PUBLISHING-READINESS.md`, `docs/status/PROJECT-STATUS.md` | bundle scan: Supabase marker + no local/data URI `brandIcon`; preferred `brandIcon:"https://"`; if Metro-off launch fails before JS marker, collect deploymentId/CLI URL/UI text/logcat and escalate |

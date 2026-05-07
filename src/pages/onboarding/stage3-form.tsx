@@ -6,12 +6,15 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback, useEffect } from 'react';
 import {
+  Image,
   Alert, ScrollView, StyleSheet, Text, TextInput,
   TouchableOpacity, View,
 } from 'react-native';
 import { FormLayout } from 'components/shared/layouts/FormLayout';
 import { useSubmitStage3 } from 'lib/hooks/useSurvey';
 import { useDraftSave } from 'lib/hooks/useDraftSave';
+import { ICONS } from 'lib/data/iconSources';
+import { useActiveDog } from 'stores/ActiveDogContext';
 import { colors, spacing, typography } from 'styles/tokens';
 import type { SurveyStage3Request } from 'types/dog';
 
@@ -48,23 +51,25 @@ type FocusLevel = 'treat_only' | 'good' | 'distracted' | 'uninterested';
 type AttachLevel = 'velcro' | 'moderate' | 'independent';
 
 const HEALTH_ISSUES = [
-  { id: 'joint_disc', label: '🦴 관절·디스크' },
-  { id: 'skin_allergy', label: '🤧 피부·알레르기' },
-  { id: 'heart', label: '🫀 심장·호흡' },
-  { id: 'digestive', label: '🫃 소화기' },
+  { id: 'joint_disc', label: '관절·디스크', iconSource: ICONS['ic-paw'] },
+  { id: 'skin_allergy', label: '피부·알레르기', iconSource: ICONS['ic-idea'] },
+  { id: 'heart', label: '심장·호흡', iconSource: ICONS['ic-bolt'] },
+  { id: 'digestive', label: '소화기', iconSource: ICONS['ic-cat-meal'] },
 ];
 
 const REWARDS = [
-  { id: 'treat', label: '🍖 간식' },
-  { id: 'toy', label: '🎾 장난감·놀이' },
-  { id: 'praise', label: '👋 칭찬·스킨십' },
-  { id: 'walk', label: '🚶 산책' },
+  { id: 'treat', label: '간식', iconSource: ICONS['ic-cat-meal'] },
+  { id: 'toy', label: '장난감·놀이', iconSource: ICONS['ic-cat-play'] },
+  { id: 'praise', label: '칭찬·스킨십', iconSource: ICONS['ic-paw'] },
+  { id: 'walk', label: '산책', iconSource: ICONS['ic-cat-walk'] },
 ];
 
 function Stage3FormPage() {
   const navigation = useNavigation();
   const params = Route.useParams() as RouteParams;
-  const { dogId, dogName } = params;
+  const { activeDog } = useActiveDog();
+  const targetDogId = params.dogId ?? activeDog?.id;
+  const displayDogName = params.dogName ?? activeDog?.name ?? '우리 아이';
   const submitStage3 = useSubmitStage3();
 
   // 건강 상태
@@ -92,7 +97,7 @@ function Stage3FormPage() {
   };
 
   const { loadedDraft, clearDraft } = useDraftSave<Stage3Draft>({
-    stageKey: `stage3_${dogId}`,
+    stageKey: `stage3_${targetDogId ?? 'direct-entry'}`,
     data: draftData,
   });
 
@@ -136,6 +141,13 @@ function Stage3FormPage() {
   };
 
   const handleSubmit = useCallback(() => {
+    if (!targetDogId) {
+      Alert.alert('반려견 정보가 필요해요', '먼저 반려견 프로필을 등록한 뒤 다시 시도해주세요.', [
+        { text: '확인', onPress: () => navigation.navigate('/onboarding/stage1-form' as never) },
+      ]);
+      return;
+    }
+
     const payload: SurveyStage3Request = {
       temperament: {
         sensitivity_score: noiseReaction === 'prolonged' ? 5 : noiseReaction === 'recover' ? 3 : 1,
@@ -158,7 +170,7 @@ function Stage3FormPage() {
       rewards_meta: { ids: rewards },
     };
 
-    submitStage3.mutate({ dogId, data: payload }, {
+    submitStage3.mutate({ dogId: targetDogId, data: payload }, {
       onSuccess: async () => {
         await clearDraft();
         navigation.navigate('/coaching/result');
@@ -167,11 +179,11 @@ function Stage3FormPage() {
         Alert.alert('저장 실패', err.message.slice(0, 200));
       },
     });
-  }, [dogId, healthStatus, healthIssues, healthNote, hadSurgery, surgeryNote, envReaction, personReaction, dogReaction, noiseReaction, focusLevel, attachLevel, energyLevel, rewards, walkMinutes, submitStage3, navigation]);
+  }, [targetDogId, healthStatus, healthIssues, healthNote, hadSurgery, surgeryNote, envReaction, personReaction, dogReaction, noiseReaction, focusLevel, attachLevel, energyLevel, rewards, walkMinutes, submitStage3, navigation]);
 
   return (
     <FormLayout
-      title={`${dogName}의 기질과 건강`}
+      title={`${displayDogName}의 기질과 건강`}
       onBack={() => navigation.goBack()}
       bottomCTA={{
         label: submitStage3.isPending ? '저장 중...' : 'Pro 풀 개인화 활성화',
@@ -182,13 +194,13 @@ function Stage3FormPage() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── 건강 섹션 ── */}
-        <SectionHeader emoji="🏥" title="건강 상태" />
+        <SectionHeader iconSource={ICONS['ic-paw']} title="건강 상태" />
 
         <Section label="지금 건강 상태가 어때요?">
           <ChipGroup>
-            <Chip label="😊 튼튼해요" selected={healthStatus === 'healthy'} onPress={() => setHealthStatus('healthy')} />
-            <Chip label="🤔 신경 쓰이는 게 있어요" selected={healthStatus === 'concern'} onPress={() => setHealthStatus('concern')} />
-            <Chip label="😷 치료 중이에요" selected={healthStatus === 'treatment'} onPress={() => setHealthStatus('treatment')} />
+            <Chip label="튼튼해요" iconSource={ICONS['ic-paw']} selected={healthStatus === 'healthy'} onPress={() => setHealthStatus('healthy')} />
+            <Chip label="신경 쓰이는 게 있어요" iconSource={ICONS['ic-idea']} selected={healthStatus === 'concern'} onPress={() => setHealthStatus('concern')} />
+            <Chip label="치료 중이에요" iconSource={ICONS['ic-bolt']} selected={healthStatus === 'treatment'} onPress={() => setHealthStatus('treatment')} />
           </ChipGroup>
         </Section>
 
@@ -200,6 +212,7 @@ function Stage3FormPage() {
                   <Chip
                     key={item.id}
                     label={item.label}
+                    iconSource={item.iconSource}
                     selected={healthIssues.includes(item.id)}
                     onPress={() => toggleIssue(item.id)}
                   />
@@ -209,7 +222,7 @@ function Stage3FormPage() {
                 style={[styles.input, styles.mt8]}
                 value={healthNote}
                 onChangeText={setHealthNote}
-                placeholder="✏️ 직접 입력 (예: 디스크 수술 후 재활 중)"
+                placeholder="직접 입력 (예: 디스크 수술 후 재활 중)"
                 placeholderTextColor={colors.textSecondary}
                 maxLength={100}
               />
@@ -219,8 +232,8 @@ function Stage3FormPage() {
 
         <Section label="수술 경험이 있나요? (중성화 제외)">
           <ChipGroup>
-            <Chip label="✅ 있어요" selected={hadSurgery === true} onPress={() => setHadSurgery(true)} />
-            <Chip label="❌ 없어요" selected={hadSurgery === false} onPress={() => setHadSurgery(false)} />
+            <Chip label="있어요" iconSource={ICONS['ic-paw']} selected={hadSurgery === true} onPress={() => setHadSurgery(true)} />
+            <Chip label="없어요" iconSource={ICONS['ic-target']} selected={hadSurgery === false} onPress={() => setHadSurgery(false)} />
           </ChipGroup>
           {hadSurgery ? (
             <TextInput
@@ -235,57 +248,57 @@ function Stage3FormPage() {
         </Section>
 
         {/* ── 기질 섹션 ── */}
-        <SectionHeader emoji="🧠" title="기질 파악" />
+        <SectionHeader iconSource={ICONS['ic-idea']} title="기질 파악" />
 
         <Section label="낯선 곳에 가면 어떻게 해요?">
           <ChipGroup wrap>
-            <Chip label="🔍 신나게 탐험해요" selected={envReaction === 'explore'} onPress={() => setEnvReaction('explore')} />
-            <Chip label="⏳ 천천히 적응해요" selected={envReaction === 'adapt'} onPress={() => setEnvReaction('adapt')} />
-            <Chip label="😰 많이 불안해해요" selected={envReaction === 'anxious'} onPress={() => setEnvReaction('anxious')} />
-            <Chip label="😐 관심 없어요" selected={envReaction === 'indifferent'} onPress={() => setEnvReaction('indifferent')} />
+            <Chip label="신나게 탐험해요" iconSource={ICONS['ic-search']} selected={envReaction === 'explore'} onPress={() => setEnvReaction('explore')} />
+            <Chip label="천천히 적응해요" iconSource={ICONS['ic-paw']} selected={envReaction === 'adapt'} onPress={() => setEnvReaction('adapt')} />
+            <Chip label="많이 불안해해요" iconSource={ICONS['ic-cat-anxiety']} selected={envReaction === 'anxious'} onPress={() => setEnvReaction('anxious')} />
+            <Chip label="관심 없어요" iconSource={ICONS['ic-target']} selected={envReaction === 'indifferent'} onPress={() => setEnvReaction('indifferent')} />
           </ChipGroup>
         </Section>
 
         <Section label="집에 낯선 사람이 오면?">
           <ChipGroup wrap>
-            <Chip label="🏃 달려가서 반가워해요" selected={personReaction === 'rush'} onPress={() => setPersonReaction('rush')} />
-            <Chip label="👀 살펴보다 다가가요" selected={personReaction === 'observe'} onPress={() => setPersonReaction('observe')} />
-            <Chip label="🙈 숨거나 피해요" selected={personReaction === 'hide'} onPress={() => setPersonReaction('hide')} />
-            <Chip label="😐 별 반응 없어요" selected={personReaction === 'indifferent'} onPress={() => setPersonReaction('indifferent')} />
+            <Chip label="달려가서 반가워해요" iconSource={ICONS['ic-bolt']} selected={personReaction === 'rush'} onPress={() => setPersonReaction('rush')} />
+            <Chip label="살펴보다 다가가요" iconSource={ICONS['ic-search']} selected={personReaction === 'observe'} onPress={() => setPersonReaction('observe')} />
+            <Chip label="숨거나 피해요" iconSource={ICONS['ic-cat-fear']} selected={personReaction === 'hide'} onPress={() => setPersonReaction('hide')} />
+            <Chip label="별 반응 없어요" iconSource={ICONS['ic-target']} selected={personReaction === 'indifferent'} onPress={() => setPersonReaction('indifferent')} />
           </ChipGroup>
         </Section>
 
         <Section label="다른 개를 만나면?">
           <ChipGroup wrap>
-            <Chip label="🐾 먼저 달려가요" selected={dogReaction === 'approach'} onPress={() => setDogReaction('approach')} />
-            <Chip label="👃 냄새 맡으며 탐색해요" selected={dogReaction === 'sniff'} onPress={() => setDogReaction('sniff')} />
-            <Chip label="😤 짖거나 공격해요" selected={dogReaction === 'bark'} onPress={() => setDogReaction('bark')} />
-            <Chip label="😐 무관심해요" selected={dogReaction === 'indifferent'} onPress={() => setDogReaction('indifferent')} />
+            <Chip label="먼저 달려가요" iconSource={ICONS['ic-paw']} selected={dogReaction === 'approach'} onPress={() => setDogReaction('approach')} />
+            <Chip label="냄새 맡으며 탐색해요" iconSource={ICONS['ic-search']} selected={dogReaction === 'sniff'} onPress={() => setDogReaction('sniff')} />
+            <Chip label="짖거나 공격해요" iconSource={ICONS['ic-cat-barking']} selected={dogReaction === 'bark'} onPress={() => setDogReaction('bark')} />
+            <Chip label="무관심해요" iconSource={ICONS['ic-target']} selected={dogReaction === 'indifferent'} onPress={() => setDogReaction('indifferent')} />
           </ChipGroup>
         </Section>
 
         <Section label="큰 소리가 나면?">
           <ChipGroup wrap>
-            <Chip label="😌 별 반응 없어요" selected={noiseReaction === 'calm'} onPress={() => setNoiseReaction('calm')} />
-            <Chip label="😲 놀라지만 금방 괜찮아요" selected={noiseReaction === 'recover'} onPress={() => setNoiseReaction('recover')} />
-            <Chip label="😱 오래 불안해해요" selected={noiseReaction === 'prolonged'} onPress={() => setNoiseReaction('prolonged')} />
+            <Chip label="별 반응 없어요" iconSource={ICONS['ic-target']} selected={noiseReaction === 'calm'} onPress={() => setNoiseReaction('calm')} />
+            <Chip label="놀라지만 금방 괜찮아요" iconSource={ICONS['ic-bolt']} selected={noiseReaction === 'recover'} onPress={() => setNoiseReaction('recover')} />
+            <Chip label="오래 불안해해요" iconSource={ICONS['ic-cat-anxiety']} selected={noiseReaction === 'prolonged'} onPress={() => setNoiseReaction('prolonged')} />
           </ChipGroup>
         </Section>
 
         <Section label="훈련이나 놀이에 얼마나 집중해요?">
           <ChipGroup wrap>
-            <Chip label="🎯 간식 있으면 최고예요" selected={focusLevel === 'treat_only'} onPress={() => setFocusLevel('treat_only')} />
-            <Chip label="📚 집중력 좋아요" selected={focusLevel === 'good'} onPress={() => setFocusLevel('good')} />
-            <Chip label="😵 금방 딴짓해요" selected={focusLevel === 'distracted'} onPress={() => setFocusLevel('distracted')} />
-            <Chip label="😒 별 관심 없어요" selected={focusLevel === 'uninterested'} onPress={() => setFocusLevel('uninterested')} />
+            <Chip label="간식 있으면 최고예요" iconSource={ICONS['ic-target']} selected={focusLevel === 'treat_only'} onPress={() => setFocusLevel('treat_only')} />
+            <Chip label="집중력 좋아요" iconSource={ICONS['ic-training']} selected={focusLevel === 'good'} onPress={() => setFocusLevel('good')} />
+            <Chip label="금방 딴짓해요" iconSource={ICONS['ic-puzzle']} selected={focusLevel === 'distracted'} onPress={() => setFocusLevel('distracted')} />
+            <Chip label="별 관심 없어요" iconSource={ICONS['ic-target']} selected={focusLevel === 'uninterested'} onPress={() => setFocusLevel('uninterested')} />
           </ChipGroup>
         </Section>
 
         <Section label="보호자한테 얼마나 붙어 있어요?">
           <ChipGroup>
-            <Chip label="🐾 껌딱지예요" selected={attachLevel === 'velcro'} onPress={() => setAttachLevel('velcro')} />
-            <Chip label="😊 적당히 가까이요" selected={attachLevel === 'moderate'} onPress={() => setAttachLevel('moderate')} />
-            <Chip label="🚶 독립적이에요" selected={attachLevel === 'independent'} onPress={() => setAttachLevel('independent')} />
+            <Chip label="껌딱지예요" iconSource={ICONS['ic-paw']} selected={attachLevel === 'velcro'} onPress={() => setAttachLevel('velcro')} />
+            <Chip label="적당히 가까이요" iconSource={ICONS['ic-dog']} selected={attachLevel === 'moderate'} onPress={() => setAttachLevel('moderate')} />
+            <Chip label="독립적이에요" iconSource={ICONS['ic-cat-walk']} selected={attachLevel === 'independent'} onPress={() => setAttachLevel('independent')} />
           </ChipGroup>
         </Section>
 
@@ -299,7 +312,7 @@ function Stage3FormPage() {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.energyText, energyLevel === n && styles.energyTextSelected]}>
-                  {n === 1 ? '💤' : n === 2 ? '🐢' : n === 3 ? '⚡' : n === 4 ? '🏃' : '🔥'}
+                  {n}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -328,6 +341,7 @@ function Stage3FormPage() {
               <Chip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={rewards.includes(item.id)}
                 onPress={() => toggleReward(item.id)}
               />
@@ -340,10 +354,10 @@ function Stage3FormPage() {
   );
 }
 
-function SectionHeader({ emoji, title }: { emoji: string; title: string }) {
+function SectionHeader({ iconSource, title }: { iconSource?: string; title: string }) {
   return (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderEmoji}>{emoji}</Text>
+      {iconSource ? <Image source={{ uri: iconSource }} style={styles.sectionHeaderIcon} /> : null}
       <Text style={styles.sectionHeaderText}>{title}</Text>
     </View>
   );
@@ -365,13 +379,16 @@ function ChipGroup({ children, wrap }: { children: React.ReactNode; wrap?: boole
   return <View style={[styles.chipGroup, wrap && styles.chipGroupWrap]}>{children}</View>;
 }
 
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+function Chip({
+  label, iconSource, selected, onPress,
+}: { label: string; iconSource?: string; selected: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.chipSelected]}
       onPress={onPress}
       activeOpacity={0.7}
     >
+      {iconSource ? <Image source={{ uri: iconSource }} style={styles.chipIcon} /> : null}
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -389,7 +406,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  sectionHeaderEmoji: { fontSize: 20, lineHeight: 28 },
+  sectionHeaderIcon: { width: 24, height: 24 },
   sectionHeaderText: {
     ...typography.bodySmall,
     fontWeight: '700',
@@ -407,6 +424,9 @@ const styles = StyleSheet.create({
   chipGroup: { flexDirection: 'row', gap: spacing.sm },
   chipGroupWrap: { flexWrap: 'wrap' },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderRadius: 20,
@@ -416,6 +436,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   chipSelected: { borderColor: colors.primaryBlue, backgroundColor: colors.primaryBlueLight },
+  chipIcon: { width: 18, height: 18 },
   chipText: { ...typography.bodySmall, color: colors.textSecondary },
   chipTextSelected: { color: colors.primaryBlue, fontWeight: '600' },
   input: {
@@ -448,8 +469,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primaryBlue,
     backgroundColor: colors.primaryBlueLight,
   },
-  energyText: { fontSize: 22, lineHeight: 28 },
-  energyTextSelected: {},
+  energyText: { ...typography.body, color: colors.textSecondary, fontWeight: '700' },
+  energyTextSelected: { color: colors.primaryBlue },
   energyLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -6,6 +6,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet ,ActivityIndicator, TouchableOpacity  } from 'react-native';
 import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
+import { useRoute } from '@react-navigation/native';
 import { colors, typography } from 'styles/tokens';
 import { createRoute } from '@granite-js/react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
@@ -16,13 +17,15 @@ import { tracker } from 'lib/analytics/tracker';
 import { supabase } from 'lib/api/supabase';
 
 export const Route = createRoute('/report/[shareToken]', {
-  validateParams: (params) => params as { shareToken: string },
+  validateParams: (params: unknown) => params as { shareToken: string },
   component: ShareTokenReportPage,
   screenOptions: { headerShown: false },
 });
 
 function ShareTokenReportPage() {
-  const { shareToken } = Route.useParams();
+  const route = useRoute();
+  const params = route.params as { shareToken?: string } | undefined;
+  const shareToken = params?.shareToken ?? '';
   const { isReady } = usePageGuard({
     currentPath: '/report/[shareToken]' as any,
     skipAuth: true,

@@ -12,17 +12,17 @@ interface ReactionTrendBarProps {
   isPro: boolean;
 }
 
-const REACTION_CONFIG: Record<DogReaction, { emoji: string; color: string; label: string }> = {
-  enjoyed:   { emoji: '😆', color: colors.green500, label: '잘 됐어요' },
-  neutral:   { emoji: '😐', color: colors.orange500, label: '평범' },
-  sensitive: { emoji: '😢', color: colors.red500, label: '예민' },
+const REACTION_CONFIG: Record<DogReaction, { color: string; label: string }> = {
+  enjoyed:   { color: colors.green500, label: '잘 됐어요' },
+  neutral:   { color: colors.orange500, label: '평범' },
+  sensitive: { color: colors.red500, label: '예민' },
 };
 
 export function ReactionTrendBar({ reactions, isPro }: ReactionTrendBarProps) {
   if (!isPro) {
     return (
       <View style={styles.proLock}>
-        <Text style={styles.proLockText}>🔒 PRO — 반응 추이 보기</Text>
+        <Text style={styles.proLockText}>PRO 반응 추이 보기</Text>
       </View>
     );
   }
@@ -45,7 +45,6 @@ export function ReactionTrendBar({ reactions, isPro }: ReactionTrendBarProps) {
           const cfg = REACTION_CONFIG[reaction];
           return (
             <View key={i} style={styles.barItem}>
-              <Text style={styles.emoji}>{cfg.emoji}</Text>
               <View style={[styles.dot, { backgroundColor: cfg.color }]} />
               {i < recent.length - 1 && <View style={styles.connector} />}
             </View>
@@ -84,10 +83,6 @@ const styles = StyleSheet.create({
   barItem: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  emoji: {
-    fontSize: 18,
-    marginRight: 4,
   },
   dot: {
     width: 10,

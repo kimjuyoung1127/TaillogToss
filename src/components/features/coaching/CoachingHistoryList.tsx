@@ -4,17 +4,17 @@
  * Parity: AI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import type { CoachingResult } from 'types/coaching';
 import { useCoachingList } from 'lib/hooks/useCoaching';
 import { EmptyState } from 'components/tds-ext/EmptyState';
 import { colors, typography, spacing } from 'styles/tokens';
 import { ICONS } from 'lib/data/iconSources';
 
-const TREND_ICON: Record<string, string> = {
-  improving: '📈',
-  stable: '➡️',
-  worsening: '📉',
+const TREND_ICON_SOURCE: Record<string, string> = {
+  improving: ICONS['ic-analysis']!,
+  stable: ICONS['ic-target']!,
+  worsening: ICONS['ic-bolt']!,
 };
 
 const REPORT_LABEL: Record<string, string> = {
@@ -103,7 +103,7 @@ function HistoryItem({
               {REPORT_LABEL[coaching.report_type] ?? coaching.report_type}
             </Text>
           </View>
-          <Text style={styles.trendEmoji}>{TREND_ICON[trend]}</Text>
+          <Image source={{ uri: TREND_ICON_SOURCE[trend] ?? ICONS['ic-coaching'] }} style={styles.trendIconImg} />
         </View>
       </View>
       <View style={styles.historyRight}>
@@ -181,8 +181,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  trendEmoji: {
-    fontSize: 14,
+  trendIconImg: {
+    width: 16,
+    height: 16,
   },
   historyRight: {
     flexDirection: 'row',

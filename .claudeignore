@@ -1,0 +1,59 @@
+# Claude Code 스캔 제외 목록
+# 토큰 절약 + 불필요한 컨텍스트 차단
+
+# 의존성 (765MB+ — 절대 스캔 불필요)
+node_modules/
+.yarn/cache/
+.pnp.*
+
+# 빌드 산출물
+dist/
+build/
+.next/
+.expo/
+.swc/
+*.ait
+
+# Python 가상환경
+Backend/.venv/
+Backend/venv/
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# 인증서 / 보안
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+
+# 로그
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# 임시 파일
+*.tmp
+*.cache
+
+# 바이너리 / DB 파일 (읽어도 의미 없음)
+.code-review-graph/graph.db
+*.db
+*.sqlite
+
+# Lock 파일 (Claude가 편집할 일 없음)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Granite / AIT 빌드
+.granite/
+
+# 에이전트 캐시
+.agents/skills/

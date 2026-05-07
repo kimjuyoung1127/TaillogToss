@@ -57,6 +57,7 @@ def build_user_prompt(
     report_type: str = "DAILY",
     previous_coaching_summary: str | None = None,
     onboarding_context: dict | None = None,
+    ai_persona: dict | None = None,
 ) -> str:
     """사용자 프롬프트 생성
 
@@ -67,6 +68,7 @@ def build_user_prompt(
     stage == 3 → 기질/건강까지 풀 개인화
     """
     onboarding_section = _build_onboarding_section(onboarding_context)
+    persona_section = _build_ai_persona_section(ai_persona)
 
     prev_section = ""
     if previous_coaching_summary:
@@ -88,8 +90,33 @@ Report Type: {report_type}
 
 Behavior Analytics:
 {behavior_analytics}
-{onboarding_section}{prev_section}
+{persona_section}{onboarding_section}{prev_section}
 Generate the 6-block coaching report in Korean (존댓말, 요체)."""
+
+
+def _build_ai_persona_section(ai_persona: dict | None) -> str:
+    """사용자 설정의 AI 코칭 선호도를 프롬프트 지시로 변환."""
+    if not ai_persona:
+        return ""
+
+    tone = ai_persona.get("tone", "empathetic")
+    perspective = ai_persona.get("perspective", "coach")
+    tone_label = {
+        "empathetic": "보호자 감정에 먼저 공감하고 안심시키는 톤",
+        "solution": "핵심 원인과 실행 방법을 더 빠르게 제시하는 솔루션 중심 톤",
+    }.get(tone, "보호자 감정에 먼저 공감하고 안심시키는 톤")
+    perspective_label = {
+        "coach": "전문 코치 관점으로 설명",
+        "dog": "강아지 입장에서 느끼는 감정과 신호를 더 자주 풀어 설명",
+    }.get(perspective, "전문 코치 관점으로 설명")
+
+    return f"""
+AI Coaching Preference:
+- Tone: {tone_label}
+- Perspective: {perspective_label}
+
+Apply these preferences across summaries, action plans, and dog_voice while preserving safety rules.
+"""
 
 
 def _build_onboarding_section(ctx: dict | None) -> str:

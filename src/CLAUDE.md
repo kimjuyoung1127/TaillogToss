@@ -5,7 +5,7 @@
 ## 구조
 
 ```
-_app.tsx              # Granite.registerApp 앱 컨테이너
+_app.tsx              # AppsInToss.registerApp 앱 컨테이너
 router.gen.ts         # 자동 생성 (라우트 타입 선언, 수동 수정 금지)
 pages/                # 실제 페이지 컴포넌트 (createRoute)
 components/           # 3계층: tds-ext ← shared ← features

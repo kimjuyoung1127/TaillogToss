@@ -44,7 +44,11 @@ const defineEnv: Record<string, string> = {
   'process.env.AIT_AD_B2': JSON.stringify(getEnv('AIT_AD_B2')),
   'process.env.AIT_AD_B3': JSON.stringify(getEnv('AIT_AD_B3')),
   'process.env.AIT_AD_I1': JSON.stringify(getEnv('AIT_AD_I1')),
+  'process.env.EXPO_PUBLIC_BACKEND_URL': JSON.stringify(getEnv('EXPO_PUBLIC_BACKEND_URL')),
+  'process.env.EXPO_PUBLIC_SHOW_DEV_MENU': JSON.stringify(getEnv('EXPO_PUBLIC_SHOW_DEV_MENU')),
 };
+
+const brandIcon = 'https://static.toss.im/appsintoss/24957/82272792-1628-40f1-abbd-fd4be9e657e0.png';
 
 export default defineConfig({
   appName: 'taillog-app',
@@ -61,7 +65,7 @@ export default defineConfig({
       brand: {
         displayName: '테일로그',
         primaryColor: '#3182F6',
-        icon: './src/assets/icons/app-logo-600.png',
+        icon: brandIcon,
       },
       permissions: [],
     }),

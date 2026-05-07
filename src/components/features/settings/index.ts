@@ -6,3 +6,8 @@ export { SettingsPermissionBanner } from './SettingsPermissionBanner';
 export { SettingsStepperRow } from './SettingsStepperRow';
 export { SettingsScreenSkeleton } from './SettingsScreenSkeleton';
 export { SettingsScreenError } from './SettingsScreenError';
+export { SettingsDivider } from './SettingsDivider';
+export { NotificationSettingsSection } from './NotificationSettingsSection';
+export { AiCoachingSettingsSection } from './AiCoachingSettingsSection';
+export { AccountSettingsSection } from './AccountSettingsSection';
+export { ServiceSettingsSection } from './ServiceSettingsSection';

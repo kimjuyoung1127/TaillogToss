@@ -56,6 +56,7 @@ description: Toss 수익화 운영 스킬 — Ads/IAP/TossPay 콘솔 설정, 샌
 - 테스트 시 **테스트 ID만 사용**:
   - 전면형: `ait-ad-test-interstitial-id`
   - 보상형: `ait-ad-test-rewarded-id`
+- standalone `.ait`에서는 AIT Runtime이 `process.env`를 빈 객체로 재설정한다. 실 광고 검증 빌드는 `src/lib/ads/config.ts`에 live `adGroupId` 상수 fallback을 두고, 업로드 전 `unzip -p taillog-app.ait bundle.android.0_84_0.js | rg -o "ait-ad-test-[a-z-]+-id" | wc -l` 이 `0`인지 확인한다.
 - 보상형은 완료 이벤트에서만 지급
 - 과노출 방지(빈도 제한/쿨다운)
 - 핵심 플로우(가입/로그인/결제) 중 노출 금지
@@ -81,6 +82,7 @@ description: Toss 수익화 운영 스킬 — Ads/IAP/TossPay 콘솔 설정, 샌
 - 조회: `getCompletedOrRefundedOrders` + 서버 API(`/api-partner/v1/apps-in-toss/order/get-order-status`)
 - 주문키 `orderId` 단건-단결제 원칙, 서버 영구 저장
 - API 레퍼런스: `getIapOrderStatus.html`
+- `processProductGrant`가 `false`를 반환하면 SDK 최종 `onEvent`를 기다리지 말고 즉시 앱 이벤트 `GRANT_FAILED`를 방출해 버튼 pending/loading을 해제한다. 이후 SDK `onEvent`가 늦게 와도 중복 방출하지 않도록 `settled` guard를 둔다.
 
 ### 샌드박스 필수 3시나리오
 1. 결제 성공
@@ -92,6 +94,7 @@ description: Toss 수익화 운영 스킬 — Ads/IAP/TossPay 콘솔 설정, 샌
 - 비소모품 복원 경로(재설치/기기변경) 보장
 - 중복 구매/중복 지급 방지(멱등)
 - 앱 재시작/백그라운드 복귀 상태 일관성
+- 서버 지급 실패/프록시 실패 시 버튼이 `...` 또는 `처리 중...`으로 남지 않고 실패 피드백으로 복귀
 
 ## TossPay 체크리스트
 - 앱인토스 전용 TossPay 키 사용(기존 일반 키 금지)
@@ -146,4 +149,6 @@ Next Action:
 - IAP 상품 이미지가 `1024x1024` 미충족이거나 현금성/환가성+토스포인트 결합 상품 등록 시 콘솔 심사에서 차단되므로, 상품 등록 전 정책 요건을 사전 점검한다.
 - TossPay 테스트 키는 결제 생성만 가능하고 실승인이 불가하므로, 실 결제 플로우 E2E 검증은 운영 키 발급(영업일 7~14일) 후에만 수행 가능하다.
 - Ads 광고 그룹 ID 전파는 최대 2시간 소요되므로, 그룹 생성 직후 SDK 호출 시 광고가 노출되지 않을 수 있으며 이를 결함으로 오판하지 않는다.
+- Ads live ID가 `.env`와 번들 안에 보여도 런타임에서 test ID fallback될 수 있다. 실기기에서 `[광고 미리보기]`가 보이면 업로드된 `.ait`가 live 상수 fallback 빌드인지 먼저 확인한다.
+- IAP Sandbox 성공 테스트에서 서버 검증이 실패하면 Toss SDK가 별도 최종 이벤트를 주지 않는 케이스가 있다. 이때 `processProductGrant=false` 시점에 직접 `GRANT_FAILED`를 emit하지 않으면 React Query mutation이 pending으로 남아 버튼 로딩이 풀리지 않는다.
 - mTLS 인증서 미설정 또는 만료 시 토스 로그인/IAP/프로모션/기능성 메시지 전 계열의 S2S 호출이 연결 단계에서 실패하므로, 인증서 교체 일정을 운영 캘린더에 등록한다. (source: https://developers-apps-in-toss.toss.im/development/integration-process.html)

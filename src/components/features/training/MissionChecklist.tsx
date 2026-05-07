@@ -4,8 +4,9 @@
  * Parity: UI-001
  */
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import type { TrainingStep, PlanVariant } from 'types/training';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography } from 'styles/tokens';
 
 interface MissionChecklistProps {
@@ -65,7 +66,7 @@ function StepItem({
         <View style={styles.stepContent}>
           <Text style={[styles.stepInstruction, isCompleted && styles.stepDone]}>{instruction}</Text>
           <View style={styles.stepMeta}>
-            <Text style={styles.duration}>{'⏱'} {duration}분</Text>
+            <Text style={styles.duration}>{duration}분</Text>
             {variantData?.difficulty_note && variantData.difficulty_note !== '표준 방법' && (
               <View style={styles.variantTag}>
                 <Text style={styles.variantTagText}>Plan {variant}</Text>
@@ -90,7 +91,7 @@ function StepItem({
             <View style={styles.tipsList}>
               {step.tips.map((tip, i) => (
                 <View key={i} style={styles.tipItem}>
-                  <Text style={styles.tipIcon}>{'💡'}</Text>
+                  <Image source={{ uri: ICONS['ic-idea'] }} style={styles.tipIcon} />
                   <Text style={styles.tipText}>{tip}</Text>
                 </View>
               ))}
@@ -200,8 +201,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   tipIcon: {
-    ...typography.detail,
+    width: 16,
+    height: 16,
     marginRight: 8,
+    marginTop: 1,
   },
   tipText: {
     flex: 1,

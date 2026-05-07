@@ -5,6 +5,8 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
+import { colors, typography } from 'styles/tokens';
+import { useAuth } from 'stores/AuthContext';
 
 export const Route = createRoute('/_404' as '/', {
   component: NotFoundPage,
@@ -13,10 +15,14 @@ export const Route = createRoute('/_404' as '/', {
 
 function NotFoundPage() {
   const navigation = useNavigation();
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
 
   useEffect(() => {
-    navigation.navigate('/onboarding/welcome');
-  }, [navigation]);
+    if (isLoading) return;
+    const target = isAuthenticated && hasCompletedOnboarding ? '/dashboard' : '/onboarding/welcome';
+    const timer = setTimeout(() => navigation.navigate(target as never), 0);
+    return () => clearTimeout(timer);
+  }, [hasCompletedOnboarding, isAuthenticated, isLoading, navigation]);
 
   return (
     <View
@@ -26,7 +32,7 @@ function NotFoundPage() {
         justifyContent: 'center',
       }}
     >
-      <Text>404 Not Found</Text>
+      <Text style={{ ...typography.bodySmall, color: colors.textSecondary }}>시작 화면으로 돌아가고 있어요</Text>
     </View>
   );
 }

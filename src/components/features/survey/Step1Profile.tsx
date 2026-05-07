@@ -103,14 +103,14 @@ export function Step1Profile({ step1, step2, onChange }: Props) {
             style={[styles.sexCard, step1.sex.startsWith('MALE') && styles.sexCardActive]}
             onPress={() => handleSexToggle('MALE')}
           >
-            <Text style={styles.sexEmoji}>♂️</Text>
+            <Image source={{ uri: ICONS['ic-dog'] }} style={styles.sexIcon} />
             <Text style={[styles.sexLabel, step1.sex.startsWith('MALE') && styles.sexLabelActive]}>남아</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.sexCard, step1.sex.startsWith('FEMALE') && styles.sexCardActive]}
             onPress={() => handleSexToggle('FEMALE')}
           >
-            <Text style={styles.sexEmoji}>♀️</Text>
+            <Image source={{ uri: ICONS['ic-paw'] }} style={styles.sexIcon} />
             <Text style={[styles.sexLabel, step1.sex.startsWith('FEMALE') && styles.sexLabelActive]}>여아</Text>
           </TouchableOpacity>
         </View>
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sexCardActive: { borderColor: colors.primary, backgroundColor: colors.backgroundSecondary, borderWidth: 2 },
-  sexEmoji: { fontSize: 24, marginBottom: 4 },
+  sexIcon: { width: 28, height: 28, marginBottom: 4 },
   sexLabel: { ...typography.detail, color: colors.textSecondary },
   sexLabelActive: { color: colors.primary, fontWeight: '700' },
   neuteredRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingHorizontal: 4 },

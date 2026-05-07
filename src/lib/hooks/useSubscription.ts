@@ -15,6 +15,7 @@ import {
   recoverPendingOrders,
 } from 'lib/api/iap';
 import { getDevPlanOverride } from 'lib/devPlanOverride';
+import { isDevToolsEnabled } from 'lib/devTools';
 
 export function useCurrentSubscription(userId: string | undefined) {
   return useQuery({
@@ -27,7 +28,7 @@ export function useCurrentSubscription(userId: string | undefined) {
 
 export function useIsPro(userId: string | undefined) {
   const { data } = useCurrentSubscription(userId);
-  if (__DEV__) {
+  if (isDevToolsEnabled()) {
     const override = getDevPlanOverride();
     if (override !== null) return override === 'PRO_MONTHLY';
   }

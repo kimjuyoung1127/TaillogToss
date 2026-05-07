@@ -8,7 +8,7 @@ entrypoint = "./functions/login-with-toss/main.ts"
 
 [functions.verify-iap-order]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 entrypoint = "./functions/verify-iap-order/main.ts"
 
 [functions.send-smart-message]

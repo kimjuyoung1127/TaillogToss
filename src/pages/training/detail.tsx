@@ -33,6 +33,7 @@ import { useIsPro } from 'lib/hooks/useSubscription';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { BannerAd } from 'components/shared/ads';
 import { tracker } from 'lib/analytics/tracker';
+import { ICONS } from 'lib/data/iconSources';
 import { useActiveDog } from 'stores/ActiveDogContext';
 import { useAuth } from 'stores/AuthContext';
 import type { CurriculumId, PlanVariant, TrainingProgress, DogReaction } from 'types/training';
@@ -138,6 +139,10 @@ function TrainingDetailPage() {
   }, [currentDay, completedStepIds]);
 
   const handleBack = useCallback(() => navigation.goBack(), [navigation]);
+
+  const handleAcademyPress = useCallback(() => {
+    navigation.navigate('/training/academy');
+  }, [navigation]);
 
   const handleToggleStep = useCallback(
     (stepId: string) => {
@@ -261,7 +266,20 @@ function TrainingDetailPage() {
   if (!curriculum) {
     return (
       <DetailLayout title="훈련" onBack={handleBack}>
-        <EmptyState title="커리큘럼을 찾을 수 없어요" icon="📚" />
+        <EmptyState
+          title="커리큘럼을 찾을 수 없어요"
+          description="훈련 아카데미에서 아이에게 맞는 커리큘럼을 다시 선택해주세요."
+          iconSource={ICONS['illust-empty-training']}
+          action={
+            <TouchableOpacity
+              style={styles.emptyActionButton}
+              onPress={handleAcademyPress}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyActionText}>훈련 아카데미로 이동</Text>
+            </TouchableOpacity>
+          }
+        />
       </DetailLayout>
     );
   }
@@ -477,5 +495,18 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     textDecorationLine: 'underline',
+  },
+  emptyActionButton: {
+    minHeight: 48,
+    paddingHorizontal: spacing.xl,
+    borderRadius: 12,
+    backgroundColor: colors.primaryBlue,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyActionText: {
+    ...typography.bodySmall,
+    color: colors.white,
+    fontWeight: '700',
   },
 });

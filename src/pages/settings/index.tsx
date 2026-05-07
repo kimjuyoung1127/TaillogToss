@@ -20,16 +20,16 @@ import { useAuth } from 'stores/AuthContext';
 import { useLogout } from 'lib/hooks/useAuth';
 import { useUserSettings, useUpdateSettings } from 'lib/hooks/useSettings';
 import { withdrawUser } from 'lib/api/auth';
+import { APP_VERSION_LABEL } from 'lib/appInfo';
 import { BottomNavBar } from 'components/shared/BottomNavBar';
 import {
-  SettingsSectionCard,
-  SettingsToggleRow,
-  SettingsNavRow,
-  SettingsStatusRow,
   SettingsPermissionBanner,
-  SettingsStepperRow,
   SettingsScreenSkeleton,
   SettingsScreenError,
+  NotificationSettingsSection,
+  AiCoachingSettingsSection,
+  AccountSettingsSection,
+  ServiceSettingsSection,
 } from 'components/features/settings';
 import {
   DEFAULT_NOTIFICATION_PREF,
@@ -304,122 +304,33 @@ function SettingsPage() {
       contentContainerStyle={styles.scrollContent}
       footer={<BottomNavBar activeTab="settings" />}
     >
-        <SettingsSectionCard title="알림 설정">
-          <SettingsStatusRow statusText={syncStatus.text} tone={syncStatus.tone} />
-          <View style={styles.divider} />
-
-          <SettingsToggleRow
-            label="푸시 알림"
-            value={notifPref.channels.push}
-            onToggle={() => toggleChannel('push')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="스마트 메시지"
-            value={notifPref.channels.smart_message}
-            onToggle={() => toggleChannel('smart_message')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="기록 리마인더"
-            value={notifPref.types.log_reminder}
-            onToggle={() => toggleType('log_reminder')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="행동 급증 알림"
-            description="평소보다 문제 행동 기록이 늘면 알려드려요."
-            value={notifPref.types.surge_alert}
-            onToggle={() => toggleType('surge_alert')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="코칭 완료 알림"
-            value={notifPref.types.coaching_ready}
-            onToggle={() => toggleType('coaching_ready')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="훈련 리마인더"
-            value={notifPref.types.training_reminder}
-            onToggle={() => toggleType('training_reminder')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="프로모션 알림"
-            value={notifPref.types.promo}
-            onToggle={() => toggleType('promo')}
-          />
-          <View style={styles.divider} />
-          <SettingsToggleRow
-            label="방해 금지 시간"
-            value={notifPref.quiet_hours.enabled}
-            onToggle={toggleQuietHoursEnabled}
-          />
-          <View style={styles.divider} />
-          <SettingsStepperRow
-            label="시작 시간"
-            value={notifPref.quiet_hours.start_hour}
-            onDecrease={() => shiftQuietHour('start_hour', -1)}
-            onIncrease={() => shiftQuietHour('start_hour', 1)}
-            disabled={!notifPref.quiet_hours.enabled}
-          />
-          <View style={styles.divider} />
-          <SettingsStepperRow
-            label="종료 시간"
-            value={notifPref.quiet_hours.end_hour}
-            onDecrease={() => shiftQuietHour('end_hour', -1)}
-            onIncrease={() => shiftQuietHour('end_hour', 1)}
-            disabled={!notifPref.quiet_hours.enabled}
-          />
-        </SettingsSectionCard>
+        <NotificationSettingsSection
+          notifPref={notifPref}
+          syncStatus={syncStatus}
+          onToggleChannel={toggleChannel}
+          onToggleType={toggleType}
+          onToggleQuietHours={toggleQuietHoursEnabled}
+          onShiftQuietHour={shiftQuietHour}
+        />
 
         <SettingsPermissionBanner onOpenSettings={handleOpenDeviceSettings} />
 
-        <SettingsSectionCard title="AI 코칭">
-          <SettingsNavRow
-            label="코칭 톤"
-            rightLabel={aiPersona.tone === 'empathetic' ? '공감형' : '솔루션형'}
-            onPress={toggleAiTone}
-          />
-          <View style={styles.divider} />
-          <SettingsNavRow
-            label="코칭 관점"
-            rightLabel={aiPersona.perspective === 'coach' ? '코치 관점' : '강아지 관점'}
-            onPress={toggleAiPerspective}
-          />
-        </SettingsSectionCard>
+        <AiCoachingSettingsSection
+          aiPersona={aiPersona}
+          onToggleTone={toggleAiTone}
+          onTogglePerspective={toggleAiPerspective}
+        />
 
-        <SettingsSectionCard title="계정">
-          <SettingsNavRow
-            label="프로필 편집"
-            onPress={() => navigation.navigate('/dog/profile' as never)}
-          />
-          <View style={styles.divider} />
-          <SettingsNavRow
-            label="이용약관"
-            onPress={() => navigation.navigate('/legal/terms' as never)}
-          />
-          <View style={styles.divider} />
-          <SettingsNavRow
-            label="개인정보 처리방침"
-            onPress={() => navigation.navigate('/legal/privacy' as never)}
-          />
-        </SettingsSectionCard>
+        <AccountSettingsSection
+          onOpenProfile={() => navigation.navigate('/dog/profile' as never)}
+          onOpenTerms={() => navigation.navigate('/legal/terms' as never)}
+          onOpenPrivacy={() => navigation.navigate('/legal/privacy' as never)}
+        />
 
-        <SettingsSectionCard title="서비스">
-          <SettingsNavRow
-            label="구독 관리"
-            onPress={() => navigation.navigate('/settings/subscription' as never)}
-          />
-          <View style={styles.divider} />
-          <SettingsNavRow
-            label="내 반려견"
-            onPress={() => navigation.navigate('/dog/profile' as never)}
-          />
-          <View style={styles.divider} />
-          <SettingsNavRow label="기기 알림 권한" onPress={handleOpenDeviceSettings} />
-        </SettingsSectionCard>
+        <ServiceSettingsSection
+          onOpenSubscription={() => navigation.navigate('/settings/subscription' as never)}
+          onOpenDogSwitcher={() => navigation.navigate('/dog/switcher' as never)}
+        />
 
         <View style={styles.dangerSection}>
           <TouchableOpacity style={styles.dangerButton} onPress={handleLogout}>
@@ -430,7 +341,7 @@ function SettingsPage() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.versionText}>v0.1.0</Text>
+        <Text style={styles.versionText}>{APP_VERSION_LABEL}</Text>
     </ListLayout>
   );
 }
@@ -438,7 +349,6 @@ function SettingsPage() {
 const styles = StyleSheet.create({
   safe: { backgroundColor: colors.surfaceTertiary },
   scrollContent: { paddingHorizontal: 0, paddingTop: 0, paddingBottom: spacing.xxxl },
-  divider: { height: 1, backgroundColor: colors.surfaceTertiary, marginLeft: 20 },
   dangerSection: {
     marginTop: 32,
     paddingHorizontal: 20,

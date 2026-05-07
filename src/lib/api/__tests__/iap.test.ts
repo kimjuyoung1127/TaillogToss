@@ -8,6 +8,15 @@ const mockFrom = jest.fn();
 const mockGetSession = jest.fn();
 const mockRefreshSession = jest.fn();
 const mockGetUser = jest.fn();
+const mockCreateOneTimePurchaseOrder = jest.fn(() => jest.fn());
+const mockCompleteProductGrant = jest.fn();
+
+jest.mock('@apps-in-toss/native-modules', () => ({
+  IAP: {
+    createOneTimePurchaseOrder: (...args: unknown[]) => mockCreateOneTimePurchaseOrder.apply(null, args),
+    completeProductGrant: (...args: unknown[]) => mockCompleteProductGrant.apply(null, args),
+  },
+}));
 
 jest.mock('lib/api/supabase', () => ({
   supabase: {
@@ -29,6 +38,7 @@ import { verifyAndGrant, recoverPendingOrders, createOneTimePurchaseOrder } from
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCreateOneTimePurchaseOrder.mockReturnValue(jest.fn());
   mockGetSession.mockResolvedValue({
     data: { session: { access_token: 'eyJ.base.session' } },
     error: null,
@@ -215,6 +225,94 @@ describe('recoverPendingOrders', () => {
 });
 
 describe('createOneTimePurchaseOrder', () => {
+  it('processProductGrant=false면 SDK 최종 이벤트 없이도 GRANT_FAILED로 처리', async () => {
+    const onEvent = jest.fn();
+    const processProductGrant = jest.fn().mockResolvedValue(false);
+
+    createOneTimePurchaseOrder({
+      sku: 'ai_token_10',
+      processProductGrant,
+      onEvent,
+    });
+
+    const options = (mockCreateOneTimePurchaseOrder.mock.calls as any)[0][0];
+    await options.options.processProductGrant({ orderId: 'ord_failed' });
+
+    expect(onEvent).toHaveBeenCalledWith({ type: 'PURCHASE_STARTED' });
+    expect(onEvent).toHaveBeenCalledWith({ type: 'GRANT_FAILED' });
+    expect(onEvent).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'GRANT_COMPLETED' }));
+    expect(mockCompleteProductGrant).not.toHaveBeenCalled();
+  });
+
+  it('processProductGrant=false 뒤 SDK onEvent가 와도 GRANT_FAILED를 중복 방출하지 않음', async () => {
+    const onEvent = jest.fn();
+    const processProductGrant = jest.fn().mockResolvedValue(false);
+
+    createOneTimePurchaseOrder({
+      sku: 'ai_token_10',
+      processProductGrant,
+      onEvent,
+    });
+
+    const options = (mockCreateOneTimePurchaseOrder.mock.calls as any)[0][0];
+    await options.options.processProductGrant({ orderId: 'ord_failed' });
+    options.onEvent({ type: 'completed' });
+
+    expect(onEvent.mock.calls.filter(([event]) => event.type === 'GRANT_FAILED')).toHaveLength(1);
+  });
+
+  it('processProductGrant=true일 때만 completeProductGrant 후 GRANT_COMPLETED 처리', async () => {
+    const onEvent = jest.fn();
+    const processProductGrant = jest.fn().mockResolvedValue(true);
+
+    createOneTimePurchaseOrder({
+      sku: 'ai_token_10',
+      processProductGrant,
+      onEvent,
+    });
+
+    const options = (mockCreateOneTimePurchaseOrder.mock.calls as any)[0][0];
+    await options.options.processProductGrant({ orderId: 'ord_granted' });
+    options.onEvent({ type: 'completed', result: { orderId: 'ord_granted' } });
+
+    expect(mockCompleteProductGrant).toHaveBeenCalledWith({ params: { orderId: 'ord_granted' } });
+    expect(onEvent).toHaveBeenCalledWith({
+      type: 'GRANT_COMPLETED',
+      result: undefined,
+    });
+  });
+
+  it('SDK 결제 이벤트가 grant 승인보다 먼저 와도 실패로 처리하지 않음', async () => {
+    const onEvent = jest.fn();
+    let resolveGrant: (value: boolean) => void = () => undefined;
+    const processProductGrant = jest.fn().mockImplementation(
+      () => new Promise<boolean>((resolve) => {
+        resolveGrant = resolve;
+      }),
+    );
+
+    createOneTimePurchaseOrder({
+      sku: 'ai_token_10',
+      processProductGrant,
+      onEvent,
+    });
+
+    const options = (mockCreateOneTimePurchaseOrder.mock.calls as any)[0][0];
+    const grantPromise = options.options.processProductGrant({ orderId: 'ord_granted' });
+    options.onEvent({ type: 'PAYMENT_COMPLETED', result: { orderId: 'ord_granted' } });
+
+    expect(onEvent).not.toHaveBeenCalledWith({ type: 'GRANT_FAILED' });
+
+    resolveGrant(true);
+    await grantPromise;
+
+    expect(mockCompleteProductGrant).toHaveBeenCalledWith({ params: { orderId: 'ord_granted' } });
+    expect(onEvent).toHaveBeenCalledWith({
+      type: 'GRANT_COMPLETED',
+      result: { orderId: 'ord_granted' },
+    });
+  });
+
   it('cleanup 호출 시 이후 onEvent 미호출', async () => {
     const onEvent = jest.fn();
     const processProductGrant = jest.fn().mockImplementation(

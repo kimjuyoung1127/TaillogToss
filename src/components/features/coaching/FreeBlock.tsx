@@ -26,10 +26,10 @@ const TREND_COLOR: Record<string, string> = {
   worsening: colors.red500,
 };
 
-const TREND_ICON: Record<string, string> = {
-  improving: '📈',
-  stable: '➡️',
-  worsening: '📉',
+const TREND_ICON_SOURCE: Record<string, string> = {
+  improving: ICONS['ic-analysis']!,
+  stable: ICONS['ic-target']!,
+  worsening: ICONS['ic-bolt']!,
 };
 
 const PATTERN_ICONS: string[] = [
@@ -46,7 +46,7 @@ export function InsightBlockView({ data }: { data: InsightBlock }) {
       <View style={styles.cardHeader}>
         <Text style={styles.blockLabel}>행동 분석</Text>
         <View style={[styles.trendBadge, { backgroundColor: TREND_COLOR[data.trend] + '1A' }]}>
-          <Text style={styles.trendIcon}>{TREND_ICON[data.trend]}</Text>
+          <Image source={{ uri: TREND_ICON_SOURCE[data.trend] ?? ICONS['ic-coaching'] }} style={styles.trendIconImg} />
           <Text style={[styles.trendText, { color: TREND_COLOR[data.trend] }]}>
             {TREND_LABEL[data.trend]}
           </Text>
@@ -233,13 +233,20 @@ export function DogVoiceBlockView({
   const [isTypingDone, setIsTypingDone] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const typingRef = useRef(false);
+  const dogVoiceMessage =
+    typeof data.message === 'string' && data.message.trim().length > 0
+      ? data.message.trim()
+      : '지금 제 마음을 천천히 읽어보고 있어요.';
 
   // 타이핑 효과 (세션 1회)
   useEffect(() => {
+    setIsTypingDone(false);
+    setDisplayedText('');
+    typingRef.current = false;
     if (typingRef.current) return;
     typingRef.current = true;
 
-    const text = data.message;
+    const text = dogVoiceMessage;
     let idx = 0;
     const interval = setInterval(() => {
       idx += 1;
@@ -251,7 +258,7 @@ export function DogVoiceBlockView({
     }, 30);
 
     return () => clearInterval(interval);
-  }, [data.message]);
+  }, [dogVoiceMessage]);
 
   return (
     <View style={[styles.card, { backgroundColor: EMOTION_BG[data.emotion] || colors.white }]}>
@@ -266,7 +273,7 @@ export function DogVoiceBlockView({
         </View>
       </View>
       <SpeechBubble
-        message={isTypingDone ? data.message : displayedText}
+        message={isTypingDone ? dogVoiceMessage : displayedText}
         emotion={data.emotion}
       />
     </View>
@@ -317,8 +324,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 4,
   },
-  trendIcon: {
-    fontSize: 12,
+  trendIconImg: {
+    width: 14,
+    height: 14,
   },
   trendText: {
     fontSize: 12,

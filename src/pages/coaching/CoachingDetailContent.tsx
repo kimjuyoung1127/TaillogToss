@@ -4,11 +4,12 @@
  * Parity: AI-001
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, typography, spacing } from 'styles/tokens';
 import { CoachingBlockList } from 'components/features/coaching/CoachingBlockList';
 import { UsageLimitBanner } from 'components/features/coaching/UsageLimitBanner';
 import { RewardedAdButton } from 'components/shared/ads/RewardedAdButton';
+import { ICONS } from 'lib/data/iconSources';
 import type { CoachingResult } from 'types/coaching';
 
 const TREND_LABEL: Record<string, string> = {
@@ -17,10 +18,10 @@ const TREND_LABEL: Record<string, string> = {
   worsening: '주의 필요',
 };
 
-const TREND_ICON: Record<string, string> = {
-  improving: '📈',
-  stable: '➡️',
-  worsening: '📉',
+const TREND_ICON_SOURCE: Record<string, string> = {
+  improving: ICONS['ic-analysis']!,
+  stable: ICONS['ic-target']!,
+  worsening: ICONS['ic-bolt']!,
 };
 
 export interface CoachingDetailContentProps {
@@ -67,7 +68,7 @@ export function CoachingDetailContent({
       {/* 인사이트 요약 헤더 카드 */}
       <View style={styles.insightSummary}>
         <View style={styles.insightSummaryLeft}>
-          <Text style={styles.insightSummaryIcon}>{TREND_ICON[trend]}</Text>
+          <Image source={{ uri: TREND_ICON_SOURCE[trend] ?? ICONS['ic-coaching'] }} style={styles.insightSummaryIcon} />
           <View style={styles.insightSummaryTextWrap}>
             <Text style={styles.insightSummaryTitle} numberOfLines={1}>
               {coaching.blocks.insight.title}
@@ -121,7 +122,7 @@ export function CoachingDetailContent({
           activeOpacity={0.8}
         >
           <Text style={styles.insightCTAText}>
-            🔒 7일 플랜 + 위험신호 분석 + 전문가 상담 잠금 해제
+            7일 플랜 + 위험신호 분석 + 전문가 상담 잠금 해제
           </Text>
           <Text style={styles.insightCTAArrow}>›</Text>
         </TouchableOpacity>
@@ -130,7 +131,7 @@ export function CoachingDetailContent({
       {/* AI 생성물 명시 */}
       <View style={styles.aiDisclaimer}>
         <Text style={styles.aiDisclaimerText}>
-          🤖 이 코칭 결과는 AI가 생성한 내용으로, 전문 수의사 또는 훈련사의 조언을 대체하지 않습니다.
+          이 코칭 결과는 AI가 생성한 내용으로, 전문 수의사 또는 훈련사의 조언을 대체하지 않습니다.
         </Text>
       </View>
 
@@ -231,7 +232,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   insightSummaryIcon: {
-    ...typography.iconLg,
+    width: 32,
+    height: 32,
     marginRight: spacing.md,
   },
   insightSummaryTextWrap: {

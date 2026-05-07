@@ -3,8 +3,9 @@
  * Parity: UI-001
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import type { PlanVariant, PlanMeta } from 'types/training';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography } from 'styles/tokens';
 
 interface VariantSelectorProps {
@@ -15,10 +16,10 @@ interface VariantSelectorProps {
   onProCTA?: () => void;
 }
 
-const VARIANTS: { key: PlanVariant; label: string; proOnly: boolean; emoji: string }[] = [
-  { key: 'A', label: 'Plan A', proOnly: false, emoji: '🎯' },
-  { key: 'B', label: 'Plan B', proOnly: true, emoji: '🎮' },
-  { key: 'C', label: 'Plan C', proOnly: true, emoji: '🔄' },
+const VARIANTS: { key: PlanVariant; label: string; proOnly: boolean; iconSource: string }[] = [
+  { key: 'A', label: 'Plan A', proOnly: false, iconSource: ICONS['ic-target']! },
+  { key: 'B', label: 'Plan B', proOnly: true, iconSource: ICONS['ic-cat-play']! },
+  { key: 'C', label: 'Plan C', proOnly: true, iconSource: ICONS['ic-puzzle']! },
 ];
 
 const PHILOSOPHY_LABEL: Record<string, string> = {
@@ -34,7 +35,7 @@ export function VariantSelector({ current, onChange, isPro, planMeta, onProCTA }
     <View style={styles.container}>
       <Text style={styles.label}>훈련 방법</Text>
       <View style={styles.segmented}>
-        {VARIANTS.map(({ key, label, proOnly, emoji }) => {
+        {VARIANTS.map(({ key, label, proOnly, iconSource }) => {
           const isActive = current === key;
           const isDisabled = proOnly && !isPro;
 
@@ -49,7 +50,7 @@ export function VariantSelector({ current, onChange, isPro, planMeta, onProCTA }
               onPress={() => isDisabled ? onProCTA?.() : onChange(key)}
               activeOpacity={0.7}
             >
-              <Text style={styles.segmentEmoji}>{emoji}</Text>
+              <Image source={{ uri: iconSource }} style={styles.segmentIcon} />
               <Text
                 style={[
                   styles.segmentText,
@@ -59,7 +60,7 @@ export function VariantSelector({ current, onChange, isPro, planMeta, onProCTA }
               >
                 {label}
               </Text>
-              {isDisabled && <Text style={styles.lockIcon}>{'🔒'}</Text>}
+              {isDisabled && <Image source={{ uri: ICONS['badge-pro'] }} style={styles.lockIcon} />}
             </TouchableOpacity>
           );
         })}
@@ -128,10 +129,12 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   lockIcon: {
-    ...typography.badge,
+    width: 14,
+    height: 14,
   },
-  segmentEmoji: {
-    fontSize: 14,
+  segmentIcon: {
+    width: 16,
+    height: 16,
   },
   metaRow: {
     flexDirection: 'row',

@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Dog } from 'types/dog';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 type DashboardDog = Pick<Dog, 'id' | 'name' | 'breed' | 'profile_image_url'>;
 
@@ -24,7 +25,7 @@ export function DogCard({ dog, todayLogCount, onPress, onSwitchPress }: DogCardP
         {dog.profile_image_url ? (
           <Image source={{ uri: dog.profile_image_url }} style={styles.avatarImage} />
         ) : (
-          <Text style={styles.avatarEmoji}>{'\uD83D\uDC36'}</Text>
+          <Image source={{ uri: ICONS['ic-dog'] }} style={styles.avatarIcon} />
         )}
       </View>
       <View style={styles.info}>
@@ -69,8 +70,9 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
   },
-  avatarEmoji: {
-    fontSize: 24,
+  avatarIcon: {
+    width: 28,
+    height: 28,
   },
   info: {
     flex: 1,

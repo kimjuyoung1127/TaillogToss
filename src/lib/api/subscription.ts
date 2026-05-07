@@ -209,6 +209,18 @@ export async function verifyIAPOrder(request: PurchaseRequest): Promise<TossOrde
     }
   }
 
+  const errStatus = getInvokeHttpStatus(error);
+  if (!isTestEnvironment() && error && (errStatus === 404 || errStatus === 408)) {
+    if (__DEV__) {
+      console.log(`[IAP-001] verifyIAPOrder legacy ${errStatus} → FastAPI proxy`);
+    }
+    data = await requestBackend<TossOrder, typeof payload>('/api/v1/subscription/iap/verify', {
+      method: 'POST',
+      body: payload,
+    });
+    error = null;
+  }
+
   if (error) throw error;
   return data as TossOrder;
 }
@@ -232,8 +244,7 @@ export async function getOrders(userId: string): Promise<TossOrder[]> {
   );
 }
 
-/** 구독 복원 — BLOCKED: Toss IAP 복원 API 미공개. 현재는 DB 조회로 대체. */
+/** 구독 복원 — 앱 시작 pending 복구 후 최신 구독 상태를 재조회한다. */
 export async function restoreSubscription(userId: string): Promise<Subscription | null> {
-  // BLOCKED: Toss IAP 복원 API가 공개되면 getPendingOrders → grant 로직으로 교체
   return getSubscription(userId);
 }

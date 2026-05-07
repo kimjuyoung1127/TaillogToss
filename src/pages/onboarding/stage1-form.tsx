@@ -6,6 +6,7 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback, useEffect } from 'react';
 import {
+  Image,
   Alert, KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
@@ -16,6 +17,7 @@ import { useDraftSave } from 'lib/hooks/useDraftSave';
 import { useAuth } from 'stores/AuthContext';
 import { uploadDogProfileImage } from 'lib/api/dog';
 import { supabase } from 'lib/api/supabase';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography, spacing } from 'styles/tokens';
 import type { DogSex, SurveyStage1Request } from 'types/dog';
 
@@ -172,7 +174,8 @@ function Stage1FormPage() {
               {(['MALE', 'FEMALE'] as const).map((s) => (
                 <ChoiceChip
                   key={s}
-                  label={s === 'MALE' ? '🐶 남자아이' : '🌸 여자아이'}
+                  label={s === 'MALE' ? '남자아이' : '여자아이'}
+                  iconSource={s === 'MALE' ? ICONS['ic-dog'] : ICONS['ic-paw']}
                   selected={sex === s}
                   onPress={() => setSex(s)}
                 />
@@ -184,9 +187,9 @@ function Stage1FormPage() {
           {sex !== null && (
             <Section label="중성화를 했나요?">
               <View style={styles.chipRow}>
-                <ChoiceChip label="✅ 했어요" selected={isNeutered === true} onPress={() => setIsNeutered(true)} />
-                <ChoiceChip label="❌ 안 했어요" selected={isNeutered === false} onPress={() => setIsNeutered(false)} />
-                <ChoiceChip label="🤔 모르겠어요" selected={isNeutered === null && sex !== null} onPress={() => setIsNeutered(null)} />
+                <ChoiceChip label="했어요" iconSource={ICONS['ic-target']} selected={isNeutered === true} onPress={() => setIsNeutered(true)} />
+                <ChoiceChip label="안 했어요" iconSource={ICONS['ic-paw']} selected={isNeutered === false} onPress={() => setIsNeutered(false)} />
+                <ChoiceChip label="모르겠어요" iconSource={ICONS['ic-idea']} selected={isNeutered === null && sex !== null} onPress={() => setIsNeutered(null)} />
               </View>
             </Section>
           )}
@@ -220,12 +223,14 @@ function Stage1FormPage() {
           <Section label="언제 태어났어요?">
             <View style={styles.chipRow}>
               <ChoiceChip
-                label="📅 날짜 알아요"
+                label="날짜 알아요"
+                iconSource={ICONS['ic-stage-puppy']}
                 selected={ageMode === 'birthdate'}
                 onPress={() => setAgeMode('birthdate')}
               />
               <ChoiceChip
-                label="🤔 대략만 알아요"
+                label="대략만 알아요"
+                iconSource={ICONS['ic-idea']}
                 selected={ageMode === 'approximate'}
                 onPress={() => setAgeMode('approximate')}
               />
@@ -274,14 +279,15 @@ function Section({
 }
 
 function ChoiceChip({
-  label, selected, onPress,
-}: { label: string; selected: boolean; onPress: () => void }) {
+  label, iconSource, selected, onPress,
+}: { label: string; iconSource?: string; selected: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.chipSelected]}
       onPress={onPress}
       activeOpacity={0.7}
     >
+      {iconSource ? <Image source={{ uri: iconSource }} style={styles.chipIcon} /> : null}
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -305,9 +311,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
   },
   inputNarrow: { width: 120 },
-  chipRow: { flexDirection: 'row', flexWrap: 'nowrap', gap: spacing.sm },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chipWrap: { flexWrap: 'wrap' },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderRadius: 20,
@@ -316,6 +325,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
   },
   chipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryBlueLight },
+  chipIcon: { width: 18, height: 18 },
   chipText: { ...typography.bodySmall, color: colors.textSecondary },
   chipTextSelected: { color: colors.primary, fontWeight: '600' },
   mt8: { marginTop: 8 },

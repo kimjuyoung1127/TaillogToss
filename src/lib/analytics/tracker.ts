@@ -1,3 +1,16 @@
+export interface AdEventContext {
+  ad_group_id?: string;
+  variant?: string;
+  screen?: string;
+  phase?: string;
+  reason?: string;
+  code?: string;
+  message?: string;
+  name?: string;
+  details?: string | Record<string, unknown>;
+  mock_mode?: boolean;
+}
+
 export interface EventPayloadMap {
   onboarding_started: undefined;
   onboarding_complete: undefined;
@@ -7,13 +20,13 @@ export interface EventPayloadMap {
   iap_purchase_success: { product_type: string };
   training_step_completed: { curriculum_id: string; step: string };
   share_reward_sent: undefined;
-  ad_requested: { placement: string };
-  ad_loaded: { placement: string };
-  ad_rewarded: { placement: string };
-  ad_impression: { placement: string };
-  ad_dismissed: { placement: string };
-  ad_error: { placement: string };
-  ad_no_fill: { placement: string; reason: string };
+  ad_requested: { placement: string } & AdEventContext;
+  ad_loaded: { placement: string } & AdEventContext;
+  ad_rewarded: { placement: string } & AdEventContext;
+  ad_impression: { placement: string } & AdEventContext;
+  ad_dismissed: { placement: string } & AdEventContext;
+  ad_error: { placement: string } & AdEventContext;
+  ad_no_fill: { placement: string; reason: string } & AdEventContext;
   // B2B 이벤트
   ops_log_created: { mode: 'preset' | 'manual'; bulk: boolean };
   ops_bulk_saved: { count: number };
@@ -45,14 +58,20 @@ export const tracker = {
   trainingStepCompleted: (curriculumId: string, step: string) =>
     track('training_step_completed', { curriculum_id: curriculumId, step }),
   shareRewardSent: () => track('share_reward_sent', undefined),
-  adRequested: (placement: string) => track('ad_requested', { placement }),
-  adLoaded: (placement: string) => track('ad_loaded', { placement }),
-  adRewarded: (placement: string) => track('ad_rewarded', { placement }),
-  adImpression: (placement: string) => track('ad_impression', { placement }),
-  adDismissed: (placement: string) => track('ad_dismissed', { placement }),
-  adError: (placement: string) => track('ad_error', { placement }),
-  adNoFill: (placement: string, reason: string) =>
-    track('ad_no_fill', { placement, reason }),
+  adRequested: (placement: string, context?: AdEventContext) =>
+    track('ad_requested', { placement, ...(context ?? {}) }),
+  adLoaded: (placement: string, context?: AdEventContext) =>
+    track('ad_loaded', { placement, ...(context ?? {}) }),
+  adRewarded: (placement: string, context?: AdEventContext) =>
+    track('ad_rewarded', { placement, ...(context ?? {}) }),
+  adImpression: (placement: string, context?: AdEventContext) =>
+    track('ad_impression', { placement, ...(context ?? {}) }),
+  adDismissed: (placement: string, context?: AdEventContext) =>
+    track('ad_dismissed', { placement, ...(context ?? {}) }),
+  adError: (placement: string, context?: AdEventContext) =>
+    track('ad_error', { placement, ...(context ?? {}) }),
+  adNoFill: (placement: string, reason: string, context?: AdEventContext) =>
+    track('ad_no_fill', { placement, reason, ...(context ?? {}) }),
   // B2B 이벤트
   opsLogCreated: (mode: 'preset' | 'manual', bulk: boolean) =>
     track('ops_log_created', { mode, bulk }),

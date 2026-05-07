@@ -58,7 +58,7 @@ export function StreakBanner({ logs, streakOverride }: StreakBannerProps) {
       {badge ? (
         <Image source={{ uri: badge }} style={styles.badgeImg} />
       ) : (
-        <Text style={styles.emoji}>{'\uD83D\uDD25'}</Text>
+        <Image source={{ uri: ICONS['badge-streak-3'] }} style={styles.badgeImg} />
       )}
       <Text style={styles.text}>
         <Text style={styles.count}>{streak}일</Text> 연속 기록 중!
@@ -81,10 +81,6 @@ const styles = StyleSheet.create({
   badgeImg: {
     width: 28,
     height: 28,
-    marginRight: 8,
-  },
-  emoji: {
-    ...typography.subtitle,
     marginRight: 8,
   },
   text: {

@@ -1,6 +1,12 @@
 # TaillogToss Project Status
 
-Last Updated: 2026-05-05 (KST) — 행동분석 `0/10회` 버그 2종 수정: (1) `check_user_daily_limit` 집계 테이블 오류(`AIRecommendationSnapshot` → `ai_coaching JOIN dogs`) (2) `today_start` timezone 오류(`date.today()+replace(utc)` → KST 자정 기준 변환). IAP E2E `subscriptions.is_active=true` 활성화 완료: `verify-iap-order` Edge Function에 `activateSubscription()` 추가 + `subscriptions_user_id_key` UNIQUE 제약 적용. `toss-iap-proxy-ops` 스킬 Pattern 5(subscriptions 활성화 E2E) 추가.
+Last Updated: 2026-05-07 (KST) — IAP/Ads/Smart Message 실기기 QA 진행: IAP Sandbox 3시나리오 false-success/loading 잔여 버그 수정 후 새 AIT에서 실패 Alert + 버튼 복귀 확인. Smart Message는 current user 대상 HTTP 200 + `noti_history.success=true` 실발송 확인. Ads는 최신 업로드 AIT `019e00dd-24bb-7fa1-b385-251e67eae2e8`로 B1/B2/B3를 순차 재시도했고, 세 슬롯 모두 mock fallback 없이 live adGroupId로 실제 SDK 호출 후 `ad_error` 상세 payload를 확보함: 공통 `code=1007`, `domain=@apps-in-toss/framework`, `This feature is not supported in the current environment`. IAP backend hardcoded 재점검 결과 release 빌드는 env가 없어도 Railway public URL로 고정하고, `127.0.0.1:8765`은 DEV local Metro host에서만 사용하도록 제한했으며 legacy `verifyIAPOrder()`도 404/408 시 FastAPI proxy로 우회하도록 보강. Railway 재배포 성공: deployment `d11ae99d-c5bf-47ba-98a7-0bea0a635848` SUCCESS, `/health` HTTP 200, IAP proxy route smoke HTTP 401로 라우트 생존 확인. `verify-iap-order` Edge v13은 Toss IAP 검증을 `/order/get-order-status` + `x-toss-user-key`로 교체해 재배포 완료. 업로드 AIT `019e00f0...` 성공 재시도에서 SDK 결제 이벤트가 서버 grant 완료보다 먼저 와 앱이 `GRANT_FAILED`로 조기 확정하는 프론트 상태머신 버그를 추가 확인했고, `createOneTimePurchaseOrder`를 서버 grant 완료 후 `GRANT_COMPLETED` 처리하도록 수정. 공식 문서 기준 `_app.tsx` 엔트리를 `AppsInToss.registerApp(AppContainer, { context })`로 교체하고 최신 AIT `019e01b9-3c4c-7677-b6b9-d80529a2d868`를 API 키 기반 `ait deploy --scheme-only`로 신규 배포 성공, hash `8a18b7d9dbb1e0c8be8ccec2513246f5e2f00cfb30f772e26f3ae84d923a7707`, 번들에 `AppsInTossInitialProps`/`RNNavigationBar`/`TDSProvider` 포함 확인, `brandIcon:"https://static.toss.im/..."`, local path/data URI 없음, `ait-ad-test-*` 0, `tsc`/문법검사 통과. Metro on control은 같은 private URL로 대시보드 진입 성공했고 logcat에 `loadJSBundleFromMetro()` + `[AIT-BUILD] taillog-appsintoss-wrapper-20260507-1745`가 찍혀 app JS/공식 wrapper 정상임을 확인. 단, Metro off standalone private launch는 여전히 JS marker 없이 테스트앱 host error(`앱 실행도중 문제가 발생했습니다.`)로 종료. 업로드/API 키/brand.icon/공식 registerApp/app JS 후보를 소거했으므로 남은 1순위는 Apps in Toss test host 또는 테스트앱 버전/QR 실행 경로 호환성 문제이며, Toss 지원에 deploymentId `019e01b9...`와 host error 증적을 전달해야 함.
+
+Previous: AIT private standalone 실행 복구 완료: 기존 `019e005e-a79c-7ea7-93d4-d63e86fbbae6` 실패 원인은 `.ait` runtime setup에 `brandIcon:"./src/assets/icons/app-logo-600.png"` 로컬 경로가 들어간 패턴으로 확인. `granite.config.ts`가 로고 PNG를 빌드 시점 `data:image/png;base64,...` URI로 주입하도록 수정 후 `taillog-app.ait` 재빌드(`019e008c-d1e0-7148-bd63-cc61473c135f`, 16MB, hash `dae637...a562`) 및 업로드 실행 성공(사용자 확인). `npm run build` 0 errors/0 warnings, `npx tsc --noEmit` PASS. 남은 항목: CORS 실환경 도메인 설정, IAP 샌드박스 테스트 3종(실기기), Ads/Smart Message Sandbox 검증.
+
+Previous: 퍼블리싱 체크리스트 진행: (1) 앱 로고 콘솔 승인 완료 체크 (2) `TOSS_MTLS_MODE=real` 복구 (`supabase secrets set` + `login-with-toss` 재배포) — 더미 코드로 Toss 실서버 응답(`invalid_grant`) 확인, mock 우회 없음 검증 (3) 번들 크기 15MB 측정 (100MB 기준 통과) (4) AI 생성물 명시(`CoachingDetailContent.tsx:134`) + 개인정보처리방침 위탁업체(`privacy.tsx §6`) 이미 구현 확인 (5) Backend pytest 47/47 PASS, tsc 0 errors.
+
+Previous: 행동분석 `0/10회` 버그 2종 수정: (1) `check_user_daily_limit` 집계 테이블 오류(`AIRecommendationSnapshot` → `ai_coaching JOIN dogs`) (2) `today_start` timezone 오류(`date.today()+replace(utc)` → KST 자정 기준 변환). IAP E2E `subscriptions.is_active=true` 활성화 완료: `verify-iap-order` Edge Function에 `activateSubscription()` 추가 + `subscriptions_user_id_key` UNIQUE 제약 적용. `toss-iap-proxy-ops` 스킬 Pattern 5(subscriptions 활성화 E2E) 추가.
 
 Previous: IAP 재진입 인증 버그 2종 수정: (1) `TOSS_MTLS_MODE=mock` 강제 설정 + `login-with-toss` 재배포 → 테스트 앱 sandbox auth code를 real Toss 서버가 거부하던 `토스인증서버응답실패` 해소 (2) `supabase.ts` AsyncStorage adapter(`@granite-js/native`) + `detectSessionInUrl:false` 추가 → IAP JS 런타임 재시작 후 세션 소멸 방지 (3) `AuthContext` `onAuthStateChange` 리스너 추가 → SIGNED_IN/SIGNED_OUT 이벤트 자동 반영. 빌드 성공(0 tsc errors). ⚠️ 프로덕션 배포 전 `TOSS_MTLS_MODE=real` 복구 필수.
 
@@ -109,9 +115,9 @@ vibehub-media 하네스 이식 완료:
 | UI-TRAINING-PERSONALIZATION-001 | 훈련 추천 개인화 | QA | `getRecommendationsV2` ScoreBand, `useBehaviorAnalytics` useQuery, academy 3섹션(AI추천/관련훈련/전체), cold start fallback, RecommendedCurriculumCard, RelatedCurriculumCarousel, StreakBadge, `useStepAttempts`+`AttemptHistorySheet` 실데이터 연결 완료(2026-04-23), tsc 0 errors | 실기기 시각 QA (AttemptHistorySheet 렌더 + InsightSummaryBar 애니) |
 | UI-TRAINING-DETAIL-001 | 훈련 상세 UX | Done | `training_step_attempts` DB 마이그레이션+RLS, StepCompletionSheet 2경로, StepAttemptHistory(PRO), ReactionTrendBar(PRO), detail.tsx useSubmitStepAttempt 연결, RecordModal B2B 훈련이력 탭, StreakBadge/ReactionTrendBar/AttemptHistorySheet 실데이터 배치 완료(2026-04-23), 스텝 체크 저장 버그 수정+reaction DB 저장 ADB E2E 확인(2026-04-27) | — |
 | AI-TRAIN-001 | 훈련 데이터 플라이휠 | InProgress | 합성 생성(synthetic.py) + 품질 태깅(training.py) + admin API 3개(ADMIN_API_KEY 인증) + migration(training_candidate/quality_score/approved/synthetic 컬럼) + 자동화 2개(daily 08:00 / weekly 일 09:00) | Supabase Edge Function 포팅, ADMIN_API_KEY .env 값 설정, pg_cron 스케줄 등록 |
-| IAP-001 | 결제 | QA | 구독 화면, useIsPro, verifyAndGrant, Edge v12, iap.test 9케이스, 서버 3시나리오+복구 재검증 증적 + DB 영속(5건) 확인, iap.ts 404→FastAPI proxy 우회, settings JSONB 파싱, verify-iap-order role 감지, stage1 사진 Supabase 직접 업로드, `iap-invoke.ts` 토큰 헬퍼 분리(2026-05-03), E2E 재검증 완료 ✅ | 실기기 결제 UI 시각적 QA |
-| MSG-001 | 알림 | In Progress | Edge v9, 쿨다운, noti_history 영속, 우회차단, 테스트 통과, Sandbox 실발송 완료(2026-04-20, A/B안 발송됨) | 토스팀 검토 승인 후 FastAPI 연동(templateCode: taillog-app-TAILLOG_BEHAVIOR_REMIND) |
-| AD-001 | 광고 | Done | 타입, mock SDK, useRewardedAd, R1/R2/R3 통합, test 5케이스 | 실 Ad Group ID 교체 + Sandbox 검증 |
+| IAP-001 | 결제 | QA | 구독 화면, useIsPro, verifyAndGrant, Edge v12, iap.test 11케이스, 서버 3시나리오+복구 재검증 증적 + DB 영속(5건) 확인, `getPendingOrders`/`completeProductGrant` 실 SDK 연결, 실기기 Sandbox 3시나리오 패널 확인 + false-success/loading 잔여 버그 수정 및 새 AIT 업로드 후 버튼 복귀 확인(2026-05-07), backend hardcoded fallback 재점검 완료, Railway redeploy SUCCESS + `/health` 200 | 최신 AIT 업로드 후 IAP 성공 재검증 |
+| MSG-001 | 알림 | QA | Edge v3 실배포, 쿨다운, noti_history 영속, 우회차단, 테스트 통과, Smart Message 승인 캠페인 `TAILLOG_BEHAVIOR_REMIND`, 실기기 current user HTTP 200 + noti_history success=true(2026-05-07) | 추가 캠페인 등록 및 회귀 발송 |
+| AD-001 | 광고 | QA | 타입, real FullScreen SDK wrapper, useRewardedAd, R1/R2/R3/B1~B3/I1 통합, live Ad Group ID 7종 상수 fallback, 최신 AIT `019e00dd...` B1/B2/B3 실 SDK 호출 + `ad_error` 상세 payload 확보(`code=1007`) | Toss 지원 환경에서 render success/no-fill 최종 판정 |
 | B2B-001 | B2B 운영 | In Progress | P1~P7, 스키마 정합, roleGuard test 8케이스, BE-P7, `/ops/setup` 페이지(2026-04-21), `create_organization` RPC(2026-04-21), `assign-b2b-role` Edge(2026-04-21), B2B 무료 전환(2026-04-21), `/dashboard` B2B 배너(2026-04-21), `/ops/dog-add` 페이지(2026-04-21), `createOrgDog()` API(2026-04-21) | 40마리 FlatList 성능, 공유 링크, B2C 회귀, verify_parent_phone RPC |
 | REG-001 | 등록 | Done | legal, toss-disconnect, mTLS 구현, 약관 2종, 사업자등록/배포 완료 | 콘솔 테스트 콜백 검증 |
 
@@ -134,9 +140,9 @@ vibehub-media 하네스 이식 완료:
 |--------|------|---------|
 | FE->BE 연결 | 완료 | adb reverse 방식 전환 완료, Wi-Fi 백업 가능 |
 | AUTH | 진행 | 실기기 200/400 증적 확보, 문서/스크린샷 정리 |
-| IAP | 진행 | 앱 UI 기준 결제/복구/실패 3시나리오 증적 정리 |
-| MSG | 진행 | Smart Message 신청/승인 대기 + Sandbox 실발송 미검증 |
-| AD | **보류** | 실 Ad Group ID 교체 보류 — 계좌사본 미비로 사업자 광고 심사 불가. ENV 구조(AIT_AD_R1/R2/R3)는 준비 완료 |
+| IAP | QA | Edge v13 get-order-status + frontend SDK event-order patch 완료. 새 `.ait` `019e0105...` 업로드 후 성공 최종 재검증 |
+| MSG | QA | `TAILLOG_BEHAVIOR_REMIND` 실발송 200 + noti_history success=true 확인 |
+| AD | QA | live Ad Group ID 상수 fallback 적용, 새 `.ait` test id 0개. 업로드 후 mock fallback 제거 + B1/B2/B3 `ad_error` 상세 payload 확인(`code=1007`) |
 | UI | 진행 | 실기기 비주얼 QA |
 | Edge 7종 | 진행 | happy-path payload 실검증 잔여 |
 | BE (FastAPI) | 완료 | - |
@@ -150,13 +156,12 @@ vibehub-media 하네스 이식 완료:
 
 | 항목 | 위치 | 전환 필요 |
 |------|------|----------|
-| Ads SDK | `src/lib/ads/config.ts` | 실 Ad Group ID 교체 **보류** — 계좌사본 없어 광고 심사 불가. ENV 준비됨(AIT_AD_R1/R2/R3 fallback) |
-| IAP 래퍼 | `src/lib/api/iap.ts` | 실 SDK 교체 |
+| Ads SDK | `src/lib/ads/config.ts` | ✅ real FullScreen SDK + live Ad Group ID 상수 fallback 적용. 새 `.ait` 업로드 후 실노출 확인 필요 |
+| IAP 래퍼 | `src/lib/api/iap.ts` | ✅ 실 SDK `createOneTimePurchaseOrder`/`getPendingOrders`/`completeProductGrant` 연결. 서버 검증 성공 후에만 UI 성공 처리 |
 | generate-report | `supabase/functions/generate-report/` | `REPORT_AI_MODE=real` + 실 OpenAI 키 |
 | ~~verify-iap-order~~ | `supabase/functions/verify-iap-order/` | ✅ real mTLS 전환 완료 (v17) |
 | ~~send-smart-message~~ | `supabase/functions/send-smart-message/` | ✅ real mTLS 전환 완료 (v14) |
 | ~~grant-toss-points~~ | `supabase/functions/grant-toss-points/` | ✅ real mTLS 전환 완료 (v14) |
-| IAP 복원 | `src/lib/api/subscription.ts:62` | Toss IAP 복원 API 공개 대기 |
 
 ## 테스트 현황
 

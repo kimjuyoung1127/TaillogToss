@@ -17,7 +17,7 @@ from app.core.config import settings
 from app.core.exceptions import BadRequestException, NotFoundException
 from app.features.coaching import budget, prompts, rule_engine, schemas
 from app.shared.clients.openai_client import OpenAIError, openai_client
-from app.shared.models import AICoaching, BehaviorLog, Dog, DogEnv
+from app.shared.models import AICoaching, BehaviorLog, Dog, DogEnv, UserSettings
 from app.shared.utils.ownership import verify_dog_ownership
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,7 @@ async def generate_coaching(
 
     # onboarding_context 추출 (Stage별 프롬프트 품질 차등)
     onboarding_ctx = _build_onboarding_context(env)
+    ai_persona = await _get_ai_persona(db, dog.user_id)
 
     if budget_mode == "rule_only" or not settings.OPENAI_API_KEY or not coaching_gate:
         # 규칙 기반 폴백 (예산 초과 or API 키 없음 or Stage 1)
@@ -93,6 +94,7 @@ async def generate_coaching(
                 issues, triggers, behavior_analytics_text, request.report_type,
                 previous_coaching_summary=prev_summary,
                 onboarding_context=onboarding_ctx,
+                ai_persona=ai_persona,
             )
             result = await openai_client.generate(
                 prompts.SYSTEM_PROMPT_6BLOCK, user_prompt,
@@ -367,6 +369,18 @@ def _build_onboarding_context(env: Optional[DogEnv]) -> dict | None:
             }
 
     return ctx
+
+
+async def _get_ai_persona(db: AsyncSession, user_id: UUID) -> dict:
+    """사용자 AI 코칭 선호도 조회. 설정이 없으면 기본 톤을 유지한다."""
+    row = (
+        await db.execute(select(UserSettings).where(UserSettings.user_id == user_id))
+    ).scalar_one_or_none()
+    persona = row.ai_persona if row and isinstance(row.ai_persona, dict) else {}
+    return {
+        "tone": persona.get("tone", "empathetic"),
+        "perspective": persona.get("perspective", "coach"),
+    }
 
 
 def _extract_list(data, key: str) -> list:
@@ -663,6 +677,7 @@ async def ask_coach(
 
     behavior_text = _build_logs_summary(list(logs))
     onboarding_ctx = _build_onboarding_context(env)
+    ai_persona = await _get_ai_persona(db, dog.user_id)
 
     coaching_summary = None
     if latest_coaching:
@@ -677,6 +692,7 @@ async def ask_coach(
         issues, triggers, behavior_text, "INSIGHT",
         previous_coaching_summary=coaching_summary,
         onboarding_context=onboarding_ctx,
+        ai_persona=ai_persona,
     )
 
     user_question_prompt = (

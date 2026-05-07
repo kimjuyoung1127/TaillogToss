@@ -118,9 +118,9 @@ export function Step3Goal({ step5, step6, step7, availableBehaviors: _availableB
         <Text style={styles.sectionTitle}>보상 선호도</Text>
         <Text style={styles.subtitle}>무엇을 줄 때 가장 행복해하나요? (1~5점)</Text>
         
-        {renderRatingSelector('😋 맛있는 간식', step7.rewards.treats, (v) => update7({ rewards: { ...step7.rewards, treats: v } }))}
-        {renderRatingSelector('🎾 장난감과 놀이', step7.rewards.play, (v) => update7({ rewards: { ...step7.rewards, play: v } }))}
-        {renderRatingSelector('🥰 보호자의 칭찬/스킨십', step7.rewards.praise, (v) => update7({ rewards: { ...step7.rewards, praise: v } }))}
+        {renderRatingSelector('맛있는 간식', step7.rewards.treats, (v) => update7({ rewards: { ...step7.rewards, treats: v } }))}
+        {renderRatingSelector('장난감과 놀이', step7.rewards.play, (v) => update7({ rewards: { ...step7.rewards, play: v } }))}
+        {renderRatingSelector('보호자의 칭찬/스킨십', step7.rewards.praise, (v) => update7({ rewards: { ...step7.rewards, praise: v } }))}
       </View>
 
       <View style={styles.divider} />
@@ -160,7 +160,7 @@ export function Step3Goal({ step5, step6, step7, availableBehaviors: _availableB
             .filter(k => !COMMAND_CATEGORIES.some(cat => cat.items.some(i => i.key === k)))
             .map(cmd => (
               <TouchableOpacity key={cmd} style={styles.customChip} onPress={() => handleCommandToggle(cmd)}>
-                <Text style={styles.customChipText}>{cmd} ✕</Text>
+                <Text style={styles.customChipText}>{cmd} 삭제</Text>
               </TouchableOpacity>
             ))
           }

@@ -16,6 +16,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
@@ -25,6 +26,7 @@ import { useActiveDog } from 'stores/ActiveDogContext';
 import { useCreateDogFromSurvey } from 'lib/hooks/useDogs';
 import type { DogSex, SurveyData } from 'types/dog';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 export const Route = createRoute('/dog/add', {
   component: DogAddPage,
@@ -142,7 +144,7 @@ function DogAddPage() {
         {/* 아바타 */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarEmoji}>{'\uD83D\uDC36'}</Text>
+            <Image source={{ uri: ICONS['ic-dog'] }} style={styles.avatarIcon} resizeMode="contain" />
           </View>
           <Text style={styles.avatarHint}>새 반려견을 등록해주세요</Text>
         </View>
@@ -243,7 +245,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  avatarEmoji: { ...typography.display },
+  avatarIcon: { width: 44, height: 44 },
   avatarHint: { ...typography.detail, color: colors.textSecondary },
 
   // Inputs

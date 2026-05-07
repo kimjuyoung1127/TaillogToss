@@ -4,9 +4,10 @@
  * Parity: UI-001, IAP-001
  */
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Alert, Image } from 'react-native';
 import { ModalLayout } from 'components/shared/layouts/ModalLayout';
 import { usePurchaseIAP } from 'lib/hooks/useSubscription';
+import { ICONS } from 'lib/data/iconSources';
 import { IAP_PRODUCTS } from 'types/subscription';
 import { colors, typography, spacing } from 'styles/tokens';
 
@@ -16,11 +17,11 @@ interface Props {
 }
 
 const BENEFITS = [
-  { emoji: '📊', text: '심화 인사이트 리포트' },
-  { emoji: '🔇', text: '광고 없이 이용' },
-  { emoji: '📋', text: '시도 이력 상세 조회' },
-  { emoji: '💬', text: '하루 코칭 10회 (무료 3회)' },
-  { emoji: '🎮', text: '훈련 Plan B/C 전체 접근' },
+  { icon: ICONS['ic-analysis'], text: '심화 인사이트 리포트' },
+  { icon: ICONS['badge-pro'], text: '광고 없이 이용' },
+  { icon: ICONS['ic-report'], text: '시도 이력 상세 조회' },
+  { icon: ICONS['ic-coaching'], text: '하루 코칭 10회 (무료 3회)' },
+  { icon: ICONS['ic-training'], text: '훈련 Plan B/C 전체 접근' },
 ];
 
 const proProduct = IAP_PRODUCTS.PRO_MONTHLY!;
@@ -53,7 +54,7 @@ export function ProUpgradeSheet({ visible, onClose }: Props) {
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <ModalLayout title="PRO 전용 기능" onClose={onClose}>
         <View style={styles.content}>
-          <Text style={styles.icon}>{'✨'}</Text>
+          <Image source={{ uri: ICONS['badge-pro'] }} style={styles.icon} resizeMode="contain" />
           <Text style={styles.title}>PRO 구독으로 더 깊이 분석하세요</Text>
 
           <View style={styles.priceRow}>
@@ -64,7 +65,7 @@ export function ProUpgradeSheet({ visible, onClose }: Props) {
           <View style={styles.benefitList}>
             {BENEFITS.map((b) => (
               <View key={b.text} style={styles.benefitRow}>
-                <Text style={styles.benefitEmoji}>{b.emoji}</Text>
+                <Image source={{ uri: b.icon }} style={styles.benefitIcon} resizeMode="contain" />
                 <Text style={styles.benefitText}>{b.text}</Text>
               </View>
             ))}
@@ -96,7 +97,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   icon: {
-    fontSize: 36,
+    width: 44,
+    height: 44,
     marginBottom: spacing.md,
   },
   title: {
@@ -132,8 +134,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  benefitEmoji: {
-    fontSize: 18,
+  benefitIcon: {
+    width: 24,
+    height: 24,
   },
   benefitText: {
     ...typography.body,

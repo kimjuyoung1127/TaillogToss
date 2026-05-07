@@ -9,6 +9,12 @@ import { REACTION_OPTIONS } from 'types/training';
 import type { StepFeedback } from 'types/training';
 import { colors, typography, spacing } from 'styles/tokens';
 
+const REACTION_DOT_COLOR: Record<string, string> = {
+  successGreen: colors.green500,
+  warningAmber: colors.orange500,
+  errorRed: colors.red500,
+};
+
 interface Props {
   feedbackList: StepFeedback[];
   onPress?: () => void;
@@ -58,7 +64,12 @@ export function InsightSummaryBar({ feedbackList, onPress }: Props) {
               .filter((d) => d.count > 0)
               .map((d) => (
                 <View key={d.value} style={styles.chip}>
-                  <Text style={styles.chipEmoji}>{d.emoji}</Text>
+                  <View
+                    style={[
+                      styles.chipDot,
+                      { backgroundColor: REACTION_DOT_COLOR[d.color] ?? colors.grey500 },
+                    ]}
+                  />
                   <Text style={styles.chipCount}>x{d.count}</Text>
                 </View>
               ))}
@@ -108,8 +119,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  chipEmoji: {
-    fontSize: 16,
+  chipDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: 2,
   },
   chipCount: {

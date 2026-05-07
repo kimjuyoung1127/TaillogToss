@@ -38,7 +38,7 @@ export function ProfileCompletionBanner({ dogId, isPro, onPressCTA }: ProfileCom
           <Text style={styles.pct}>{status.completion_percentage}%</Text>
         </View>
         <Text style={styles.title}>
-          {isStage1 ? '✨ AI 코칭 활성화까지 한 단계!' : '🎯 Pro 풀 개인화 활성화하기'}
+          {isStage1 ? 'AI 코칭 활성화까지 한 단계!' : 'Pro 풀 개인화 활성화하기'}
         </Text>
         <Text style={styles.desc}>
           {isStage1

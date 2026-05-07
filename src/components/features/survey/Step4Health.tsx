@@ -91,7 +91,7 @@ export function Step4Health({ value, onChange }: Props) {
         <Text style={styles.sectionTitle}>환경적 스트레스 요인</Text>
         <Text style={styles.subtitle}>생활 환경의 자극 정도를 알려주세요</Text>
         
-        {renderRatingSelector('🔊 외부 소음 예민도', value.environment_stress.noise_sensitivity, (v) => updateEnv({ noise_sensitivity: v }))}
+        {renderRatingSelector('외부 소음 예민도', value.environment_stress.noise_sensitivity, (v) => updateEnv({ noise_sensitivity: v }))}
 
         <Text style={styles.label}>집을 방문하는 외부인 빈도</Text>
         <View style={styles.optionRow}>

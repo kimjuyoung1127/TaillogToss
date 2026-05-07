@@ -11,10 +11,10 @@ interface Props {
   attempts: StepAttempt[];
 }
 
-const REACTION_LABEL: Record<string, { emoji: string; label: string; color: string }> = {
-  enjoyed: { emoji: '😆', label: '잘 됐어요', color: colors.green500 },
-  neutral: { emoji: '😐', label: '평범했어요', color: colors.orange500 },
-  sensitive: { emoji: '😢', label: '예민했어요', color: colors.red500 },
+const REACTION_LABEL: Record<string, { label: string; color: string }> = {
+  enjoyed: { label: '잘 됐어요', color: colors.green500 },
+  neutral: { label: '평범했어요', color: colors.orange500 },
+  sensitive: { label: '예민했어요', color: colors.red500 },
 };
 
 export function StepAttemptHistory({ attempts }: Props) {
@@ -42,7 +42,7 @@ export function StepAttemptHistory({ attempts }: Props) {
 
             {reactionInfo && (
               <View style={styles.reactionRow}>
-                <Text style={styles.reactionEmoji}>{reactionInfo.emoji}</Text>
+                <View style={[styles.reactionDot, { backgroundColor: reactionInfo.color }]} />
                 <Text style={[styles.reactionLabel, { color: reactionInfo.color }]}>
                   {reactionInfo.label}
                 </Text>
@@ -114,8 +114,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  reactionEmoji: {
-    fontSize: 16,
+  reactionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: 6,
   },
   reactionLabel: {

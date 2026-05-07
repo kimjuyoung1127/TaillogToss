@@ -6,35 +6,31 @@
 import { supabase } from './supabase';
 import { NativeModules } from 'react-native';
 
-// adb reverse tcp:8000이 디바이스 포트 점유로 불가 → 8765 사용
-const DEFAULT_BACKEND_URL = 'http://127.0.0.1:8765';
-
-// 개발 전용 LAN IP (adb reverse 불가 시 수동 전환):
-// const DEV_LAN_BACKEND_URL = 'http://192.168.0.57:8765';
+const PUBLIC_BACKEND_URL = 'https://taillogtoss-backend-production.up.railway.app';
+const DEV_LOOPBACK_BACKEND_URL = 'http://127.0.0.1:8765';
 
 function resolveBackendUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_BACKEND_URL;
   if (fromEnv && fromEnv.trim().length > 0) return fromEnv;
+  if (!__DEV__) return PUBLIC_BACKEND_URL;
 
-  // 실기기 Metro 번들 URL(host:8081)에서 host를 추출해 backend(8000)로 맞춘다.
+  // 개발 중 실기기 Metro 번들 URL(host:8081)에서 host를 추출해 backend(8765)로 맞춘다.
   const scriptURL = (NativeModules as { SourceCode?: { scriptURL?: string } })?.SourceCode?.scriptURL;
   if (!scriptURL || (!scriptURL.startsWith('http://') && !scriptURL.startsWith('https://'))) {
-    return DEFAULT_BACKEND_URL;
+    return PUBLIC_BACKEND_URL;
   }
 
   try {
     const parsed = new URL(scriptURL);
-    if (!parsed.hostname) return DEFAULT_BACKEND_URL;
+    if (!parsed.hostname) return PUBLIC_BACKEND_URL;
     // Metro가 0.0.0.0/localhost로 노출되면 실기기에서 127.0.0.1은 기기 자신을 가리킨다.
-    // __DEV__에서는 LAN IP로, 프로덕션에서는 loopback으로 폴백한다.
     if (parsed.hostname === '0.0.0.0' || parsed.hostname === 'localhost') {
-      // adb reverse tcp:8000 tcp:8000 설정 시 127.0.0.1로 직접 접근 가능.
-      // LAN IP 폴백은 adb reverse 불가 시에만 DEV_LAN_BACKEND_URL로 수동 전환.
-      return DEFAULT_BACKEND_URL;
+      // adb reverse tcp:8765 tcp:8765 설정 시 local dev에서만 loopback 접근 가능.
+      return DEV_LOOPBACK_BACKEND_URL;
     }
     return `${parsed.protocol}//${parsed.hostname}:8765`;
   } catch {
-    return DEFAULT_BACKEND_URL;
+    return PUBLIC_BACKEND_URL;
   }
 }
 

@@ -129,6 +129,14 @@ describe('G. WeeklyBar/MonthlyBar 상세', () => {
 // H. computeTrainingEffects (시나리오 8-10)
 // ──────────────────────────────────────────────
 describe('H. computeTrainingEffects', () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-06T12:00:00+09:00'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   test('8. 훈련 없음 → 빈 배열', () => {
     const logs = [makeLog()];
     const result = computeTrainingEffects(logs, []);

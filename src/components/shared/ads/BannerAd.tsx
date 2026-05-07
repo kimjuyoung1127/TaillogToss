@@ -71,12 +71,12 @@ interface InlineAdProps {
   theme: 'auto' | 'light' | 'dark';
   tone: 'blackAndWhite' | 'grey';
   impressFallbackOnMount: boolean;
-  onAdRendered: () => void;
-  onAdImpression: () => void;
-  onAdViewable: () => void;
+  onAdRendered: (details?: unknown) => void;
+  onAdImpression: (details?: unknown) => void;
+  onAdViewable: (details?: unknown) => void;
   onAdClicked: () => void;
-  onNoFill: () => void;
-  onAdFailedToRender: () => void;
+  onNoFill: (details?: unknown) => void;
+  onAdFailedToRender: (details?: unknown) => void;
 }
 
 const styles = StyleSheet.create({

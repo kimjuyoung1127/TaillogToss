@@ -32,7 +32,7 @@ export interface SendSmartMessageRequest {
   userId: string;
   notificationType: NotificationType;
   templateCode: string;
-  variables: Record<string, string>;
+  variables?: Record<string, string>;
   idempotencyKey: string;
 }
 
@@ -57,6 +57,7 @@ interface SendSmartMessageDeps {
   getNow: () => Date;
   history: CooldownRecord[];
   notiHistoryRepository: NotiHistoryRepository;
+  resolveTossUserKey: (userId: string) => Promise<string>;
 }
 
 const historyStore: CooldownRecord[] = [];
@@ -68,7 +69,48 @@ function defaultDeps(): SendSmartMessageDeps {
     getNow: () => new Date(),
     history: historyStore,
     notiHistoryRepository: createNotiHistoryRepository({ history: historyStore }),
+    resolveTossUserKey,
   };
+}
+
+function readEnv(name: string): string | undefined {
+  const denoRuntime = (globalThis as { Deno?: { env?: { get: (key: string) => string | undefined } } }).Deno;
+  if (denoRuntime?.env?.get) {
+    try {
+      return denoRuntime.env.get(name);
+    } catch {
+      // ignore in non-edge runtimes
+    }
+  }
+  return (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[name];
+}
+
+async function resolveTossUserKey(userId: string): Promise<string> {
+  const supabaseUrl = readEnv('SUPABASE_URL');
+  const serviceRoleKey = readEnv('SUPABASE_SERVICE_ROLE_KEY') ?? readEnv('SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceRoleKey) return userId;
+
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/users?id=eq.${encodeURIComponent(userId)}&select=toss_user_key&limit=1`,
+    {
+      method: 'GET',
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to resolve toss_user_key: ${response.status}`);
+  }
+
+  const rows = await response.json() as Array<{ toss_user_key?: string | null }>;
+  const tossUserKey = rows[0]?.toss_user_key;
+  if (!tossUserKey) {
+    throw new Error('Missing toss_user_key');
+  }
+  return tossUserKey;
 }
 
 function resolveIdempotentResponse(
@@ -154,10 +196,11 @@ export function createSendSmartMessageHandler(overrides?: Partial<SendSmartMessa
     }
 
     try {
+      const tossUserKey = await deps.resolveTossUserKey(request.userId);
       const sent = await deps.mTLSClient.sendSmartMessage({
-        userId: request.userId,
+        userId: tossUserKey,
         templateCode: request.templateCode,
-        variables: request.variables,
+        variables: request.variables ?? {},
       });
 
       deps.history.push({

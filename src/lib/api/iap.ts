@@ -78,40 +78,85 @@ export function createOneTimePurchaseOrder({
   onEvent,
   onError,
 }: CreateOrderOptions): () => void {
+  let active = true;
+  let grantApproved = false;
+  let settled = false;
+  let lastPaymentResult: PurchaseResult | undefined;
+
+  const emitGrantFailed = () => {
+    if (!active || settled) return;
+    settled = true;
+    onEvent?.({ type: 'GRANT_FAILED' });
+  };
+
+  const emitGrantCompleted = (result?: PurchaseResult) => {
+    if (!active || settled) return;
+    settled = true;
+    onEvent?.({ type: 'GRANT_COMPLETED', result });
+  };
+
   onEvent?.({ type: 'PURCHASE_STARTED' });
 
-  return IAP.createOneTimePurchaseOrder({
+  const cleanup = IAP.createOneTimePurchaseOrder({
     options: {
       sku,
       processProductGrant: async ({ orderId }) => {
-        const granted = await processProductGrant({ orderId });
-        if (granted) {
-          // 서버 지급 완료 후 SDK에 영수증 소비 신호 전달
-          try {
-            await IAP.completeProductGrant({ params: { orderId } });
-          } catch (e) {
-            if (__DEV__) {
-              console.warn('[IAP-001] completeProductGrant failed (non-fatal):', e);
-            }
+        let granted = false;
+        try {
+          granted = await processProductGrant({ orderId });
+        } catch (e) {
+          if (__DEV__) {
+            console.warn('[IAP-001] processProductGrant failed:', e);
           }
         }
+        if (!active) return false;
+        grantApproved = granted;
+        if (!granted) {
+          emitGrantFailed();
+          return false;
+        }
+        // 서버 지급 완료 후 SDK에 영수증 소비 신호 전달
+        try {
+          await IAP.completeProductGrant({ params: { orderId } });
+        } catch (e) {
+          if (__DEV__) {
+            console.warn('[IAP-001] completeProductGrant failed (non-fatal):', e);
+          }
+        }
+        emitGrantCompleted(lastPaymentResult);
         return granted;
       },
     },
-    onEvent: () => {
-      // SDK가 결제 + 지급 전체 성공 후 발화
-      onEvent?.({ type: 'GRANT_COMPLETED' });
+    onEvent: (event) => {
+      if (!active || settled) return;
+      const sdkEventType = String((event as { type?: unknown }).type ?? '');
+      if (sdkEventType === 'GRANT_FAILED' || sdkEventType === 'failed') {
+        emitGrantFailed();
+        return;
+      }
+      const result = (event as { result?: PurchaseResult } | undefined)?.result;
+      if (result) lastPaymentResult = result;
+      if (grantApproved) {
+        emitGrantCompleted(result ?? lastPaymentResult);
+      }
     },
     onError: (error) => {
+      if (!active || settled) return;
       const code = (error as { code?: string })?.code;
       if (code === 'PRODUCT_NOT_GRANTED_BY_PARTNER' || code === 'USER_CANCELED') {
         // 지급 실패 또는 사용자 취소 → 에러 없이 GRANT_FAILED로 처리
-        onEvent?.({ type: 'GRANT_FAILED' });
+        emitGrantFailed();
       } else {
+        settled = true;
         onError?.(error instanceof Error ? error : new Error(String(error)));
       }
     },
   });
+
+  return () => {
+    active = false;
+    cleanup?.();
+  };
 }
 
 /**
@@ -210,10 +255,10 @@ export async function verifyAndGrant(
   const errStatus = getInvokeHttpStatus(error);
   if (!isTestEnvironment() && error && (errStatus === 404 || errStatus === 408)) {
     if (__DEV__) {
-      console.log(`[IAP-001] verify-iap-order ${errStatus} → FastAPI proxy :8765`);
+      console.log(`[IAP-001] verify-iap-order ${errStatus} → FastAPI proxy`);
     }
     try {
-      data = await requestBackend<unknown>('http://127.0.0.1:8765/api/v1/subscription/iap/verify', {
+      data = await requestBackend<unknown>('/api/v1/subscription/iap/verify', {
         method: 'POST',
         body,
       });
@@ -272,10 +317,26 @@ export interface PendingOrder {
 
 /**
  * getPendingOrders — 미완료 주문 조회
- * 실 SDK: @apps-in-toss/framework의 getPendingOrders()
- * 래퍼: toss_orders 테이블에서 grant_status='pending' 조회
+ * 실 SDK(IAP.getPendingOrders)를 우선 조회하고, 미지원/실패 시 DB pending 이력으로 폴백한다.
  */
 export async function getPendingOrders(userId: string): Promise<PendingOrder[]> {
+  try {
+    const pending = typeof IAP.getPendingOrders === 'function'
+      ? await IAP.getPendingOrders()
+      : undefined;
+    if (pending?.orders?.length) {
+      return pending.orders.map((order) => ({
+        orderId: order.orderId,
+        productId: order.sku,
+        transactionId: order.orderId,
+      }));
+    }
+  } catch (error) {
+    if (__DEV__) {
+      console.warn('[IAP-001] getPendingOrders SDK failed, falling back to DB', error);
+    }
+  }
+
   const { data, error } = await supabase
     .from('toss_orders')
     .select('toss_order_id, product_id, id')
@@ -294,9 +355,7 @@ export async function getPendingOrders(userId: string): Promise<PendingOrder[]> 
 
 /**
  * completeProductGrant — 미완료 주문 지급 완료
- * 실 SDK: @apps-in-toss/framework의 completeProductGrant()
- * TODO(IAP-001): 실 SDK 교체 시 receipt 검증 로직이 SDK 내부로 이동.
- *   현재는 mock receipt → Edge Function verifyAndGrant로 우회.
+ * 서버 검증/지급 후 실 SDK completeProductGrant로 Toss pending 상태를 닫는다.
  */
 export async function completeProductGrant(order: PendingOrder): Promise<boolean> {
   const granted = await verifyAndGrant({
@@ -305,6 +364,13 @@ export async function completeProductGrant(order: PendingOrder): Promise<boolean
     transactionId: order.transactionId,
   });
   if (granted) {
+    try {
+      await IAP.completeProductGrant({ params: { orderId: order.orderId } });
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('[IAP-001] completeProductGrant SDK failed after server grant', error);
+      }
+    }
     tracker.iapPurchaseSuccess(order.productId);
   }
   return granted;

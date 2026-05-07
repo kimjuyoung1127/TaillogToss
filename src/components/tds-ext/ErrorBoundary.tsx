@@ -4,9 +4,10 @@
  * Parity: UI-001
  */
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet  } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from '../../styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 interface Props {
   children: ReactNode;
@@ -39,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <SafeAreaView style={styles.safe}>
           <View style={styles.container}>
-            <Text style={styles.icon}>{'\u26A0\uFE0F'}</Text>
+            <Image source={{ uri: ICONS['ic-bolt'] }} style={styles.iconImg} resizeMode="contain" />
             <Text style={styles.title}>문제가 발생했어요</Text>
             <Text style={styles.description}>
               예상하지 못한 오류가 발생했습니다.{'\n'}
@@ -72,8 +73,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xxxl,
   },
-  icon: {
-    ...typography.emoji,
+  iconImg: {
+    width: 56,
+    height: 56,
     marginBottom: spacing.lg,
   },
   title: {

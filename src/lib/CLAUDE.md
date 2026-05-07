@@ -45,6 +45,12 @@
 | `useOrgSubscription.ts` | `useOrgSubscription()`, `useOrgEntitlement()`, `usePurchaseB2BIAP()` |
 | `pageGuardEvaluator.ts` | 페이지 가드 평가 로직 (usePageGuard 내부 유틸) |
 
+### appInfo — 앱 메타데이터
+
+| 파일 | 용도 |
+|------|------|
+| `appInfo.ts` | `package.json` 기반 앱 버전 라벨 |
+
 ### ads/ — 광고 SDK 설정 (1개) ✅ Phase 12
 
 | 파일 | 용도 |

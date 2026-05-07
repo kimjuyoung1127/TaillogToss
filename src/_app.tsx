@@ -1,10 +1,11 @@
 /**
- * TaillogToss 앱 컨테이너 — Granite.registerApp 엔트리
+ * TaillogToss 앱 컨테이너 — AppsInToss.registerApp 엔트리
  * Parity: APP-001
  */
 import React, { type PropsWithChildren, useEffect } from 'react';
 import { LogBox } from 'react-native';
-import { Granite, getSchemeUri, type InitialProps } from '@granite-js/react-native';
+import { AppsInToss } from '@apps-in-toss/framework';
+import { type InitialProps } from '@granite-js/react-native';
 
 // LogBox 오버레이 비활성화 — SafeArea 충돌 방지, 콘솔 워닝은 adb logcat으로 확인
 LogBox.ignoreAllLogs(true);
@@ -14,7 +15,6 @@ import { AuthProvider, useAuth } from 'stores/AuthContext';
 import { ActiveDogProvider, useActiveDog } from 'stores/ActiveDogContext';
 import { OrgProvider } from 'stores/OrgContext';
 import { SurveyProvider } from 'stores/SurveyContext';
-import { rewriteInitialUrlForDeepEntry } from 'lib/guards';
 import { usePendingOrderRecovery } from 'lib/hooks/useSubscription';
 import { useAppStateRefetch } from 'lib/hooks/useAppStateRefetch';
 import { ErrorBoundary } from 'components/tds-ext/ErrorBoundary';
@@ -22,7 +22,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { getMyOrg } from 'lib/api/org';
 import { useOrg } from 'stores/OrgContext';
 import { DevMenu } from 'components/shared/DevMenu';
+import { isDevToolsEnabled } from 'lib/devTools';
 
+console.log('[AIT-BUILD] taillog-appsintoss-wrapper-20260507-1745');
 
 /**
  * OrgBootstrap — B2B 역할 유저가 앱 시작 시 자신의 org를 DB에서 로드
@@ -89,7 +91,7 @@ function AppContainer({ children }: PropsWithChildren<InitialProps>) {
               <OrgBootstrap />
               <SurveyProvider>
                 {children}
-                {__DEV__ && <DevMenu />}
+                {isDevToolsEnabled() && <DevMenu />}
               </SurveyProvider>
             </OrgProvider>
           </ActiveDogProvider>
@@ -100,11 +102,6 @@ function AppContainer({ children }: PropsWithChildren<InitialProps>) {
   );
 }
 
-export default Granite.registerApp(AppContainer, {
-  appName: 'taillog-app',
+export default AppsInToss.registerApp(AppContainer, {
   context,
-  getInitialUrl: async (initialScheme: string) => {
-    const initialUrl = getSchemeUri();
-    return rewriteInitialUrlForDeepEntry(initialUrl, initialScheme);
-  },
 });

@@ -8,6 +8,7 @@ import type { AdPlacement, RewardedAdState } from 'types/ads';
 import { DEFAULT_AD_FALLBACK } from 'types/ads';
 import { getAdGroupId, getAdsSdk } from 'lib/ads/config';
 import { tracker } from 'lib/analytics/tracker';
+import { buildAdDiagnostics } from 'lib/ads/diagnostics';
 
 /** 일일 광고 노출 카운트 (인메모리, 앱 재시작 시 리셋) */
 const dailyCounts: Record<string, { date: string; count: number }> = {};
@@ -67,13 +68,13 @@ export function useRewardedAd(
     // 일일 한도 초과 시 무광고 폴백
     if (getDailyCount(placement) >= DEFAULT_AD_FALLBACK.daily_limit) {
       setAdState('no_fill');
-      tracker.adNoFill(placement, 'daily_limit');
+      tracker.adNoFill(placement, 'daily_limit', buildAdDiagnostics(placement, 'daily_limit'));
       if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
       return;
     }
 
     setAdState('loading');
-    tracker.adRequested(placement);
+    tracker.adRequested(placement, buildAdDiagnostics(placement, 'fullscreen_load_requested'));
 
     const sdk = getAdsSdk();
     const adGroupId = getAdGroupId(placement);
@@ -82,7 +83,7 @@ export function useRewardedAd(
     timeoutRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
       setAdState('no_fill');
-      tracker.adNoFill(placement, 'timeout');
+      tracker.adNoFill(placement, 'timeout', buildAdDiagnostics(placement, 'fullscreen_load_timeout'));
       if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
     }, DEFAULT_AD_FALLBACK.timeout_ms);
 
@@ -90,40 +91,46 @@ export function useRewardedAd(
       adGroupId,
       onLoaded: () => {
         if (!mountedRef.current) return;
-        tracker.adLoaded(placement);
+        tracker.adLoaded(placement, buildAdDiagnostics(placement, 'fullscreen_loaded'));
         setAdState('showing');
+
+        let rewardHandled = false;
 
         sdk.showFullScreenAd({
           onRewarded: () => {
-            if (!mountedRef.current) return;
+            if (!mountedRef.current || rewardHandled) return;
+            rewardHandled = true;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             incrementDailyCount(placement);
             setAdState('rewarded');
-            tracker.adRewarded(placement);
+            tracker.adRewarded(placement, buildAdDiagnostics(placement, 'fullscreen_rewarded'));
             onRewarded();
           },
           onClosed: () => {
-            if (!mountedRef.current) return;
+            if (!mountedRef.current || rewardHandled) return;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             setAdState('no_fill');
-            tracker.adNoFill(placement, 'closed_without_reward');
-            if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
+            tracker.adNoFill(
+              placement,
+              'closed_without_reward',
+              buildAdDiagnostics(placement, 'fullscreen_closed_without_reward'),
+            );
           },
-          onError: () => {
-            if (!mountedRef.current) return;
+          onError: (error) => {
+            if (!mountedRef.current || rewardHandled) return;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             setAdState('error');
-            tracker.adError(placement);
+            tracker.adError(placement, buildAdDiagnostics(placement, 'fullscreen_show_error', error));
             if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
             onError?.();
           },
         });
       },
-      onError: () => {
+      onError: (error) => {
         if (!mountedRef.current) return;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setAdState('error');
-        tracker.adError(placement);
+        tracker.adError(placement, buildAdDiagnostics(placement, 'fullscreen_load_error', error));
         if (DEFAULT_AD_FALLBACK.unlock_on_no_fill) onRewarded();
         onError?.();
       },

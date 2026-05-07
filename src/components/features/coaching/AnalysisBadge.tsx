@@ -4,7 +4,8 @@
  * Parity: AI-COACHING-ANALYTICS-001
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography, spacing } from 'styles/tokens';
 
 interface Props {
@@ -38,7 +39,7 @@ export function AnalysisBadge({ logCount, analysisDays, topBehavior }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>📊</Text>
+      <Image source={{ uri: ICONS['ic-analysis'] }} style={styles.icon} resizeMode="contain" />
       <Text style={styles.text}>
         최근 {analysisDays}일 {logCount}개 기록 분석{suffix}
       </Text>
@@ -58,7 +59,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   icon: {
-    fontSize: 13,
+    width: 16,
+    height: 16,
     marginRight: 5,
   },
   text: {

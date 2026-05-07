@@ -52,6 +52,16 @@ const LIVING_TYPES: { value: HouseholdInfo['living_type']; label: string }[] = [
   { value: 'other', label: '기타' },
 ];
 
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+  if (value && typeof value === 'object' && Array.isArray((value as { ids?: unknown }).ids)) {
+    return (value as { ids: unknown[] }).ids.filter((item): item is string => typeof item === 'string');
+  }
+  return [];
+}
+
 function DogProfilePage() {
   const navigation = useNavigation();
   const { isReady } = usePageGuard({ currentPath: '/dog/profile' });
@@ -103,7 +113,7 @@ function DogProfilePage() {
       setLivingType(dogEnv.household_info.living_type);
       setMembersCount(String(dogEnv.household_info.members_count));
       setHealthNotes(dogEnv.health_meta.vet_notes ?? '');
-      setTriggers(dogEnv.triggers);
+      setTriggers(normalizeStringList(dogEnv.triggers));
     }
   }, [dogEnv]);
 
@@ -375,8 +385,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarEmoji: { ...typography.display },
-
   // Form inputs
   inputGroup: { marginBottom: 16 },
   fieldLabel: {

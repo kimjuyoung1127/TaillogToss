@@ -3,8 +3,9 @@
  * API 실패, 네트워크 오류 등에 사용
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { colors, typography, spacing } from '../../styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 export interface ErrorStateProps {
   title?: string;
@@ -19,7 +20,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{'\u26A0\uFE0F'}</Text>
+      <Image source={{ uri: ICONS['ic-bolt'] }} style={styles.iconImg} resizeMode="contain" />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       {onRetry && (
@@ -39,8 +40,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
     paddingVertical: 48,
   },
-  icon: {
-    ...typography.emoji,
+  iconImg: {
+    width: 56,
+    height: 56,
     marginBottom: spacing.lg,
   },
   title: {

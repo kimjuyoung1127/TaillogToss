@@ -5,7 +5,7 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView ,TouchableOpacity  } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView ,TouchableOpacity  } from 'react-native';
 import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import {
   BehaviorTypeBadge,
@@ -20,6 +20,7 @@ import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { generateSurveyAnalysis } from 'lib/data/analysis/engine';
 import { SkeletonBox } from 'components/tds-ext/SkeletonBox';
 import { ErrorState } from 'components/tds-ext';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/survey-result', {
@@ -101,7 +102,7 @@ function SurveyResultPage() {
         {/* AI 분석 헤더 */}
         <View style={styles.aiHeader}>
           <View style={styles.aiIcon}>
-            <Text style={styles.aiEmoji}>🤖</Text>
+            <Image source={{ uri: ICONS['ic-coaching'] }} style={styles.aiIconImage} />
           </View>
           <Text style={styles.resultTitle}>{dogName}의 행동 분석{'\n'}결과입니다</Text>
         </View>
@@ -125,7 +126,10 @@ function SurveyResultPage() {
 
         {/* 상세 리포트 (잠금 영역) */}
         <View style={styles.detailSection}>
-          <Text style={styles.detailHeader}>📋 상세 리포트</Text>
+          <View style={styles.detailHeaderRow}>
+            <Image source={{ uri: ICONS['ic-report'] }} style={styles.detailHeaderIcon} />
+            <Text style={styles.detailHeader}>상세 리포트</Text>
+          </View>
 
           {isDetailUnlocked && !analysis ? (
             <ErrorState onRetry={() => navigation.navigate('/onboarding/survey')} />
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  aiEmoji: { ...typography.heroTitle },
+  aiIconImage: { width: 32, height: 32 },
   resultTitle: {
     ...typography.pageTitle,
     fontWeight: '700',
@@ -223,11 +227,17 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   detailSection: {},
+  detailHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  detailHeaderIcon: { width: 22, height: 22 },
   detailHeader: {
     ...typography.label,
     fontWeight: '700',
     color: colors.textDark,
-    marginBottom: 16,
   },
   unlockedContent: {
     backgroundColor: colors.surfaceSecondary,

@@ -8,6 +8,7 @@ import { View, TouchableOpacity, Image, StyleSheet, Text, Alert, ActivityIndicat
 import { fetchAlbumPhotos } from '@apps-in-toss/native-modules';
 import { FetchAlbumPhotosPermissionError } from '@apps-in-toss/types';
 import { colors, typography } from 'styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 interface Props {
   uri?: string;
@@ -77,7 +78,7 @@ export function DogPhotoPicker({ uri, onSelect }: Props) {
           <Image source={{ uri }} style={styles.image} />
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.emoji}>{'\uD83D\uDCF7'}</Text>
+            <Image source={{ uri: ICONS['ic-dog'] }} style={styles.placeholderIcon} resizeMode="contain" />
           </View>
         )}
         {!isLoading && (
@@ -118,8 +119,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoji: {
-    fontSize: 32,
+  placeholderIcon: {
+    width: 42,
+    height: 42,
   },
   badge: {
     position: 'absolute',

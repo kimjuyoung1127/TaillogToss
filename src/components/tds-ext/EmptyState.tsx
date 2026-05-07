@@ -6,11 +6,12 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { colors, typography, spacing } from '../../styles/tokens';
 import { LottieAnimation, type LottieAssetKey } from '../shared/LottieAnimation';
+import { ICONS } from 'lib/data/iconSources';
 
 export interface EmptyStateProps {
   title: string;
   description?: string;
-  /** 이모지 아이콘 (lottie/iconSource 미지정 시 표시) */
+  /** 레거시 텍스트 아이콘 (iconSource 미지정 시에만 사용) */
   icon?: string;
   /** URI 아이콘 소스 — 지정 시 이모지 대신 Image 표시 */
   iconSource?: string;
@@ -19,7 +20,14 @@ export interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-export function EmptyState({ title, description, icon = '\uD83D\uDCED', iconSource, lottie, action }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  icon,
+  iconSource = ICONS['illust-empty-log'],
+  lottie,
+  action,
+}: EmptyStateProps) {
   return (
     <View style={styles.container}>
       {lottie ? (
@@ -50,7 +58,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   icon: {
-    ...typography.emoji,
+    ...typography.subtitle,
     marginBottom: spacing.lg,
   },
   iconImg: {

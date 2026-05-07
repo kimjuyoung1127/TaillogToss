@@ -26,17 +26,18 @@ import type { IAPProduct } from 'types/subscription';
 import { colors, typography } from 'styles/tokens';
 import { ICONS } from 'lib/data/iconSources';
 import { verifyAndGrant } from 'lib/api/iap';
+import { isDevToolsEnabled } from 'lib/devTools';
 
 export const Route = createRoute('/settings/subscription', {
   component: SubscriptionPage,
   screenOptions: { headerShown: false },
 });
 
-const PRO_FEATURES: Array<{ icon: string; iconSource?: string; label: string }> = [
-  { icon: '🤖', label: 'AI 코칭 무제한' },
-  { icon: '🐕', iconSource: ICONS['ic-dog'], label: `다견 기능 최대 ${DOG_LIMITS.PRO}마리` },
-  { icon: '📊', iconSource: ICONS['ic-analysis'], label: '심화 인사이트 리포트' },
-  { icon: '📅', label: '훈련 계획 무제한 (Plan A/B/C)' },
+const PRO_FEATURES: Array<{ iconSource: string; label: string }> = [
+  { iconSource: ICONS['ic-coaching']!, label: 'AI 코칭 무제한' },
+  { iconSource: ICONS['ic-dog']!, label: `다견 기능 최대 ${DOG_LIMITS.PRO}마리` },
+  { iconSource: ICONS['ic-analysis']!, label: '심화 인사이트 리포트' },
+  { iconSource: ICONS['ic-training']!, label: '훈련 계획 무제한 (Plan A/B/C)' },
 ];
 
 const FREE_FEATURES = [
@@ -85,7 +86,7 @@ function SubscriptionPage() {
 
   // DEV only: AIT 테스트 앱 IAP 크래시 우회 — getEdgeValue SDK 버그 회피
   const handleDevDirectGrant = useCallback(async (productId: string) => {
-    if (!__DEV__) return;
+    if (!isDevToolsEnabled()) return;
     setPurchasingId(productId);
     try {
       const mockOrderId = `dev_${Date.now()}`;
@@ -160,11 +161,7 @@ function SubscriptionPage() {
             <View style={styles.featureList}>
               {PRO_FEATURES.map((f) => (
                 <View key={f.label} style={styles.featureRow}>
-                  {f.iconSource ? (
-                    <Image source={{ uri: f.iconSource }} style={styles.featureIconImg} />
-                  ) : (
-                    <Text style={styles.featureIcon}>{f.icon}</Text>
-                  )}
+                  <Image source={{ uri: f.iconSource }} style={styles.featureIconImg} />
                   <Text style={styles.featureLabel}>{f.label}</Text>
                 </View>
               ))}
@@ -179,7 +176,7 @@ function SubscriptionPage() {
                 {purchasingId === proProduct.product_id ? '처리 중...' : 'PRO 시작하기'}
               </Text>
             </TouchableOpacity>
-            {__DEV__ && (
+            {isDevToolsEnabled() && (
               <TouchableOpacity
                 style={[styles.devBypassButton, purchasingId === proProduct.product_id && styles.buttonDisabled]}
                 onPress={() => void handleDevDirectGrant(proProduct.product_id)}
@@ -319,7 +316,6 @@ const styles = StyleSheet.create({
   planPeriod: { ...typography.detail, fontWeight: '400', color: colors.grey600 },
   featureList: { marginBottom: 20 },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  featureIcon: { ...typography.label, marginRight: 10 },
   featureIconImg: { width: 20, height: 20, marginRight: 10 },
   featureLabel: { ...typography.bodySmall, color: colors.textDark },
   purchaseButton: {

@@ -170,29 +170,26 @@ NFT/디지털 자산 거래, 도박, 대출/보험/증권, 투자 조언, 현금
 - [x] SDK 2.x 적용 (`@apps-in-toss/framework ^2.4.1`)
 - [x] mTLS 인증서 발급 + 서버 통합 (IAP, Smart Message, 포인트 전체) — 2026-04-21
 - [ ] mTLS 인증서 만료일 캘린더 등록 (만료일: 2027-04-25)
-- [ ] 번들 크기 100MB 미만 확인
+- [x] 번들 크기 100MB 미만 확인 — 15MB (2026-05-07 측정)
 
 ### 콘솔 등록 / 에셋
 
 - [x] 앱 로고 600x600 각진 정사각형 준비 (`src/assets/icons/app-logo-600.png`)
-- [x] 앱 로고 `granite.config.ts` `brand.icon` 적용 완료 — 콘솔 업로드 별도 필요
+- [x] 앱 로고 `granite.config.ts` `brand.icon` 최종 적용 — 콘솔 이미지 HTTPS URL 적용 완료, bundle scan에서 `brandIcon:"https://static.toss.im/..."` 확인(2026-05-07)
+- [x] 앱 로고 콘솔 업로드 + 승인 완료 — 2026-05-07
+- [ ] AIT private standalone 실행 확인 — CLI deploy `019e01b9-3c4c-7677-b6b9-d80529a2d868`는 공식 `AppsInToss.registerApp` wrapper 적용 후 업로드 성공했지만 Metro-off에서 JS 진입 전 host error. Apps in Toss test host/샌드박스앱/QR 실행 경로 확인 필요
 - [x] 앱 이름 한글 명사형 확인 (15자 이하) + 영문명 등록 — 2026-04-23 콘솔 신청 완료
 - [x] 앱 검색 키워드 + 카테고리 등록 — 2026-04-23 콘솔 신청 완료
 - [x] 스크린샷 세로형 3장 (636×1048) + 가로형 1장 (1504×741) — 2026-04-23 콘솔 신청 완료
 
 ### 디자인 / 기능
 
-- [ ] 탭 바 토스 플로팅 컴포넌트 사용 확인
-- [ ] 실 환경 CORS 도메인 확인 (`apps.tossmini.com`)
+- [⚠️] 탭 바 — SDK에 플로팅 탭바 컴포넌트 없음. `BottomNavBar.tsx` 자체 구현(3~4탭, 개수 기준은 통과). 디자인 심사 시 시각적 스타일 검토 필요.
+- [x] 실 환경 CORS 도메인 확인 — FastAPI Railway 배포 완료 (`https://taillogtoss-backend-production.up.railway.app`). `EXPO_PUBLIC_BACKEND_URL` `.env` 등록 + `.ait` 재빌드 완료. Edge Functions CORS `*` 확인. — 2026-05-07
 
 ### 배포 전 필수 복구 항목 ⚠️
 
-- [ ] **`TOSS_MTLS_MODE=real` 복구** — 현재 테스트용 `mock`으로 설정됨. 프로덕션 배포 전 반드시 복구:
-  ```bash
-  supabase secrets set TOSS_MTLS_MODE=real --project-ref gxvtgrcqkbdibkyeqyil
-  supabase functions deploy login-with-toss --no-verify-jwt
-  ```
-  > mock 상태로 배포 시 전체 유저가 `mock_stable_user_001` 계정 공유 → 치명적 보안 취약점
+- [x] **`TOSS_MTLS_MODE=real` 복구 완료** — 2026-05-07. secrets set + login-with-toss 재배포 완료.
 
 ### IAP 테스트
 
@@ -207,8 +204,8 @@ NFT/디지털 자산 거래, 도박, 대출/보험/증권, 투자 조언, 현금
 
 ### 개인정보 / 보안
 
-- [ ] 개인정보처리방침 업데이트 (위탁 업체: Supabase, OpenAI)
-- [ ] AI 코칭 결과 "AI 생성물" 명시 확인
+- [x] 개인정보처리방침 업데이트 완료 — `privacy.tsx` §6 Supabase/OpenAI 위탁 이미 명시
+- [x] AI 코칭 결과 "AI 생성물" 명시 완료 — `CoachingDetailContent.tsx:134` 확인
 - [x] AI 위험 키워드 필터링 구현 완료 — 2026-04-21 (`service.py _apply_safety_filter`)
 - [x] AI 자해·자살 감지 → 안전 응답 프로토콜 구현 완료 — 2026-04-21
 

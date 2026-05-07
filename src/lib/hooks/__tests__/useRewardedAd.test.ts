@@ -127,7 +127,7 @@ describe('useRewardedAd', () => {
     expect(result.current.adState).toBe('loading');
   });
 
-  it('보상 미지급(onClosed) 시 no_fill + 무광고 폴백으로 onRewarded 호출', async () => {
+  it('보상 미지급(onClosed) 시 no_fill 처리하고 리워드는 지급하지 않음', async () => {
     const onRewarded = jest.fn();
     const { result } = renderHook(() => useRewardedAd('R1', onRewarded));
 
@@ -145,6 +145,6 @@ describe('useRewardedAd', () => {
     });
 
     expect(result.current.adState).toBe('no_fill');
-    expect(onRewarded).toHaveBeenCalledTimes(1); // unlock_on_no_fill
+    expect(onRewarded).not.toHaveBeenCalled();
   });
 });

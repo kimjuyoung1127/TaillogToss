@@ -10,20 +10,20 @@ import type { Next7DaysBlock, RiskSignalsBlock, ConsultationQuestionsBlock } fro
 import { colors, typography, spacing } from 'styles/tokens';
 import { ICONS } from 'lib/data/iconSources';
 
-const BLOCK_META: Record<string, { label: string; icon: string; teaser: string }> = {
+const BLOCK_META: Record<string, { label: string; iconSource: string; teaser: string }> = {
   next_7_days: {
     label: '7일 맞춤 플랜',
-    icon: '📅',
+    iconSource: ICONS['ic-training']!,
     teaser: '다음 7일간 해야 할 구체적인 훈련 계획을 확인하세요',
   },
   risk_signals: {
     label: '위험 신호 분석',
-    icon: '⚠️',
+    iconSource: ICONS['ic-bolt']!,
     teaser: '놓치고 있는 행동 위험 신호를 AI가 분석했습니다',
   },
   consultation_questions: {
     label: '전문가 상담 질문',
-    icon: '👨‍⚕️',
+    iconSource: ICONS['ic-trainer']!,
     teaser: '수의사/훈련사에게 꼭 물어볼 맞춤 질문을 준비했습니다',
   },
 };
@@ -39,7 +39,7 @@ export function LockedBlock({ blockKey }: LockedBlockProps) {
     <View style={styles.card}>
       <Text style={styles.blockLabel}>{meta.label}</Text>
       <View style={styles.lockOverlay}>
-        <Text style={styles.lockIcon}>{meta.icon}</Text>
+        <Image source={{ uri: meta.iconSource }} style={styles.lockIconImg} />
         <Text style={styles.lockTitle}>{meta.label}</Text>
         <Text style={styles.lockTeaser}>{meta.teaser}</Text>
 
@@ -52,7 +52,7 @@ export function LockedBlock({ blockKey }: LockedBlockProps) {
         </View>
 
         <View style={styles.blurOverlay}>
-          <Text style={styles.blurIcon}>🔒</Text>
+          <Image source={{ uri: ICONS['badge-pro'] }} style={styles.blurIconImg} />
           <Text style={styles.blurText}>PRO 전용 콘텐츠</Text>
         </View>
       </View>
@@ -143,13 +143,6 @@ const RISK_LABEL: Record<string, string> = {
   critical: '심각',
 };
 
-const SEVERITY_ICON: Record<string, string> = {
-  low: '🟢',
-  medium: '🟡',
-  high: '🟠',
-  critical: '🔴',
-};
-
 export function RiskSignalsView({ data }: { data: RiskSignalsBlock }) {
   const gaugeWidth = RISK_GAUGE[data.overall_risk] ?? 0.5;
 
@@ -178,14 +171,12 @@ export function RiskSignalsView({ data }: { data: RiskSignalsBlock }) {
       {data.signals.map((signal, idx) => (
         <View key={idx} style={styles.signalCard}>
           <View style={styles.signalHeader}>
-            <Text style={styles.signalIcon}>
-              {SEVERITY_ICON[signal.severity]}
-            </Text>
+            <View style={[styles.signalDot, { backgroundColor: SEVERITY_COLOR[signal.severity] ?? colors.grey400 }]} />
             <Text style={styles.signalType}>{signal.type}</Text>
           </View>
           <Text style={styles.signalDesc}>{signal.description}</Text>
           <View style={styles.signalRecBox}>
-            <Text style={styles.signalRecLabel}>💡 권장사항</Text>
+            <Text style={styles.signalRecLabel}>권장사항</Text>
             <Text style={styles.signalRec}>{signal.recommendation}</Text>
           </View>
         </View>
@@ -198,10 +189,10 @@ export function RiskSignalsView({ data }: { data: RiskSignalsBlock }) {
 // PRO 블록 ⑥: 전문가 상담 질문 — 프로필 카드 + 복사 가능 질문
 // ──────────────────────────────────────
 
-const SPECIALIST_META: Record<string, { icon: string; iconSource?: string; label: string; desc: string }> = {
-  behaviorist: { icon: '🧠', label: '행동 전문가', desc: '동물행동학 기반 문제행동 분석' },
-  trainer: { icon: '🎓', iconSource: ICONS['ic-trainer'], label: '전문 훈련사', desc: '실전 행동교정 및 사회화 훈련' },
-  vet: { icon: '🏥', label: '수의사', desc: '건강 원인 행동 문제 진단' },
+const SPECIALIST_META: Record<string, { iconSource: string; label: string; desc: string }> = {
+  behaviorist: { iconSource: ICONS['ic-idea']!, label: '행동 전문가', desc: '동물행동학 기반 문제행동 분석' },
+  trainer: { iconSource: ICONS['ic-trainer']!, label: '전문 훈련사', desc: '실전 행동교정 및 사회화 훈련' },
+  vet: { iconSource: ICONS['ic-paw']!, label: '수의사', desc: '건강 원인 행동 문제 진단' },
 };
 
 export function ConsultationView({ data }: { data: ConsultationQuestionsBlock }) {
@@ -214,11 +205,7 @@ export function ConsultationView({ data }: { data: ConsultationQuestionsBlock })
       {/* 전문가 프로필 카드 */}
       {specialist && (
         <View style={styles.specialistCard}>
-          {specialist.iconSource ? (
-            <Image source={{ uri: specialist.iconSource }} style={styles.specialistIconImg} />
-          ) : (
-            <Text style={styles.specialistIcon}>{specialist.icon}</Text>
-          )}
+          <Image source={{ uri: specialist.iconSource }} style={styles.specialistIconImg} />
           <View style={styles.specialistInfo}>
             <Text style={styles.specialistTitle}>
               추천: {specialist.label}
@@ -261,8 +248,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
-  lockIcon: {
-    fontSize: 32,
+  lockIconImg: {
+    width: 40,
+    height: 40,
     marginBottom: spacing.sm,
   },
   lockTitle: {
@@ -295,8 +283,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: 20,
   },
-  blurIcon: {
-    ...typography.detail,
+  blurIconImg: {
+    width: 18,
+    height: 18,
     marginRight: 6,
   },
   blurText: {
@@ -410,8 +399,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
-  signalIcon: {
-    fontSize: 14,
+  signalDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: spacing.sm,
   },
   signalType: {
@@ -447,10 +438,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-  },
-  specialistIcon: {
-    fontSize: 36,
-    marginRight: spacing.lg,
   },
   specialistIconImg: {
     width: 36,

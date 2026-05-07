@@ -3,29 +3,35 @@
  * View + Shadow + Border 커스텀
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { colors, typography, spacing } from '../../styles/tokens';
+import { ICONS } from 'lib/data/iconSources';
 
 export interface SpeechBubbleProps {
   message: string;
   emotion?: 'happy' | 'anxious' | 'confused' | 'hopeful' | 'tired';
 }
 
-const EMOTION_EMOJI: Record<string, string> = {
-  happy: '\uD83D\uDE0A',
-  anxious: '\uD83D\uDE1F',
-  confused: '\uD83E\uDD14',
-  hopeful: '\uD83D\uDE4F',
-  tired: '\uD83D\uDE34',
+const EMOTION_ICON: Record<string, string> = {
+  happy: ICONS['ic-paw']!,
+  anxious: ICONS['ic-cat-anxiety']!,
+  confused: ICONS['ic-search']!,
+  hopeful: ICONS['ic-target']!,
+  tired: ICONS['ic-cat-rest']!,
 };
 
 export function SpeechBubble({ message, emotion = 'happy' }: SpeechBubbleProps) {
+  const displayMessage =
+    typeof message === 'string' && message.trim().length > 0
+      ? message.trim()
+      : '조금만 기다려 주세요.';
+
   return (
     <View style={styles.container}>
       <View style={styles.bubble}>
         <View style={styles.row}>
-          <Text style={styles.emoji}>{EMOTION_EMOJI[emotion]}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <Image source={{ uri: EMOTION_ICON[emotion] ?? ICONS['ic-paw'] }} style={styles.emotionIcon} />
+          <Text style={styles.message}>{displayMessage}</Text>
         </View>
       </View>
       <View style={styles.tail} />
@@ -43,6 +49,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderTopLeftRadius: 4,
     padding: spacing.lg,
+    alignSelf: 'stretch',
     maxWidth: '88%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -55,14 +62,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
-  emoji: {
-    fontSize: 20,
-    lineHeight: 24,
+  emotionIcon: {
+    width: 22,
+    height: 22,
   },
   message: {
     ...typography.bodySmall,
     color: colors.textDark,
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
   },
   tail: {
     width: 12,

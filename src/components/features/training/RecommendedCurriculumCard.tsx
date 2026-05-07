@@ -3,8 +3,9 @@
  * Parity: UI-TRAINING-PERSONALIZATION-001
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { CURRICULUMS } from 'lib/data/published/runtime';
+import { ICONS } from 'lib/data/iconSources';
 import type { CurriculumId } from 'types/training';
 import type { ScoreBand } from 'lib/data/recommendation/engine';
 import { colors, typography, spacing } from 'styles/tokens';
@@ -52,7 +53,7 @@ export function RecommendedCurriculumCard({
       <Text style={styles.description} numberOfLines={2}>{curriculum.description}</Text>
 
       <View style={styles.reasonRow}>
-        <Text style={styles.reasonIcon}>💡</Text>
+        <Image source={{ uri: ICONS['ic-idea'] }} style={styles.reasonIcon} resizeMode="contain" />
         <Text style={styles.reasonText}>{reasoning}</Text>
       </View>
 
@@ -87,7 +88,7 @@ export function RecommendedCurriculumCard({
       )}
       {!isPro && scoreBand && (
         <View style={styles.proLock}>
-          <Text style={styles.proLockText}>🔒 PRO에서 점수 분석 확인</Text>
+          <Text style={styles.proLockText}>PRO에서 점수 분석 확인</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -156,8 +157,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   reasonIcon: {
-    fontSize: 14,
-    marginRight: 6,
+    width: 18,
+    height: 18,
+    marginRight: 8,
+    marginTop: 1,
   },
   reasonText: {
     ...typography.caption,

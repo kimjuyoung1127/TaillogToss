@@ -6,7 +6,7 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share, Image } from 'react-native';
 import { colors, typography, spacing } from 'styles/tokens';
 import { DetailLayout } from 'components/shared/layouts/DetailLayout';
 import { CoachingHistoryList } from 'components/features/coaching/CoachingHistoryList';
@@ -33,6 +33,7 @@ import { useAuth } from 'stores/AuthContext';
 import { Stage2InterceptModal } from 'components/features/survey/Stage2InterceptModal';
 import { useSurveyStatus } from 'lib/hooks/useSurvey';
 import type { CoachingResult } from 'types/coaching';
+import { ICONS } from 'lib/data/iconSources';
 
 export const Route = createRoute('/coaching/result', {
   component: CoachingResultPage,
@@ -223,7 +224,7 @@ function CoachingResultPage() {
     return (
       <DetailLayout title="AI 행동 진단" onBack={handleBack}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorEmoji}>😥</Text>
+          <Image source={{ uri: ICONS['ic-coaching'] }} style={styles.errorIcon} resizeMode="contain" />
           <Text style={styles.errorTitle}>{generateError}</Text>
           <Text style={styles.errorDesc}>잠시 후 다시 시도해 주세요</Text>
           <TouchableOpacity
@@ -251,7 +252,7 @@ function CoachingResultPage() {
             <EmptyState
               title="아직 코칭 결과가 없어요"
               description="행동 기록을 기반으로 AI가 맞춤 코칭을 제공합니다"
-              icon="🐾"
+              iconSource={ICONS['illust-empty-coaching']}
             />
             <TouchableOpacity
               style={[styles.generateButton, remaining === 0 && styles.generateButtonDisabled]}
@@ -381,8 +382,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 80,
   },
-  errorEmoji: {
-    ...typography.emoji,
+  errorIcon: {
+    width: 64,
+    height: 64,
     marginBottom: spacing.lg,
   },
   errorTitle: {

@@ -388,6 +388,25 @@ async function activateSubscription(userId: string, productId: string): Promise<
   }
 }
 
+async function resolveTossUserKey(userId: string): Promise<string | null> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/users?id=eq.${encodeURIComponent(userId)}&select=toss_user_key&limit=1`,
+    {
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to resolve toss_user_key: ${response.status}`);
+  }
+  const rows = await response.json() as Array<{ toss_user_key?: string | null }>;
+  return rows[0]?.toss_user_key ?? null;
+}
+
 /** 요청 전체 타임아웃 — processProductGrant 30초 한도보다 1초 마진 */
 const REQUEST_TIMEOUT_MS = 29_000;
 
@@ -463,6 +482,16 @@ async function handleRequest(request: Request): Promise<Response> {
 
   // mTLS 실 검증 — cert/key 환경변수 존재 시 real, 없으면 mock (로컬 안전)
   const mTLSClient = createMTLSClient(resolveMtlsMode());
+  let tossUserKey: string | null = null;
+  try {
+    tossUserKey = await resolveTossUserKey(resolvedUserId!);
+  } catch {
+    return toJsonResponse(fail('IAP_USER_KEY_RESOLVE_FAILED', 'Failed to resolve Toss user key', 502));
+  }
+  if (!tossUserKey) {
+    return toJsonResponse(fail('IAP_USER_KEY_MISSING', 'Missing Toss user key for IAP verification', 404));
+  }
+
   let tossResult: { tossStatus: VerifyIapOrderResponse['toss_status']; amount: number; tossOrderId: string; errorCode?: string };
   try {
     tossResult = await iapCircuitBreaker.execute(
@@ -472,6 +501,7 @@ async function handleRequest(request: Request): Promise<Response> {
           orderId: body.orderId,
           productId: body.productId,
           transactionId: body.transactionId,
+          userKey: tossUserKey,
         }),
         { maxRetries: 2, baseDelayMs: 150 }
       )

@@ -11,6 +11,12 @@ import { REACTION_OPTIONS } from 'types/training';
 import type { DogReaction } from 'types/training';
 import { colors, typography, spacing } from 'styles/tokens';
 
+const REACTION_DOT_COLOR: Record<string, string> = {
+  successGreen: colors.green500,
+  warningAmber: colors.orange500,
+  errorRed: colors.red500,
+};
+
 interface Props {
   visible: boolean;
   dayNumber: number;
@@ -39,7 +45,12 @@ export function DaySummarySheet({ visible, dayNumber, reactions, isLastDay, onNe
                 .filter((r) => r.count > 0)
                 .map((r) => (
                   <View key={r.value} style={styles.reactionChip}>
-                    <Text style={styles.reactionEmoji}>{r.emoji}</Text>
+                    <View
+                      style={[
+                        styles.reactionDot,
+                        { backgroundColor: REACTION_DOT_COLOR[r.color] ?? colors.grey500 },
+                      ]}
+                    />
                     <Text style={styles.reactionCount}>x{r.count}</Text>
                   </View>
                 ))}
@@ -76,8 +87,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  reactionEmoji: {
-    fontSize: 20,
+  reactionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: spacing.xs,
   },
   reactionCount: {

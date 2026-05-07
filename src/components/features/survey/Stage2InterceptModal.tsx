@@ -6,9 +6,10 @@
  */
 import React from 'react';
 import {
-  Modal, StyleSheet, Text, TouchableOpacity, View,
+  Image, Modal, StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, spacing, typography } from 'styles/tokens';
 
 interface Stage2InterceptModalProps {
@@ -53,7 +54,7 @@ function InterceptSheet({
       >
         <View style={styles.handle} />
 
-        <Text style={styles.emoji}>🐾</Text>
+        <Image source={{ uri: ICONS['ic-coaching'] }} style={styles.heroIcon} />
         <Text style={styles.title}>{dogName}의 AI 코칭을 활성화해요</Text>
         <Text style={styles.desc}>
           생활 환경 정보를 입력하면{'\n'}
@@ -63,11 +64,14 @@ function InterceptSheet({
 
         <View style={styles.benefits}>
           {[
-            '✅ AI 맞춤 6블록 코칭 활성화',
-            '✅ 고민·트리거 기반 정밀 분석',
-            '✅ 7일 훈련 플랜 자동 생성',
+            'AI 맞춤 6블록 코칭 활성화',
+            '고민·트리거 기반 정밀 분석',
+            '7일 훈련 플랜 자동 생성',
           ].map((item) => (
-            <Text key={item} style={styles.benefitItem}>{item}</Text>
+            <View key={item} style={styles.benefitRow}>
+              <Image source={{ uri: ICONS['ic-target'] }} style={styles.benefitIcon} />
+              <Text style={styles.benefitItem}>{item}</Text>
+            </View>
           ))}
         </View>
 
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: spacing.xl,
   },
-  emoji: { fontSize: 48, lineHeight: 56, marginBottom: spacing.md },
+  heroIcon: { width: 56, height: 56, marginBottom: spacing.md },
   title: {
     ...typography.sectionTitle,
     fontWeight: '700',
@@ -127,7 +131,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xl,
   },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  benefitIcon: { width: 16, height: 16 },
   benefitItem: {
+    flex: 1,
     ...typography.bodySmall,
     color: colors.textPrimary,
   },

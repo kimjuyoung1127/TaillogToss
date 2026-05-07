@@ -22,6 +22,12 @@ const REACTION_BG_MAP: Record<string, string> = {
   errorRed: colors.red50,
 };
 
+const SITUATION_DOT_COLOR: Record<string, string> = {
+  positive: colors.green500,
+  neutral: colors.orange500,
+  negative: colors.red500,
+};
+
 interface Props {
   visible: boolean;
   dogName: string;
@@ -91,7 +97,7 @@ export function StepCompletionSheet({ visible, dogName, onSubmit, onSkip, onSave
       >
         {saved ? (
           <Animated.View style={[styles.savedContainer, { opacity: savedOpacity }]}>
-            <Text style={styles.savedCheck}>{'\u2705'}</Text>
+            <Text style={styles.savedCheck}>✓</Text>
             <Text style={styles.savedText}>반응이 저장됐어요</Text>
             <TouchableOpacity style={styles.savedConfirmButton} onPress={onSaved} activeOpacity={0.8}>
               <Text style={styles.savedConfirmText}>확인</Text>
@@ -116,7 +122,7 @@ export function StepCompletionSheet({ visible, dogName, onSubmit, onSkip, onSave
                     activeOpacity={0.7}
                   >
                     <View style={styles.optionHeader}>
-                      <Text style={styles.emoji}>{option.emoji}</Text>
+                      <View style={[styles.reactionDot, { backgroundColor: accent }]} />
                       <Text style={[styles.optionLabel, isSelected && { color: accent }]}>
                         {option.label}
                       </Text>
@@ -167,7 +173,15 @@ export function StepCompletionSheet({ visible, dogName, onSubmit, onSkip, onSave
                       onPress={() => toggleChip(chip.label)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.chipText}>{chip.emoji} {chip.label}</Text>
+                      <View
+                        style={[
+                          styles.chipDot,
+                          { backgroundColor: SITUATION_DOT_COLOR[chip.sentiment] ?? colors.grey500 },
+                        ]}
+                      />
+                      <Text style={[styles.chipText, situationTags.includes(chip.label) && styles.chipTextSelected]}>
+                        {chip.label}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -227,8 +241,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
-  emoji: {
-    fontSize: 24,
+  reactionDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     marginRight: spacing.sm,
   },
   optionLabel: {
@@ -239,7 +255,7 @@ const styles = StyleSheet.create({
   effectText: {
     ...typography.caption,
     color: colors.textSecondary,
-    marginLeft: 32,
+    marginLeft: 20,
   },
   memoInput: {
     borderWidth: 1,
@@ -283,6 +299,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
@@ -297,6 +315,16 @@ const styles = StyleSheet.create({
   chipText: {
     ...typography.caption,
     color: colors.textPrimary,
+  },
+  chipTextSelected: {
+    color: colors.white,
+    fontWeight: '600',
+  },
+  chipDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: spacing.xs,
   },
   detailInput: {
     borderWidth: 1,

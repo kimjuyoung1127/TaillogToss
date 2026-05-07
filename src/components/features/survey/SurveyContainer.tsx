@@ -165,7 +165,7 @@ export function SurveyContainer({ onComplete, onBack }: SurveyContainerProps) {
         {renderStep()}
         {!isStepValid() && errorMsg && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>⚠️ {errorMsg}</Text>
+            <Text style={styles.errorText}>{errorMsg}</Text>
           </View>
         )}
       </View>

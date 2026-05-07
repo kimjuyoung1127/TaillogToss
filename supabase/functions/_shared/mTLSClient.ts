@@ -77,6 +77,7 @@ export interface MTLSClient {
     orderId: string;
     productId: string;
     transactionId: string;
+    userKey?: string;
   }): Promise<TossOrderVerification>;
   sendSmartMessage(request: {
     userId: string;
@@ -275,12 +276,48 @@ class RealMTLSClient implements MTLSClient {
     orderId: string;
     productId: string;
     transactionId: string;
+    userKey?: string;
   }): Promise<TossOrderVerification> {
-    return this.request<TossOrderVerification>(
+    if (!request.userKey) {
+      const error = new Error('Toss userKey is required for IAP order status') as StatusError;
+      error.status = 400;
+      error.code = 'TOSS_USER_KEY_REQUIRED';
+      throw error;
+    }
+
+    const payload = await this.request<unknown>(
       'POST',
-      `${TOSS_APP_PATH}/iap/verify-order`,
-      { body: request },
+      `${TOSS_APP_PATH}/order/get-order-status`,
+      {
+        body: { orderId: request.orderId },
+        headers: { 'x-toss-user-key': request.userKey },
+      },
     );
+    const result = unwrapTossSuccess<Record<string, unknown>>(payload, 'get-order-status');
+    const rawStatus = result.status ?? result.orderStatus ?? result.order_status ?? result.tossStatus;
+    if (typeof rawStatus !== 'string') {
+      throw new Error(`Toss get-order-status response has no status: ${JSON.stringify(payload).slice(0, 220)}`);
+    }
+
+    const rawSku = result.sku ?? result.productId ?? result.product_id;
+    if (typeof rawSku === 'string' && rawSku && rawSku !== request.productId) {
+      const error = new Error(`Toss IAP product mismatch: ${rawSku}`) as StatusError;
+      error.status = 409;
+      error.code = 'TOSS_PRODUCT_MISMATCH';
+      throw error;
+    }
+
+    const rawAmount = result.amount ?? result.paymentAmount ?? result.price ?? result.supplyAmount;
+    const amount = typeof rawAmount === 'number'
+      ? rawAmount
+      : (typeof rawAmount === 'string' ? Number(rawAmount.replace(/[^0-9.-]/g, '')) : 0);
+    const tossOrderId = result.orderId ?? result.order_id ?? result.id ?? request.orderId;
+
+    return {
+      tossStatus: rawStatus as TossOrderVerification['tossStatus'],
+      amount: Number.isFinite(amount) ? amount : 0,
+      tossOrderId: String(tossOrderId),
+    };
   }
 
   async sendSmartMessage(request: {
@@ -362,6 +399,7 @@ class MockMTLSClient implements MTLSClient {
     orderId: string;
     productId: string;
     transactionId: string;
+    userKey?: string;
   }): Promise<TossOrderVerification> {
     const key = `${request.orderId}:${request.transactionId}`;
     const currentAttempts = this.retryCounter.get(key) ?? 0;

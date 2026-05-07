@@ -5,13 +5,14 @@
  */
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet ,TouchableOpacity, Switch  } from 'react-native';
+import { View, Text, Image, StyleSheet ,TouchableOpacity, Switch  } from 'react-native';
 import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useUpdateSettings } from 'lib/hooks/useSettings';
 import { tracker } from 'lib/analytics/tracker';
 import { useAuth } from 'stores/AuthContext';
 import { consumePostLoginRedirect } from 'stores/postLoginRedirect';
+import { ICONS } from 'lib/data/iconSources';
 import { colors, typography } from 'styles/tokens';
 
 export const Route = createRoute('/onboarding/notification', {
@@ -120,7 +121,7 @@ function NotificationPage() {
         {/* Hero */}
         <View style={styles.heroSection}>
           <View style={styles.bellArea}>
-            <Text style={styles.bellEmoji}>🔔</Text>
+            <Image source={{ uri: ICONS['ic-bolt'] }} style={styles.bellIcon} />
           </View>
 
           <Text style={styles.heading}>반려견의 변화를{'\n'}놓치지 마세요</Text>
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
-  bellEmoji: { fontSize: 40 },
+  bellIcon: { width: 44, height: 44 },
   heading: {
     ...typography.t3,
     fontWeight: '700',

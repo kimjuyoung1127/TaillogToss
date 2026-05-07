@@ -8,6 +8,7 @@ import type { InterstitialPlacement, InterstitialAdState } from 'types/ads';
 import { INTERSTITIAL_PLACEMENT_CONFIG, DEFAULT_AD_FALLBACK } from 'types/ads';
 import { getAdGroupId, getAdsSdk } from 'lib/ads/config';
 import { tracker } from 'lib/analytics/tracker';
+import { buildAdDiagnostics } from 'lib/ads/diagnostics';
 
 const dailyCounts: Record<string, { date: string; count: number }> = {};
 
@@ -61,13 +62,13 @@ export function useInterstitialAd(
 
     if (getCount(placement) >= limit) {
       setAdState('no_fill');
-      tracker.adNoFill(placement, 'daily_limit');
+      tracker.adNoFill(placement, 'daily_limit', buildAdDiagnostics(placement, 'daily_limit'));
       onDismissed?.();
       return;
     }
 
     setAdState('loading');
-    tracker.adRequested(placement);
+    tracker.adRequested(placement, buildAdDiagnostics(placement, 'fullscreen_load_requested'));
 
     const sdk = getAdsSdk();
     const adGroupId = getAdGroupId(placement);
@@ -75,7 +76,7 @@ export function useInterstitialAd(
     timeoutRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
       setAdState('no_fill');
-      tracker.adNoFill(placement, 'timeout');
+      tracker.adNoFill(placement, 'timeout', buildAdDiagnostics(placement, 'fullscreen_load_timeout'));
       onDismissed?.();
     }, DEFAULT_AD_FALLBACK.timeout_ms);
 
@@ -83,7 +84,7 @@ export function useInterstitialAd(
       adGroupId,
       onLoaded: () => {
         if (!mountedRef.current) return;
-        tracker.adLoaded(placement);
+        tracker.adLoaded(placement, buildAdDiagnostics(placement, 'fullscreen_loaded'));
         setAdState('showing');
 
         let handled = false;
@@ -94,28 +95,28 @@ export function useInterstitialAd(
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
           increment(placement);
           setAdState('dismissed');
-          tracker.adDismissed(placement);
+          tracker.adDismissed(placement, buildAdDiagnostics(placement, 'fullscreen_dismissed'));
           onDismissed?.();
         };
 
         sdk.showFullScreenAd({
           onRewarded: handleDismiss,
           onClosed: handleDismiss,
-          onError: () => {
+          onError: (error) => {
             if (!mountedRef.current || handled) return;
             handled = true;
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             setAdState('error');
-            tracker.adError(placement);
+            tracker.adError(placement, buildAdDiagnostics(placement, 'fullscreen_show_error', error));
             onError?.();
           },
         });
       },
-      onError: () => {
+      onError: (error) => {
         if (!mountedRef.current) return;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setAdState('error');
-        tracker.adError(placement);
+        tracker.adError(placement, buildAdDiagnostics(placement, 'fullscreen_load_error', error));
         onError?.();
       },
     });

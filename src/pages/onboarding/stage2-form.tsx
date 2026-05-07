@@ -6,12 +6,15 @@
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import React, { useState, useCallback, useEffect } from 'react';
 import {
+  Image,
   Alert, ScrollView, StyleSheet, Text, TextInput,
   TouchableOpacity, View,
 } from 'react-native';
 import { FormLayout } from 'components/shared/layouts/FormLayout';
 import { useSubmitStage2 } from 'lib/hooks/useSurvey';
 import { useDraftSave } from 'lib/hooks/useDraftSave';
+import { ICONS } from 'lib/data/iconSources';
+import { useActiveDog } from 'stores/ActiveDogContext';
 import { colors, typography, spacing } from 'styles/tokens';
 import type { SurveyStage2Request } from 'types/dog';
 
@@ -36,71 +39,73 @@ interface Stage2Draft {
 }
 
 const ISSUES = [
-  { id: 'bathroom_miss', label: '🚽 배변 실수' },
-  { id: 'barking', label: '😤 짖음' },
-  { id: 'separation_anxiety', label: '😰 분리불안' },
-  { id: 'leash_pulling', label: '🐾 산책 당김' },
-  { id: 'aggression', label: '😾 공격성' },
-  { id: 'destructive', label: '🏠 파괴 행동' },
+  { id: 'bathroom_miss', label: '배변 실수', iconSource: ICONS['ic-cat-toilet'] },
+  { id: 'barking', label: '짖음', iconSource: ICONS['ic-cat-barking'] },
+  { id: 'separation_anxiety', label: '분리불안', iconSource: ICONS['ic-cat-anxiety'] },
+  { id: 'leash_pulling', label: '산책 당김', iconSource: ICONS['ic-cat-walk'] },
+  { id: 'aggression', label: '공격성', iconSource: ICONS['ic-cat-aggression'] },
+  { id: 'destructive', label: '파괴 행동', iconSource: ICONS['ic-cat-destructive'] },
 ];
 
 const LIVING_TYPES = [
-  { id: 'apartment', label: '🏢 아파트' },
-  { id: 'house', label: '🏠 단독주택' },
-  { id: 'villa', label: '🏘️ 빌라' },
-  { id: 'other', label: '🏙️ 오피스텔·기타' },
+  { id: 'apartment', label: '아파트', iconSource: ICONS['ic-home'] },
+  { id: 'house', label: '단독주택', iconSource: ICONS['ic-home'] },
+  { id: 'villa', label: '빌라', iconSource: ICONS['ic-home'] },
+  { id: 'other', label: '오피스텔·기타', iconSource: ICONS['ic-home'] },
 ] as const;
 
 const ALONE_HOURS = [
-  { id: '0', label: '😊 거의 없어요' },
-  { id: '1.5', label: '🕐 1~2시간' },
-  { id: '3', label: '🕒 2~4시간' },
-  { id: '5', label: '🕔 4~6시간' },
-  { id: '7', label: '😢 6시간 이상' },
+  { id: '0', label: '거의 없어요', iconSource: ICONS['ic-paw'] },
+  { id: '1.5', label: '1~2시간', iconSource: ICONS['ic-paw'] },
+  { id: '3', label: '2~4시간', iconSource: ICONS['ic-paw'] },
+  { id: '5', label: '4~6시간', iconSource: ICONS['ic-paw'] },
+  { id: '7', label: '6시간 이상', iconSource: ICONS['ic-cat-anxiety'] },
 ];
 
 const TRIGGERS = [
-  { id: 'alone', label: '🚪 혼자 있을 때' },
-  { id: 'walk', label: '🚶 산책 중' },
-  { id: 'stranger', label: '👥 낯선 사람' },
-  { id: 'other_dog', label: '🐕 다른 개' },
-  { id: 'noise', label: '🔊 큰 소리' },
-  { id: 'feeding', label: '🍽️ 밥 먹을 때' },
+  { id: 'alone', label: '혼자 있을 때', iconSource: ICONS['ic-cat-anxiety'] },
+  { id: 'walk', label: '산책 중', iconSource: ICONS['ic-cat-walk'] },
+  { id: 'stranger', label: '낯선 사람', iconSource: ICONS['ic-cat-fear'] },
+  { id: 'other_dog', label: '다른 개', iconSource: ICONS['ic-dog'] },
+  { id: 'noise', label: '큰 소리', iconSource: ICONS['ic-bolt'] },
+  { id: 'feeding', label: '밥 먹을 때', iconSource: ICONS['ic-cat-meal'] },
 ];
 
 const PAST_ATTEMPTS = [
-  { id: 'treat_reward', label: '🍖 간식 보상' },
-  { id: 'youtube_diy', label: '📱 유튜브·독학' },
-  { id: 'professional', label: '👨‍🏫 전문 훈련사' },
-  { id: 'kindergarten', label: '🏫 유치원' },
-  { id: 'none', label: '없어요' },
+  { id: 'treat_reward', label: '간식 보상', iconSource: ICONS['ic-cat-meal'] },
+  { id: 'youtube_diy', label: '유튜브·독학', iconSource: ICONS['ic-search'] },
+  { id: 'professional', label: '전문 훈련사', iconSource: ICONS['ic-trainer'] },
+  { id: 'kindergarten', label: '유치원', iconSource: ICONS['ic-training'] },
+  { id: 'none', label: '없어요', iconSource: ICONS['ic-paw'] },
 ];
 
 const WALK_FREQ = [
-  { id: '1', label: '🐌 주 1~2회' },
-  { id: '3.5', label: '🚶 주 3~4회' },
-  { id: '6', label: '🏃 거의 매일' },
-  { id: '7', label: '💨 매일 꼭!' },
+  { id: '1', label: '주 1~2회', iconSource: ICONS['ic-cat-walk'] },
+  { id: '3.5', label: '주 3~4회', iconSource: ICONS['ic-cat-walk'] },
+  { id: '6', label: '거의 매일', iconSource: ICONS['ic-cat-walk'] },
+  { id: '7', label: '매일 꼭!', iconSource: ICONS['ic-cat-walk'] },
 ];
 
 const WALK_DURATION = [
-  { id: '10', label: '⏱️ 15분 이내' },
-  { id: '22', label: '🕐 15~30분' },
-  { id: '45', label: '🕓 30~60분' },
-  { id: '90', label: '🏅 60분 이상' },
+  { id: '10', label: '15분 이내', iconSource: ICONS['ic-bolt'] },
+  { id: '22', label: '15~30분', iconSource: ICONS['ic-bolt'] },
+  { id: '45', label: '30~60분', iconSource: ICONS['ic-bolt'] },
+  { id: '90', label: '60분 이상', iconSource: ICONS['ic-bolt'] },
 ];
 
 const REWARDS = [
-  { id: 'treat', label: '🍖 간식' },
-  { id: 'toy', label: '🎾 장난감' },
-  { id: 'praise', label: '👋 칭찬·스킨십' },
-  { id: 'walk', label: '🚶 산책' },
+  { id: 'treat', label: '간식', iconSource: ICONS['ic-cat-meal'] },
+  { id: 'toy', label: '장난감', iconSource: ICONS['ic-cat-play'] },
+  { id: 'praise', label: '칭찬·스킨십', iconSource: ICONS['ic-paw'] },
+  { id: 'walk', label: '산책', iconSource: ICONS['ic-cat-walk'] },
 ];
 
 function Stage2FormPage() {
   const navigation = useNavigation();
   const params = Route.useParams() as RouteParams;
-  const { dogId, dogName } = params;
+  const { activeDog } = useActiveDog();
+  const targetDogId = params.dogId ?? activeDog?.id;
+  const displayDogName = params.dogName ?? activeDog?.name ?? '우리 아이';
   const submitStage2 = useSubmitStage2();
 
   const [issues, setIssues] = useState<string[]>([]);
@@ -120,7 +125,7 @@ function Stage2FormPage() {
   };
 
   const { loadedDraft, clearDraft } = useDraftSave<Stage2Draft>({
-    stageKey: `stage2_${dogId}`,
+    stageKey: `stage2_${targetDogId ?? 'direct-entry'}`,
     data: draftData,
   });
 
@@ -147,6 +152,13 @@ function Stage2FormPage() {
   };
 
   const handleSubmit = useCallback(() => {
+    if (!targetDogId) {
+      Alert.alert('반려견 정보가 필요해요', '먼저 반려견 프로필을 등록한 뒤 다시 시도해주세요.', [
+        { text: '확인', onPress: () => navigation.navigate('/onboarding/stage1-form' as never) },
+      ]);
+      return;
+    }
+
     const allIssues = issueOther.trim()
       ? [...issues, issueOther.trim()]
       : issues;
@@ -169,7 +181,7 @@ function Stage2FormPage() {
       rewards_meta: rewards.length > 0 ? { ids: rewards } : undefined,
     };
 
-    submitStage2.mutate({ dogId, data: payload }, {
+    submitStage2.mutate({ dogId: targetDogId, data: payload }, {
       onSuccess: async () => {
         await clearDraft();
         navigation.navigate('/dashboard');
@@ -178,7 +190,7 @@ function Stage2FormPage() {
         Alert.alert('저장 실패', err.message.slice(0, 200));
       },
     });
-  }, [dogId, issues, issueOther, livingType, hasOtherPets, triggers, pastAttempts, walkFreq, walkDuration, rewards, submitStage2, navigation]);
+  }, [targetDogId, issues, issueOther, livingType, hasOtherPets, triggers, pastAttempts, walkFreq, walkDuration, rewards, submitStage2, navigation]);
 
   const handleSkip = useCallback(() => {
     navigation.navigate('/dashboard');
@@ -186,7 +198,7 @@ function Stage2FormPage() {
 
   return (
     <FormLayout
-      title={`${dogName}에 대해 더 알려줘요`}
+      title={`${displayDogName}에 대해 더 알려줘요`}
       onBack={() => navigation.goBack()}
       bottomCTA={{
         label: submitStage2.isPending ? '저장 중...' : 'AI 코칭 활성화',
@@ -198,7 +210,7 @@ function Stage2FormPage() {
 
         {/* 나중에 하기 배너 */}
         <TouchableOpacity style={styles.skipBanner} onPress={handleSkip} activeOpacity={0.8}>
-          <Text style={styles.skipText}>⏭️ 나중에 할게요 — 기본 코칭만 먼저 볼게요</Text>
+          <Text style={styles.skipText}>나중에 할게요. 기본 코칭만 먼저 볼게요</Text>
         </TouchableOpacity>
 
         {/* 주요 고민 */}
@@ -208,6 +220,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={issues.includes(item.id)}
                 onPress={() => toggleItem(issues, setIssues, item.id, 3)}
               />
@@ -217,7 +230,7 @@ function Stage2FormPage() {
             style={[styles.input, styles.mt8]}
             value={issueOther}
             onChangeText={setIssueOther}
-            placeholder="✏️ 직접 입력..."
+            placeholder="직접 입력..."
             placeholderTextColor={colors.textSecondary}
             maxLength={100}
           />
@@ -230,6 +243,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={livingType === item.id}
                 onPress={() => setLivingType(item.id)}
               />
@@ -244,6 +258,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={aloneHours === item.id}
                 onPress={() => setAloneHours(item.id)}
               />
@@ -254,8 +269,8 @@ function Stage2FormPage() {
         {/* 다른 동물 */}
         <Section label="함께 사는 동물이 있나요?">
           <View style={styles.chipRow}>
-            <ChoiceChip label="🐾 있어요" selected={hasOtherPets === true} onPress={() => setHasOtherPets(true)} />
-            <ChoiceChip label="❌ 없어요" selected={hasOtherPets === false} onPress={() => setHasOtherPets(false)} />
+            <ChoiceChip label="있어요" iconSource={ICONS['ic-dog']} selected={hasOtherPets === true} onPress={() => setHasOtherPets(true)} />
+            <ChoiceChip label="없어요" iconSource={ICONS['ic-paw']} selected={hasOtherPets === false} onPress={() => setHasOtherPets(false)} />
           </View>
         </Section>
 
@@ -266,6 +281,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={triggers.includes(item.id)}
                 onPress={() => toggleItem(triggers, setTriggers, item.id, 3)}
               />
@@ -280,6 +296,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={pastAttempts.includes(item.id)}
                 onPress={() => toggleItem(pastAttempts, setPastAttempts, item.id, 3)}
               />
@@ -294,6 +311,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={walkFreq === item.id}
                 onPress={() => setWalkFreq(item.id)}
               />
@@ -308,6 +326,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={walkDuration === item.id}
                 onPress={() => setWalkDuration(item.id)}
               />
@@ -322,6 +341,7 @@ function Stage2FormPage() {
               <ChoiceChip
                 key={item.id}
                 label={item.label}
+                iconSource={item.iconSource}
                 selected={rewards.includes(item.id)}
                 onPress={() => toggleItem(rewards, setRewards, item.id, 2)}
               />
@@ -349,14 +369,15 @@ function Section({
 }
 
 function ChoiceChip({
-  label, selected, onPress,
-}: { label: string; selected: boolean; onPress: () => void }) {
+  label, iconSource, selected, onPress,
+}: { label: string; iconSource?: string; selected: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.chipSelected]}
       onPress={onPress}
       activeOpacity={0.7}
     >
+      {iconSource ? <Image source={{ uri: iconSource }} style={styles.chipIcon} /> : null}
       <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -379,6 +400,9 @@ const styles = StyleSheet.create({
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chipRow: { flexDirection: 'row', gap: spacing.sm },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderRadius: 20,
@@ -388,6 +412,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   chipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryBlueLight },
+  chipIcon: { width: 18, height: 18 },
   chipText: { ...typography.bodySmall, color: colors.textSecondary },
   chipTextSelected: { color: colors.primary, fontWeight: '600' },
   input: {
