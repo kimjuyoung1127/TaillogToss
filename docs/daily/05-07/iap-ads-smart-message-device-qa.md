@@ -275,6 +275,18 @@ Source: `/Users/family/Downloads/rn-miniapp-real-release-protected.DL3GxCd4.zip`
 
 Conclusion: outdated sandbox app is ruled out. Remaining likely causes are deployment entitlement/lookup in the Apps in Toss host, a difference between direct adb scheme launch and console QR/test-button context, or a server-side registration issue for private deployment `019e01b9...`.
 
+## Minimal AIT Smoke Build
+
+- [x] Temporary `_app.tsx` replaced with a single-screen `AppsInToss.registerApp` smoke app.
+- [x] Typecheck: `npx tsc --noEmit` PASS.
+- [x] Build: `ait build` PASS, deploymentId embedded in artifact `019e01f5-9ae6-774d-90d7-e68ac7132db5`.
+- [x] Artifact: current root `taillog-app.ait`, hash `552c233d3d5d3ada1eee5676f66fc6950e667b65664713d2e72c060b6ed81d03`, size about `17MB`.
+- [x] Bundle scan: `brandIcon:"https://static.toss.im/appsintoss/24957/82272792-1628-40f1-abbd-fd4be9e657e0.png"`, `[AIT-SMOKE] minimal-standalone-20260507-1845`, `Taillog AIT Smoke`, and `AppsInTossInitialProps` present.
+- [x] Syntax scan: `node --check` PASS for Android RN `0.84.0` and `0.72.6` bundles.
+- [x] Source restored to the normal app after smoke artifact creation; typecheck PASS after restore.
+
+Next: upload the current `taillog-app.ait` smoke artifact in the Apps in Toss console and run it by console QR/test button. If this minimal artifact also fails before JS, the blocker is host/deployment registration rather than the Taillog app bundle.
+
 ## Daily Sync
 
 - `docs/status/PROJECT-STATUS.md`: updated to QA state for IAP/MSG/AD
