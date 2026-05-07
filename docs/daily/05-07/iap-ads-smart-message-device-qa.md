@@ -316,6 +316,13 @@ Deployment: `019e0219-fcc0-7eaf-aa96-6853fd8a7553`
 
 Recommendation: submit this final candidate for review/escalation rather than the smoke artifact. Include the minimal smoke failure evidence (`019e01f5...`) in the review/support note so Toss can distinguish app-code issues from standalone host/deployment execution issues.
 
+## Review Request Submitted
+
+- [x] Apps in Toss review request submitted with the final review candidate AIT.
+- [x] Release note entered with the actual Taillog app scope: behavior logging, personalized training, AI coaching, subscription/tokens.
+- [x] App feature registered: `맞춤 훈련 찾기` / `Find training` -> `intoss://taillog-app/training/academy`.
+- [x] Follow-up operation rule: if Toss requests changes, reproduce in Metro dev mode first (`intoss://taillog-app`), patch code/docs, run `npx tsc --noEmit`, rebuild with `node_modules/.bin/ait build`, upload the new `.ait`, verify the new `deploymentId`, then resubmit with a short change summary.
+
 ## Daily Sync
 
 - `docs/status/PROJECT-STATUS.md`: updated to QA state for IAP/MSG/AD
