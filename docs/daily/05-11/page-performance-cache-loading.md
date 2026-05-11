@@ -141,10 +141,12 @@
 - Backend/query round-trip reduction:
   - Dashboard FastAPI service now loads `Dog + DogEnv` in one query and log count/recent logs/streak dates in one window-count query, reducing dashboard DB round trips from 5 to 2 while returning up to 20 recent logs.
   - Training progress and step feedback now share the same `/api/v1/training/{dogId}` row request when they are fired together; feedback is derived from cached rows instead of hitting `/training/feedback/{dogId}` separately.
+  - Behavior analytics now uses SQL aggregate rows for behavior count/average intensity/weekly trend, a separate peak-hour aggregate, and memo-only rows for keyword extraction instead of fetching full `BehaviorLog` ORM objects for every log in the analysis window.
   - Added regression tests:
     - `Backend/tests/test_dashboard_service.py`: dashboard service keeps compact 2-query behavior and response semantics.
+    - `Backend/tests/test_behavior_analytics.py`: behavior analytics preserves empty/trend/peak/top/memo semantics and verifies aggregate-query execution.
     - `src/lib/api/__tests__/training.test.ts`: simultaneous progress + feedback reads call backend rows only once.
-  - Validation: `npm run typecheck` PASS; `npm run test:app -- --runInBand --passWithNoTests` PASS: 16 suites, 101 tests; `Backend/venv/bin/pytest Backend/tests/ -v` PASS: 49 tests.
+  - Validation: `npm run typecheck` PASS; `npm run test:app -- --runInBand --passWithNoTests` PASS: 16 suites, 101 tests; `Backend/venv/bin/pytest Backend/tests/ -v` PASS: 50 tests.
 
 ## Notes
 
@@ -152,6 +154,6 @@
 - Next real-device pass should measure two runs per route: first cached population, then process restart/re-entry with hydrated cache.
 - Next instrumentation should log `loadingStartTs -> first shell`, `loadingStartTs -> cached data`, and `loadingStartTs -> fresh data settled` separately, because external adb/UI dump timing includes Toss host and Metro overhead.
 - Query/API split showed the slow leg was backend refresh, not rendering: dashboard aggregate about 6.3s, training backend reads about 5.7-6.2s. Stale policy now avoids those calls on fresh cached re-entry while preserving mutation invalidation.
-- Backend-side round trips are reduced for dashboard and training progress/feedback. Next improvement target: SQL-level aggregation for `/api/v1/dogs/{dogId}/behavior-analytics` and live AIT timing confirmation after upload.
+- Backend-side data transfer is reduced for dashboard, training progress/feedback, and `/api/v1/dogs/{dogId}/behavior-analytics`. Next improvement target: live AIT timing confirmation after upload.
 - If `Invalid semver: ''` repeats, first treat it as Sandbox host/native state: unlock device, force-stop host apps, clear logcat, relaunch. Only consider app-code changes if it reproduces after a clean launch.
 - Before review/release, disable or gate private `[PERF][startup]` logging if the measurement build is promoted.

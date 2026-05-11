@@ -4,12 +4,11 @@ SCHEMA-ISSUE-1: training_behavior_snapshots UNIQUE 제약으로 추이 분석 �
 """
 import re
 from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, case, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from typing import Dict, List, Optional
 
 from app.shared.models import BehaviorLog, TrainingStepAttempt
 from . import schemas
@@ -32,19 +31,46 @@ async def get_behavior_analytics(
     days: int = 30,
 ) -> schemas.BehaviorAnalyticsResponse:
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-
-    # 전체 로그 조회 (인덱스 활용)
-    q = (
-        select(BehaviorLog)
-        .where(
-            BehaviorLog.dog_id == dog_id,
-            BehaviorLog.occurred_at >= cutoff,
-        )
-        .order_by(BehaviorLog.occurred_at)
+    week_cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    prev_week_cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+    behavior_key = func.coalesce(
+        func.nullif(BehaviorLog.behavior, ""),
+        func.nullif(BehaviorLog.quick_category, ""),
+        literal("unknown"),
     )
-    logs = (await db.execute(q)).scalars().all()
+    base_filters = (
+        BehaviorLog.dog_id == dog_id,
+        BehaviorLog.occurred_at >= cutoff,
+    )
 
-    total_logs = len(logs)
+    count_expr = func.count(BehaviorLog.id)
+    aggregate_q = (
+        select(
+            behavior_key.label("behavior"),
+            count_expr.label("count"),
+            func.avg(BehaviorLog.intensity).label("avg_intensity"),
+            func.avg(
+                case((BehaviorLog.occurred_at >= week_cutoff, BehaviorLog.intensity))
+            ).label("this_week_avg"),
+            func.avg(
+                case(
+                    (
+                        and_(
+                            BehaviorLog.occurred_at >= prev_week_cutoff,
+                            BehaviorLog.occurred_at < week_cutoff,
+                        ),
+                        BehaviorLog.intensity,
+                    )
+                )
+            ).label("last_week_avg"),
+        )
+        .where(*base_filters)
+        .group_by(behavior_key)
+        .order_by(count_expr.desc())
+    )
+    aggregate_rows = (await db.execute(aggregate_q)).all()
+
+    total_logs = sum(int(row.count or 0) for row in aggregate_rows)
 
     if total_logs == 0:
         return schemas.BehaviorAnalyticsResponse(
@@ -59,89 +85,64 @@ async def get_behavior_analytics(
             memo_keywords={},
         )
 
-    # behavior 집계
-    behavior_groups: dict[str, list[BehaviorLog]] = {}
-    for log in logs:
-        key = log.behavior or log.quick_category or "unknown"
-        behavior_groups.setdefault(key, []).append(log)
-
-    # avg_intensity per behavior
-    avg_intensity_by_behavior: dict[str, float] = {}
-    for behavior, blogs in behavior_groups.items():
-        intensities = [l.intensity for l in blogs if l.intensity is not None]
-        avg_intensity_by_behavior[behavior] = round(
-            sum(intensities) / len(intensities) if intensities else 5.0, 1
+    top_behaviors = [row.behavior for row in aggregate_rows]
+    avg_intensity_by_behavior: dict[str, float] = {
+        row.behavior: round(
+            float(row.avg_intensity) if row.avg_intensity is not None else 5.0,
+            1,
         )
-
-    # 빈도순 top_behaviors
-    top_behaviors = sorted(
-        behavior_groups.keys(),
-        key=lambda b: len(behavior_groups[b]),
-        reverse=True,
-    )
-
-    # weekly trend (이번주 vs 지난주 avg_intensity 비교)
-    week_cutoff = datetime.now(timezone.utc) - timedelta(days=7)
-    prev_week_cutoff = datetime.now(timezone.utc) - timedelta(days=14)
+        for row in aggregate_rows
+    }
     weekly_trend: dict[str, str] = {}
-    for behavior, blogs in behavior_groups.items():
-        this_week = [
-            l.intensity
-            for l in blogs
-            if l.occurred_at and l.occurred_at >= week_cutoff and l.intensity is not None
-        ]
-        last_week = [
-            l.intensity
-            for l in blogs
-            if l.occurred_at
-            and prev_week_cutoff <= l.occurred_at < week_cutoff
-            and l.intensity is not None
-        ]
-        if not this_week or not last_week:
-            weekly_trend[behavior] = "stable"
+    for row in aggregate_rows:
+        if row.this_week_avg is None or row.last_week_avg is None:
+            weekly_trend[row.behavior] = "stable"
             continue
-        this_avg = sum(this_week) / len(this_week)
-        last_avg = sum(last_week) / len(last_week)
-        delta = this_avg - last_avg
+        delta = float(row.this_week_avg) - float(row.last_week_avg)
         if delta <= -0.5:
-            weekly_trend[behavior] = "improving"
+            weekly_trend[row.behavior] = "improving"
         elif delta >= 0.5:
-            weekly_trend[behavior] = "worsening"
+            weekly_trend[row.behavior] = "worsening"
         else:
-            weekly_trend[behavior] = "stable"
+            weekly_trend[row.behavior] = "stable"
 
-    # peak_hour (가장 많이 발생한 시간대)
-    hour_counts: dict[int, int] = {}
-    for log in logs:
-        if log.occurred_at:
-            h = log.occurred_at.hour
-            hour_counts[h] = hour_counts.get(h, 0) + 1
-    peak_hour = max(hour_counts, key=lambda h: hour_counts[h]) if hour_counts else None
+    hour_expr = func.extract("hour", BehaviorLog.occurred_at)
+    peak_q = (
+        select(hour_expr.label("hour"), func.count(BehaviorLog.id).label("count"))
+        .where(*base_filters, BehaviorLog.occurred_at.is_not(None))
+        .group_by(hour_expr)
+        .order_by(func.count(BehaviorLog.id).desc(), hour_expr.asc())
+        .limit(1)
+    )
+    peak_row = (await db.execute(peak_q)).first()
+    peak_hour = int(peak_row.hour) if peak_row and peak_row.hour is not None else None
 
-    # stats 조합
     stats = [
         schemas.BehaviorStat(
-            behavior=behavior,
-            count=len(blogs),
-            avg_intensity=avg_intensity_by_behavior[behavior],
-            trend=weekly_trend.get(behavior, "stable"),
+            behavior=row.behavior,
+            count=int(row.count or 0),
+            avg_intensity=avg_intensity_by_behavior[row.behavior],
+            trend=weekly_trend.get(row.behavior, "stable"),
         )
-        for behavior, blogs in sorted(
-            behavior_groups.items(), key=lambda x: len(x[1]), reverse=True
-        )
+        for row in aggregate_rows
     ]
 
-    # memo 키워드 집계 (behavior별 최대 5개 키워드, 빈도순)
+    memo_q = (
+        select(behavior_key.label("behavior"), BehaviorLog.memo.label("memo"))
+        .where(*base_filters, BehaviorLog.memo.is_not(None), BehaviorLog.memo != "")
+    )
+    memo_rows = (await db.execute(memo_q)).all()
+
     memo_keywords: Dict[str, List[str]] = {}
-    for behavior, blogs in behavior_groups.items():
-        word_freq: Dict[str, int] = {}
-        for log in blogs:
-            if log.memo and isinstance(log.memo, str) and log.memo.strip():
-                for word in _extract_keywords(log.memo[:100]):
-                    word_freq[word] = word_freq.get(word, 0) + 1
-        if word_freq:
-            sorted_words = sorted(word_freq, key=lambda w: word_freq[w], reverse=True)
-            memo_keywords[behavior] = sorted_words[:5]
+    word_freq_by_behavior: Dict[str, Dict[str, int]] = {}
+    for row in memo_rows:
+        if row.memo and isinstance(row.memo, str) and row.memo.strip():
+            word_freq = word_freq_by_behavior.setdefault(row.behavior, {})
+            for word in _extract_keywords(row.memo[:100]):
+                word_freq[word] = word_freq.get(word, 0) + 1
+    for behavior, word_freq in word_freq_by_behavior.items():
+        sorted_words = sorted(word_freq, key=lambda w: word_freq[w], reverse=True)
+        memo_keywords[behavior] = sorted_words[:5]
 
     return schemas.BehaviorAnalyticsResponse(
         dog_id=str(dog_id),

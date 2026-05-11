@@ -3,6 +3,7 @@
 Parity: AI-COACHING-ANALYTICS-001
 """
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -42,9 +43,66 @@ def mock_db():
 
 
 def _patch_db(mock_db, logs):
-    result = MagicMock()
-    result.scalars.return_value.all.return_value = logs
-    mock_db.execute = AsyncMock(return_value=result)
+    now = datetime.now(timezone.utc)
+    week_cutoff = now - timedelta(days=7)
+    prev_week_cutoff = now - timedelta(days=14)
+    groups = {}
+    for log in logs:
+        behavior = log.behavior or log.quick_category or "unknown"
+        groups.setdefault(behavior, []).append(log)
+
+    aggregate_rows = []
+    sorted_groups = sorted(groups.items(), key=lambda item: len(item[1]), reverse=True)
+    for behavior, behavior_logs in sorted_groups:
+        intensities = [log.intensity for log in behavior_logs if log.intensity is not None]
+        this_week = [
+            log.intensity
+            for log in behavior_logs
+            if log.occurred_at and log.occurred_at >= week_cutoff and log.intensity is not None
+        ]
+        last_week = [
+            log.intensity
+            for log in behavior_logs
+            if log.occurred_at
+            and prev_week_cutoff <= log.occurred_at < week_cutoff
+            and log.intensity is not None
+        ]
+        aggregate_rows.append(
+            SimpleNamespace(
+                behavior=behavior,
+                count=len(behavior_logs),
+                avg_intensity=(sum(intensities) / len(intensities)) if intensities else None,
+                this_week_avg=(sum(this_week) / len(this_week)) if this_week else None,
+                last_week_avg=(sum(last_week) / len(last_week)) if last_week else None,
+            )
+        )
+
+    hour_counts = {}
+    for log in logs:
+        if log.occurred_at:
+            hour_counts[log.occurred_at.hour] = hour_counts.get(log.occurred_at.hour, 0) + 1
+    peak_hour = None
+    if hour_counts:
+        peak_hour = sorted(hour_counts.items(), key=lambda item: (-item[1], item[0]))[0][0]
+
+    memo_rows = [
+        SimpleNamespace(behavior=log.behavior or log.quick_category or "unknown", memo=log.memo)
+        for log in logs
+        if log.memo
+    ]
+
+    aggregate_result = MagicMock()
+    aggregate_result.all.return_value = aggregate_rows
+    peak_result = MagicMock()
+    peak_result.first.return_value = (
+        SimpleNamespace(hour=peak_hour, count=hour_counts.get(peak_hour, 0))
+        if peak_hour is not None
+        else None
+    )
+    memo_result = MagicMock()
+    memo_result.all.return_value = memo_rows
+
+    mock_db.execute = AsyncMock(side_effect=[aggregate_result, peak_result, memo_result])
     return mock_db
 
 
@@ -167,3 +225,14 @@ async def test_no_memo_graceful(mock_db, dog_id):
     assert result.memo_keywords is not None
     assert isinstance(result.memo_keywords, dict)
     assert result.memo_keywords == {}
+
+
+# ── 케이스 8: ORM 전체 로그 조회 대신 집계 쿼리 사용 ─────────────────────
+@pytest.mark.asyncio
+async def test_uses_aggregate_queries_instead_of_full_log_scan(mock_db, dog_id):
+    logs = [_make_log(dog_id, "barking", 7, memo="자전거 소리") for _ in range(2)]
+    _patch_db(mock_db, logs)
+
+    await get_behavior_analytics(mock_db, dog_id)
+
+    assert mock_db.execute.await_count == 3
