@@ -147,6 +147,41 @@
     - `Backend/tests/test_behavior_analytics.py`: behavior analytics preserves empty/trend/peak/top/memo semantics and verifies aggregate-query execution.
     - `src/lib/api/__tests__/training.test.ts`: simultaneous progress + feedback reads call backend rows only once.
   - Validation: `npm run typecheck` PASS; `npm run test:app -- --runInBand --passWithNoTests` PASS: 16 suites, 101 tests; `Backend/venv/bin/pytest Backend/tests/ -v` PASS: 50 tests.
+- AIT uploaded-build `/training/academy` remeasurement after Railway deploy:
+  - Railway deploy: `f704fc3f-de21-4111-b416-2701eaced51d` SUCCESS; public `/health` HTTP 200.
+  - New AIT artifact/deploy: `019e162c-c1b7-7a29-a3e0-df4f21cf162a`, hash `8af3cd93fef425768d14e1f453350047b2b01f5c3489929cf40190d72b251db2`, bundle scan included `api_training_behavior_analytics_backend`, Railway URL, HTTPS `brandIcon`, and `isDevToolsEnabled() -> return false`.
+  - Launch: production Toss app, Metro off proof by absence of `loadJSBundleFromMetro()`, activity `viva.republica.toss/im.toss.rn.granite.core.GraniteActivity`.
+  - First launch after upload: cached query only, `behavior_analytics durationMs=null` because persisted cache was still fresh.
+  - After waiting past `queryPolicy.long` stale time, second launch forced backend refetch:
+    - `js_entry`: `fromLoadingStartMs=534`, `fromJsStartMs=0`.
+    - `first_paint_boundary`: `fromLoadingStartMs=850`, `fromJsStartMs=316`.
+    - `page_shell_ready`: `fromLoadingStartMs=1556`, `fromJsStartMs=1022`.
+    - `page_cached_data_ready`: `fromLoadingStartMs=1556`, `fromJsStartMs=1022`, `progressIsFetching=true`, `feedbackIsFetching=true`, `analyticsIsFetching=true`.
+    - `api_training_feedback_from_rows_done`: `durationMs=7056`.
+    - `training_progress` / `step_feedback` query settled: `durationMs=7091`.
+    - `api_training_behavior_analytics_backend_done`: `durationMs=7266`.
+    - `behavior_analytics` query settled: `durationMs=7305`.
+    - `page_fresh_data_settled`: `fromLoadingStartMs=8861`, `fromJsStartMs=8327`.
+  - Comparison: prior DEV_LOCAL behavior analytics backend marker was `6246ms`; this AIT/Railway production run was `7266ms` (+1020ms, about +16%). SQL aggregation did not produce an observable end-to-end improvement in this uploaded-build measurement. The result likely includes public network/Railway service latency and parallel training rows latency, so next split should measure backend server timing separately.
+  - Screenshot evidence: `/tmp/taillog-ait-training-019e162c.png`; log evidence: `/tmp/taillog-ait-training-stale.log`.
+- Backend server timing split + uploaded AIT validation:
+  - Implemented `Server-Timing` and `X-Taillog-Server-Timing` on `GET /api/v1/dogs/{dogId}/behavior-analytics`.
+  - Backend timing buckets: `ownership_ms`, `aggregate_ms`, `compute_ms`, `peak_ms`, `memo_ms`, `keywords_ms`, `serialize_ms`, `total_ms`.
+  - App-side `requestBackend()` now prints `[PERF][backend-server-timing]` for behavior analytics responses, with dog id redacted.
+  - Railway deploy: `da40cc90-225f-4052-988a-a4e701f95591` SUCCESS; public `/health` HTTP 200.
+  - New AIT artifact/deploy: `019e163c-d6fe-7168-9b81-2c784e043966`, hash `1289b0fc3d99b43ba9d77085915871b778bd8caacdf8a88c811ba6967d73616c`, bundle scan confirmed `[PERF][backend-server-timing]`, `server-timing`, Railway URL, `api_training_behavior_analytics_backend`, and `isDevToolsEnabled() -> return false`.
+  - Production Toss launch: activity `viva.republica.toss/im.toss.rn.granite.core.GraniteActivity`; no `loadJSBundleFromMetro()` marker in filtered log; `/training/academy` rendered.
+  - AIT timing:
+    - `first_paint_boundary`: `fromLoadingStartMs=2097`, `fromJsStartMs=329`.
+    - `page_cached_data_ready`: `fromLoadingStartMs=1881`, `fromJsStartMs=113`.
+    - `api_training_feedback_from_rows_done`: `durationMs=4106`.
+    - `[PERF][backend-server-timing]`: `ownership_ms=1694.4,aggregate_ms=259.2,serialize_ms=0.0,total_ms=1954.5`.
+    - `api_training_behavior_analytics_backend_done`: `durationMs=4509`.
+    - `behavior_analytics` query settled: `durationMs=4548`.
+    - `page_fresh_data_settled`: `fromLoadingStartMs=6429`, `fromJsStartMs=4661`.
+  - Split conclusion: the behavior analytics end-to-end marker improved from `7266ms` to `4509ms` on this AIT run, but only `1954.5ms` was inside the FastAPI route. The remaining ~`2554ms` is outside measured SQL/serialization and is likely app-to-Railway request overhead, auth/session/token work before request completion, public network, or Railway wake/queue time.
+  - Evidence: `/tmp/taillog-ait-server-timing-prod.log`, `/tmp/taillog-ait-server-timing-prod.png`, `/tmp/ait-build-server-timing.log`, `/tmp/ait-deploy-server-timing.log`.
+  - Validation: `npm run typecheck` PASS; `Backend/venv/bin/pytest Backend/tests/test_behavior_analytics.py -v` PASS (10 tests); `Backend/venv/bin/pytest Backend/tests/ -v` PASS (52 tests); `git diff --check` PASS.
 
 ## Notes
 
@@ -154,6 +189,6 @@
 - Next real-device pass should measure two runs per route: first cached population, then process restart/re-entry with hydrated cache.
 - Next instrumentation should log `loadingStartTs -> first shell`, `loadingStartTs -> cached data`, and `loadingStartTs -> fresh data settled` separately, because external adb/UI dump timing includes Toss host and Metro overhead.
 - Query/API split showed the slow leg was backend refresh, not rendering: dashboard aggregate about 6.3s, training backend reads about 5.7-6.2s. Stale policy now avoids those calls on fresh cached re-entry while preserving mutation invalidation.
-- Backend-side data transfer is reduced for dashboard, training progress/feedback, and `/api/v1/dogs/{dogId}/behavior-analytics`. Next improvement target: live AIT timing confirmation after upload.
+- Backend-side data transfer is reduced for dashboard, training progress/feedback, and `/api/v1/dogs/{dogId}/behavior-analytics`. Server timing now shows behavior analytics SQL aggregate itself is not the only bottleneck: latest AIT end-to-end was `4509ms`, while backend route total was `1954.5ms`. Next improvement target: reduce ownership/auth lookup time and inspect request/network/Railway overhead.
 - If `Invalid semver: ''` repeats, first treat it as Sandbox host/native state: unlock device, force-stop host apps, clear logcat, relaunch. Only consider app-code changes if it reproduces after a clean launch.
 - Before review/release, disable or gate private `[PERF][startup]` logging if the measurement build is promoted.

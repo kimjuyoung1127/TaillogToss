@@ -4,6 +4,7 @@ SCHEMA-ISSUE-1: training_behavior_snapshots UNIQUE 제약으로 추이 분석 �
 """
 import re
 from datetime import datetime, timedelta, timezone
+from time import perf_counter
 from typing import Dict, List, Optional
 from uuid import UUID
 
@@ -25,10 +26,16 @@ def _extract_keywords(text: str) -> List[str]:
     return [w for w in words if len(w) >= 2 and w not in _STOPWORDS]
 
 
+def _record_timing(timings: Optional[Dict[str, float]], key: str, started_at: float) -> None:
+    if timings is not None:
+        timings[key] = (perf_counter() - started_at) * 1000
+
+
 async def get_behavior_analytics(
     db: AsyncSession,
     dog_id: UUID,
     days: int = 30,
+    timings: Optional[Dict[str, float]] = None,
 ) -> schemas.BehaviorAnalyticsResponse:
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     week_cutoff = datetime.now(timezone.utc) - timedelta(days=7)
@@ -68,12 +75,15 @@ async def get_behavior_analytics(
         .group_by(behavior_key)
         .order_by(count_expr.desc())
     )
+    started_at = perf_counter()
     aggregate_rows = (await db.execute(aggregate_q)).all()
+    _record_timing(timings, "aggregate_ms", started_at)
 
+    started_at = perf_counter()
     total_logs = sum(int(row.count or 0) for row in aggregate_rows)
 
     if total_logs == 0:
-        return schemas.BehaviorAnalyticsResponse(
+        response = schemas.BehaviorAnalyticsResponse(
             dog_id=str(dog_id),
             analysis_days=days,
             total_logs=0,
@@ -84,6 +94,8 @@ async def get_behavior_analytics(
             stats=[],
             memo_keywords={},
         )
+        _record_timing(timings, "serialize_ms", started_at)
+        return response
 
     top_behaviors = [row.behavior for row in aggregate_rows]
     avg_intensity_by_behavior: dict[str, float] = {
@@ -105,6 +117,7 @@ async def get_behavior_analytics(
             weekly_trend[row.behavior] = "worsening"
         else:
             weekly_trend[row.behavior] = "stable"
+    _record_timing(timings, "compute_ms", started_at)
 
     hour_expr = func.extract("hour", BehaviorLog.occurred_at)
     peak_q = (
@@ -114,9 +127,12 @@ async def get_behavior_analytics(
         .order_by(func.count(BehaviorLog.id).desc(), hour_expr.asc())
         .limit(1)
     )
+    started_at = perf_counter()
     peak_row = (await db.execute(peak_q)).first()
+    _record_timing(timings, "peak_ms", started_at)
     peak_hour = int(peak_row.hour) if peak_row and peak_row.hour is not None else None
 
+    started_at = perf_counter()
     stats = [
         schemas.BehaviorStat(
             behavior=row.behavior,
@@ -131,8 +147,11 @@ async def get_behavior_analytics(
         select(behavior_key.label("behavior"), BehaviorLog.memo.label("memo"))
         .where(*base_filters, BehaviorLog.memo.is_not(None), BehaviorLog.memo != "")
     )
+    started_at = perf_counter()
     memo_rows = (await db.execute(memo_q)).all()
+    _record_timing(timings, "memo_ms", started_at)
 
+    started_at = perf_counter()
     memo_keywords: Dict[str, List[str]] = {}
     word_freq_by_behavior: Dict[str, Dict[str, int]] = {}
     for row in memo_rows:
@@ -143,8 +162,10 @@ async def get_behavior_analytics(
     for behavior, word_freq in word_freq_by_behavior.items():
         sorted_words = sorted(word_freq, key=lambda w: word_freq[w], reverse=True)
         memo_keywords[behavior] = sorted_words[:5]
+    _record_timing(timings, "keywords_ms", started_at)
 
-    return schemas.BehaviorAnalyticsResponse(
+    started_at = perf_counter()
+    response = schemas.BehaviorAnalyticsResponse(
         dog_id=str(dog_id),
         analysis_days=days,
         total_logs=total_logs,
@@ -155,6 +176,8 @@ async def get_behavior_analytics(
         stats=stats,
         memo_keywords=memo_keywords,
     )
+    _record_timing(timings, "serialize_ms", started_at)
+    return response
 
 
 async def get_step_attempts(

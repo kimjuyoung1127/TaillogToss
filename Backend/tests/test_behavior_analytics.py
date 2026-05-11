@@ -10,6 +10,7 @@ from uuid import uuid4
 import pytest
 
 from app.features.analytics.service import get_behavior_analytics
+from app.features.analytics.router import _format_debug_timing, _format_server_timing
 from app.shared.models import BehaviorLog
 
 
@@ -236,3 +237,38 @@ async def test_uses_aggregate_queries_instead_of_full_log_scan(mock_db, dog_id):
     await get_behavior_analytics(mock_db, dog_id)
 
     assert mock_db.execute.await_count == 3
+
+
+# ── 케이스 9: 서비스 내부 단계별 타이밍을 수집 ───────────────────────────
+@pytest.mark.asyncio
+async def test_collects_behavior_analytics_service_timings(mock_db, dog_id):
+    logs = [_make_log(dog_id, "barking", 7, memo="자전거 소리") for _ in range(2)]
+    _patch_db(mock_db, logs)
+    timings: dict[str, float] = {}
+
+    await get_behavior_analytics(mock_db, dog_id, timings=timings)
+
+    assert "aggregate_ms" in timings
+    assert "compute_ms" in timings
+    assert "peak_ms" in timings
+    assert "memo_ms" in timings
+    assert "keywords_ms" in timings
+    assert "serialize_ms" in timings
+    assert all(value >= 0 for value in timings.values())
+
+
+# ── 케이스 10: Server-Timing 헤더 포맷 ─────────────────────────────────
+def test_formats_behavior_analytics_server_timing_headers():
+    timings = {
+        "ownership_ms": 1.234,
+        "aggregate_ms": 20.0,
+        "memo_ms": 3.0,
+        "total_ms": 30.5,
+    }
+
+    assert _format_server_timing(timings) == (
+        "ownership;dur=1.2, aggregate;dur=20.0, memo;dur=3.0, total;dur=30.5"
+    )
+    assert _format_debug_timing(timings) == (
+        "ownership_ms=1.2,aggregate_ms=20.0,memo_ms=3.0,total_ms=30.5"
+    )

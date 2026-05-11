@@ -75,6 +75,30 @@ function toBackendApiError(message: string, status?: number, details?: unknown):
   return error;
 }
 
+function redactPerformancePath(path: string): string {
+  return path.replace(/\/dogs\/[^/]+\/behavior-analytics/, '/dogs/:dogId/behavior-analytics');
+}
+
+function logBackendServerTiming(method: HttpMethod, path: string, response: Response): void {
+  if (!path.includes('/behavior-analytics')) return;
+
+  try {
+    const serverTiming = response.headers.get('server-timing');
+    const debugTiming = response.headers.get('x-taillog-server-timing');
+    const timing = debugTiming || serverTiming;
+    if (!timing) return;
+
+    console.log('[PERF][backend-server-timing]', {
+      method,
+      path: redactPerformancePath(path),
+      status: response.status,
+      timing,
+    });
+  } catch {
+    // Timing headers are diagnostic only; never fail the API call because of them.
+  }
+}
+
 export async function requestBackend<TResponse, TBody = unknown>(
   path: string,
   options?: RequestOptions<TBody>,
@@ -98,6 +122,8 @@ export async function requestBackend<TResponse, TBody = unknown>(
     },
     body: serializedBody,
   });
+
+  logBackendServerTiming(method, path, response);
 
   if (response.status === 204) {
     return undefined as TResponse;
