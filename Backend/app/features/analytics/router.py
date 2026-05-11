@@ -18,6 +18,10 @@ logger = logging.getLogger("taillogtoss.analytics")
 
 _SERVER_TIMING_ORDER = (
     "ownership_ms",
+    "dog_lookup_ms",
+    "b2c_check_ms",
+    "assignment_lookup_ms",
+    "org_dog_lookup_ms",
     "aggregate_ms",
     "compute_ms",
     "peak_ms",
@@ -42,6 +46,14 @@ def _format_debug_timing(timings: dict[str, float]) -> str:
     return ",".join(f"{name}={timings[name]:.1f}" for name in names)
 
 
+def _format_debug_details(timings: dict[str, float], meta: dict[str, str]) -> str:
+    timing_text = _format_debug_timing(timings)
+    meta_text = ",".join(f"{key}={value}" for key, value in meta.items())
+    if timing_text and meta_text:
+        return f"{timing_text},{meta_text}"
+    return timing_text or meta_text
+
+
 @router.get("/{dog_id}/behavior-analytics", response_model=schemas.BehaviorAnalyticsResponse)
 async def get_behavior_analytics(
     dog_id: UUID,
@@ -53,16 +65,23 @@ async def get_behavior_analytics(
     """강아지 행동 패턴 분석 — behavior_logs 직접 집계"""
     route_started_at = perf_counter()
     timings: dict[str, float] = {}
+    timing_meta: dict[str, str] = {}
 
     started_at = perf_counter()
-    await verify_dog_ownership(db, dog_id, user_id=user_id)
+    await verify_dog_ownership(
+        db,
+        dog_id,
+        user_id=user_id,
+        timings=timings,
+        timing_meta=timing_meta,
+    )
     timings["ownership_ms"] = (perf_counter() - started_at) * 1000
 
     result = await service.get_behavior_analytics(db, dog_id, days, timings=timings)
     timings["total_ms"] = (perf_counter() - route_started_at) * 1000
 
     server_timing = _format_server_timing(timings)
-    debug_timing = _format_debug_timing(timings)
+    debug_timing = _format_debug_details(timings, timing_meta)
     response.headers["Server-Timing"] = server_timing
     response.headers["X-Taillog-Server-Timing"] = debug_timing
 

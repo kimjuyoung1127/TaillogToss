@@ -182,6 +182,18 @@
   - Split conclusion: the behavior analytics end-to-end marker improved from `7266ms` to `4509ms` on this AIT run, but only `1954.5ms` was inside the FastAPI route. The remaining ~`2554ms` is outside measured SQL/serialization and is likely app-to-Railway request overhead, auth/session/token work before request completion, public network, or Railway wake/queue time.
   - Evidence: `/tmp/taillog-ait-server-timing-prod.log`, `/tmp/taillog-ait-server-timing-prod.png`, `/tmp/ait-build-server-timing.log`, `/tmp/ait-deploy-server-timing.log`.
   - Validation: `npm run typecheck` PASS; `Backend/venv/bin/pytest Backend/tests/test_behavior_analytics.py -v` PASS (10 tests); `Backend/venv/bin/pytest Backend/tests/ -v` PASS (52 tests); `git diff --check` PASS.
+- Ownership path split + AIT validation:
+  - Implemented optional timing/meta fields inside `verify_dog_ownership()` without changing access rules.
+  - New timing/meta keys: `dog_lookup_ms`, `b2c_check_ms`, `assignment_lookup_ms`, `org_dog_lookup_ms`, `b2c_match`, `ownership_path`.
+  - Regression tests added for B2C fast path and denied B2B fallback path.
+  - Railway deploy: `318e4e14-1c34-43a7-85d1-2078dded5bed` SUCCESS; existing AIT `019e163c-d6fe-7168-9b81-2c784e043966` reused because the app already logs `X-Taillog-Server-Timing`.
+  - Production Toss launch result:
+    - `[PERF][backend-server-timing]`: `ownership_ms=4033.9,dog_lookup_ms=4033.1,b2c_check_ms=0.0,aggregate_ms=290.4,serialize_ms=0.1,total_ms=4327.0,b2c_match=true,ownership_path=b2c_owner`.
+    - `api_training_behavior_analytics_backend_done`: `durationMs=5963`.
+    - `page_fresh_data_settled`: `fromLoadingStartMs=7649`, `fromJsStartMs=7079`.
+  - Conclusion: the first-entry request is not taking the B2B fallback. It is a B2C owner match, and almost all measured ownership time is the initial `dogs` row lookup. Next safe optimization target is DB lookup latency for `dogs.id`/connection wake, not removing B2B checks.
+  - Evidence: `/tmp/taillog-ait-ownership-split.log`.
+  - Validation: `Backend/venv/bin/pytest Backend/tests/test_ownership.py Backend/tests/test_behavior_analytics.py -v` PASS (13 tests); `Backend/venv/bin/pytest Backend/tests/ -v` PASS (55 tests); `git diff --check` PASS.
 
 ## Notes
 
@@ -189,6 +201,6 @@
 - Next real-device pass should measure two runs per route: first cached population, then process restart/re-entry with hydrated cache.
 - Next instrumentation should log `loadingStartTs -> first shell`, `loadingStartTs -> cached data`, and `loadingStartTs -> fresh data settled` separately, because external adb/UI dump timing includes Toss host and Metro overhead.
 - Query/API split showed the slow leg was backend refresh, not rendering: dashboard aggregate about 6.3s, training backend reads about 5.7-6.2s. Stale policy now avoids those calls on fresh cached re-entry while preserving mutation invalidation.
-- Backend-side data transfer is reduced for dashboard, training progress/feedback, and `/api/v1/dogs/{dogId}/behavior-analytics`. Server timing now shows behavior analytics SQL aggregate itself is not the only bottleneck: latest AIT end-to-end was `4509ms`, while backend route total was `1954.5ms`. Next improvement target: reduce ownership/auth lookup time and inspect request/network/Railway overhead.
+- Backend-side data transfer is reduced for dashboard, training progress/feedback, and `/api/v1/dogs/{dogId}/behavior-analytics`. Server timing now shows behavior analytics SQL aggregate itself is not the only bottleneck. Ownership split confirmed the current `/training/academy` AIT run is `b2c_match=true` and `ownership_path=b2c_owner`; the slow part is `dog_lookup_ms`, not B2B fallback.
 - If `Invalid semver: ''` repeats, first treat it as Sandbox host/native state: unlock device, force-stop host apps, clear logcat, relaunch. Only consider app-code changes if it reproduces after a clean launch.
 - Before review/release, disable or gate private `[PERF][startup]` logging if the measurement build is promoted.

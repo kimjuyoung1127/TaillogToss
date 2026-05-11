@@ -10,7 +10,11 @@ from uuid import uuid4
 import pytest
 
 from app.features.analytics.service import get_behavior_analytics
-from app.features.analytics.router import _format_debug_timing, _format_server_timing
+from app.features.analytics.router import (
+    _format_debug_details,
+    _format_debug_timing,
+    _format_server_timing,
+)
 from app.shared.models import BehaviorLog
 
 
@@ -271,4 +275,20 @@ def test_formats_behavior_analytics_server_timing_headers():
     )
     assert _format_debug_timing(timings) == (
         "ownership_ms=1.2,aggregate_ms=20.0,memo_ms=3.0,total_ms=30.5"
+    )
+
+
+# ── 케이스 11: ownership path meta를 debug timing에 포함 ────────────────
+def test_formats_behavior_analytics_debug_timing_with_ownership_meta():
+    timings = {
+        "ownership_ms": 10.0,
+        "dog_lookup_ms": 8.0,
+        "b2c_check_ms": 0.1,
+        "total_ms": 15.0,
+    }
+    meta = {"b2c_match": "true", "ownership_path": "b2c_owner"}
+
+    assert _format_debug_details(timings, meta) == (
+        "ownership_ms=10.0,dog_lookup_ms=8.0,b2c_check_ms=0.1,total_ms=15.0,"
+        "b2c_match=true,ownership_path=b2c_owner"
     )
