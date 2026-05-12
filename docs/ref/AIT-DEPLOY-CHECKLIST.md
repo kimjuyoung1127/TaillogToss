@@ -1,6 +1,6 @@
 # TaillogToss 앱인토스 배포 전 체크리스트
 
-> 생성: 2026-04-30 | 기준: Opus 전수 스캔 결과
+> 생성: 2026-04-30 | 최종 점검: 2026-05-12 | 기준: Codex 출시 전 코드/문서 정합성 스캔
 > 심사 소요: 운영/기능/디자인/보안 4단계, 영업일 최대 3일
 > 전략: **B2C 우선 출시 → 2주 후 B2B 추가 배포**
 
@@ -9,9 +9,9 @@
 ## 🔴 BLOCKER — 심사 통과 필수
 
 ### B1. IAP createOneTimePurchaseOrder 실 SDK 교체
-- [ ] `src/lib/api/iap.ts:160-189` — orderId mock(`order_${Date.now().toString(36)}`) 제거
-- [ ] 실 Toss SDK `@apps-in-toss/framework` IAP 호출로 교체
-- [ ] `completeProductGrant` 정상 동작 확인 (`iap.ts:183` 이미 호출 있음)
+- [x] `src/lib/api/iap.ts` 실 Toss SDK `IAP.createOneTimePurchaseOrder` 사용 확인
+- [x] 서버 지급 성공 후에만 `IAP.completeProductGrant` 호출 확인
+- [x] `getPendingOrders()` 우선 + DB fallback 복원 경로 확인
 
 ### B2. IAP 샌드박스 3종 시나리오 테스트 (실기기)
 - [ ] 시나리오 1: PRO ₩4,895 구매 성공 → `subscriptions.is_active=true` DB 확인
@@ -19,17 +19,17 @@
 - [ ] 시나리오 3: 사용자 취소/에러 → 구독 상태 미변경 확인
 
 ### B3. 광고 슬롯 5개 페이지 연결 (컴포넌트는 이미 완성됨)
-- [ ] R2: `src/pages/dashboard/analysis.tsx` → `<RewardedAdButton placement="R2" />`
-- [ ] B1: `src/pages/dashboard/index.tsx` → `<BannerAd placement="B1" />`
-- [ ] B2: `src/pages/dashboard/quick-log.tsx` → `<BannerAd placement="B2" />`
-- [ ] B3: `src/pages/training/detail.tsx` → `<BannerAd placement="B3" />`
-- [ ] I1: `src/pages/training/academy.tsx` → `<InterstitialAd placement="I1" />`
-- [ ] 모두 `{!isPro && <컴포넌트 />}` 무료 사용자 조건 적용
+- [x] R2: `src/pages/dashboard/analysis.tsx` → `<RewardedAdButton placement="R2" />`
+- [x] B1: `src/pages/dashboard/index.tsx` → `<BannerAd placement="B1" />`
+- [x] B2: `src/pages/dashboard/quick-log.tsx` → `<BannerAd placement="B2" />`
+- [x] B3: `src/pages/training/detail.tsx` → `<BannerAd placement="B3" />`
+- [x] I1: `src/pages/training/academy.tsx` → `useInterstitialAd('I1')`
+- [x] 무료 사용자 조건 적용 확인 (`!isPro`)
 
 ### B4. 실 Ad Group ID 환경변수 등록
-- [ ] Toss Ads 관리자에서 7개 슬롯 실 ID 발급 신청 (신청 후 48시간 활성화)
-- [ ] 환경변수 등록: `AIT_AD_R1 / R2 / R3 / B1 / B2 / B3 / I1`
-- [ ] `isMockMode()` 자동 감지 확인 (test ID 아니면 실 광고 자동 전환)
+- [x] Toss Ads 관리자 실 ID 7종 코드 fallback 반영
+- [x] `src/lib/ads/config.ts` `LIVE_AD_GROUP_IDS` 7종 확인
+- [x] `isMockMode()`는 `ait-ad-test-` prefix일 때만 true
 
 ### B5. QR 테스트 최소 1회 완료
 - [ ] 실기기에서 앱 테스트 QR 생성 → 스캔 → 동작 확인
@@ -90,10 +90,10 @@
 - [x] SDK 2.x 적용 (`@apps-in-toss/framework ^2.4.1`)
 - [x] 번들 크기 100MB 미만 (현재 4.9MB ✅)
 - [x] mTLS 설정 완료 (IAP/SmartMessage/포인트 전체)
-- [x] `tsc --noEmit` 0 errors
-- [ ] IAP 실 SDK 연결 (B1)
+- [x] `tsc --noEmit` 0 errors (2026-05-12 재확인)
+- [x] IAP 실 SDK 연결 (B1)
 - [ ] IAP 샌드박스 3종 (B2)
-- [ ] 외부 결제/앱 다운로드 링크 없음 확인
+- [x] 외부 결제/앱 다운로드 링크 없음 코드 스캔 확인 (2026-05-12)
 
 ### 디자인 심사
 - [x] 앱 로고 600×600 각진 정사각형 (`src/assets/icons/app-logo-600.png`)
@@ -118,7 +118,7 @@
 | 구분 | B2C | B2B |
 |---|---|---|
 | 구현 완성도 | 95% | 70% |
-| BLOCKER 수 | 5개 | 5개 + 추가 6개 |
+| BLOCKER 수 | 2개 | 2개 + B2B 추가 검증 |
 | 초기 출시 | ✅ 포함 | ❌ 제외 (2주 후) |
 | 기대 사용자 | 개인 견주 (90%) | 훈련사/센터 (10%) |
 
@@ -127,7 +127,7 @@
 ## 완료 기준 (Definition of Done)
 
 배포 제출 가능 조건:
-1. BLOCKER B1~B5 전체 체크 완료
+1. BLOCKER B2/B5 전체 체크 완료
 2. `tsc --noEmit` 0 errors
 3. IAP 샌드박스 3종 실기기 통과 증적 남기기
 4. 앱인토스 콘솔 "검토 요청" 버튼 활성화 확인

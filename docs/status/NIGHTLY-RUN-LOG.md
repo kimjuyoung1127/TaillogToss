@@ -41,3 +41,7 @@ Execution log for docs nightly organizer (22:00 Asia/Seoul).
 - weekly_created_or_updated: none
 - deleted_daily_count: 0
 - errors: none
+
+## 2026-05-11 18:31 [오케스트레이터]
+- vision-labeling: 오류 — TailLog Supabase INACTIVE (DB 접근 불가)
+- docs-organizer: weekly 생성 5개 (W09/W10/W14/W17/W18) / daily 삭제 18개 / 남은 daily 5개

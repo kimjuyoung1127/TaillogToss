@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import math
 from pathlib import Path
 
@@ -13,14 +14,21 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = ROOT / "src/assets/icons"
 
+ICON_SOURCES = ROOT / "src/lib/data/iconSources.ts"
+
 NAVY = (10, 30, 76, 255)
-NAVY_MID = (28, 57, 118, 255)
+NAVY_MID = (24, 50, 105, 255)
 NAVY_SOFT = (54, 82, 144, 255)
-GOLD = (250, 194, 40, 255)
-GOLD_DEEP = (229, 162, 15, 255)
-GOLD_LIGHT = (255, 227, 132, 255)
-CREAM = (255, 245, 214, 255)
+GREEN = (28, 64, 50, 255)
+GREEN_SOFT = (122, 156, 111, 255)
+GOLD = (254, 213, 36, 255)
+GOLD_DEEP = (250, 194, 40, 255)
+GOLD_LIGHT = (255, 232, 137, 255)
+CREAM = (250, 249, 245, 255)
+PAPER = (255, 248, 226, 255)
 WHITE = (255, 255, 255, 255)
+ORANGE = (217, 119, 66, 255)
+ORANGE_DEEP = (178, 79, 32, 255)
 CORAL = (242, 122, 88, 255)
 SKY = (122, 193, 231, 255)
 SAGE = (132, 171, 138, 255)
@@ -30,58 +38,117 @@ SOFT_SHADOW = (6, 12, 28, 28)
 TRANSPARENT = (0, 0, 0, 0)
 
 TAB_ICON_SPECS = {
-    "ic-home": (48, 72),
-    "ic-training": (48, 72),
-    "ic-coaching": (48, 72),
-    "ic-settings": (48, 72),
-    "ic-paw": (48, 72),
-    "ic-add-log": (48, 72),
-    "ic-analysis": (48, 72),
-    "ic-back": (48, 72),
+    "ic-home": (48, 48, 72),
+    "ic-training": (48, 48, 72),
+    "ic-coaching": (48, 48, 72),
+    "ic-settings": (48, 48, 72),
+    "ic-paw": (48, 48, 72),
+    "ic-add-log": (48, 48, 72),
+    "ic-analysis": (48, 48, 72),
+    "ic-back": (48, 48, 72),
+}
+
+UTILITY_ICON_SPECS = {
+    "ic-ops": (48, 48, 72),
+    "ic-trainer": (48, 48, 72),
+    "ic-stage-puppy": (48, 48, 72),
+    "ic-stage-adult": (48, 48, 72),
+    "ic-stage-senior": (48, 48, 72),
+    "ic-search": (48, 48, 72),
+    "ic-target": (48, 48, 72),
+    "ic-idea": (48, 48, 72),
+    "ic-bolt": (48, 48, 72),
+    "ic-puzzle": (48, 48, 72),
+    "ic-dog": (48, 48, 72),
+    "ic-report": (48, 48, 72),
 }
 
 CATEGORY_ICON_SPECS = {
-    "ic-cat-barking": (80, 120),
-    "ic-cat-mounting": (80, 120),
-    "ic-cat-excitement": (80, 120),
-    "ic-cat-toilet": (80, 120),
-    "ic-cat-destructive": (80, 120),
-    "ic-cat-anxiety": (80, 120),
-    "ic-cat-aggression": (80, 120),
-    "ic-cat-fear": (80, 120),
-    "ic-cat-walk": (80, 120),
-    "ic-cat-meal": (80, 120),
-    "ic-cat-train": (80, 120),
-    "ic-cat-play": (80, 120),
-    "ic-cat-rest": (80, 120),
-    "ic-cat-grooming": (80, 120),
+    "ic-cat-barking": (80, 80, 120),
+    "ic-cat-mounting": (80, 80, 120),
+    "ic-cat-excitement": (80, 80, 120),
+    "ic-cat-toilet": (80, 80, 120),
+    "ic-cat-destructive": (80, 80, 120),
+    "ic-cat-anxiety": (80, 80, 120),
+    "ic-cat-aggression": (80, 80, 120),
+    "ic-cat-fear": (80, 80, 120),
+    "ic-cat-walk": (80, 80, 120),
+    "ic-cat-meal": (80, 80, 120),
+    "ic-cat-train": (80, 80, 120),
+    "ic-cat-play": (80, 80, 120),
+    "ic-cat-rest": (80, 80, 120),
+    "ic-cat-grooming": (80, 80, 120),
 }
 
 BADGE_ICON_SPECS = {
-    "badge-streak-3": (128, 192),
-    "badge-streak-7": (128, 192),
-    "badge-streak-30": (128, 192),
-    "badge-pro": (128, 192),
+    "badge-streak-3": (128, 128, 192),
+    "badge-streak-7": (128, 128, 192),
+    "badge-streak-30": (128, 128, 192),
+    "badge-pro": (128, 128, 192),
 }
 
 ILLUST_SPECS = {
-    "illust-empty-log": (400, 600),
-    "illust-empty-coaching": (400, 600),
-    "illust-empty-training": (400, 600),
+    "illust-empty-log": (400, 400, 600),
+    "illust-empty-coaching": (400, 400, 600),
+    "illust-empty-training": (400, 400, 600),
 }
+
+ICON_SOURCE_ORDER = (
+    "badge-pro",
+    "badge-streak-30",
+    "badge-streak-3",
+    "badge-streak-7",
+    "ic-add-log",
+    "ic-analysis",
+    "ic-back",
+    "ic-bolt",
+    "ic-cat-aggression",
+    "ic-cat-anxiety",
+    "ic-cat-barking",
+    "ic-cat-destructive",
+    "ic-cat-excitement",
+    "ic-cat-fear",
+    "ic-cat-grooming",
+    "ic-cat-meal",
+    "ic-cat-mounting",
+    "ic-cat-play",
+    "ic-cat-rest",
+    "ic-cat-toilet",
+    "ic-cat-train",
+    "ic-cat-walk",
+    "ic-coaching",
+    "ic-dog",
+    "ic-home",
+    "ic-idea",
+    "ic-ops",
+    "ic-paw",
+    "ic-puzzle",
+    "ic-report",
+    "ic-search",
+    "ic-settings",
+    "ic-stage-adult",
+    "ic-stage-puppy",
+    "ic-stage-senior",
+    "ic-target",
+    "ic-trainer",
+    "ic-training",
+    "illust-empty-coaching",
+    "illust-empty-log",
+    "illust-empty-training",
+)
 
 CATEGORY_ACCENTS = {
     "ic-cat-barking": CORAL,
     "ic-cat-mounting": CORAL,
-    "ic-cat-excitement": GOLD,
+    "ic-cat-excitement": GOLD_DEEP,
     "ic-cat-toilet": SKY,
     "ic-cat-destructive": CORAL,
     "ic-cat-anxiety": SAGE,
     "ic-cat-aggression": CORAL,
     "ic-cat-fear": SKY,
     "ic-cat-walk": SAGE,
-    "ic-cat-meal": GOLD,
-    "ic-cat-train": GOLD,
+    "ic-cat-meal": ORANGE,
+    "ic-cat-train": GREEN_SOFT,
     "ic-cat-play": SKY,
     "ic-cat-rest": NAVY_SOFT,
     "ic-cat-grooming": SKY,
@@ -91,7 +158,7 @@ BADGE_RIBBONS = {
     "badge-streak-3": CORAL,
     "badge-streak-7": SKY,
     "badge-streak-30": SAGE,
-    "badge-pro": GOLD,
+    "badge-pro": GOLD_DEEP,
 }
 
 
@@ -221,6 +288,49 @@ def draw_paw(
         outline=outline,
         width=outline_width,
     )
+
+
+def draw_tailog_dog(draw: ImageDraw.ImageDraw, s: int, cx: float, cy: float, scale: float = 1.0) -> None:
+    head = s * 0.21 * scale
+    stroke = i(s * 0.028 * scale)
+    draw.ellipse([i(cx - head), i(cy - head), i(cx + head), i(cy + head)], fill=GOLD, outline=NAVY, width=stroke)
+    draw.ellipse([i(cx - head * 0.58), i(cy + head * 0.05), i(cx + head * 0.58), i(cy + head * 0.72)], fill=PAPER)
+    draw.ellipse([i(cx - head * 1.1), i(cy - head * 0.55), i(cx - head * 0.35), i(cy + head * 0.28)], fill=GOLD, outline=NAVY, width=max(1, stroke // 2))
+    draw.ellipse([i(cx + head * 0.35), i(cy - head * 0.55), i(cx + head * 1.1), i(cy + head * 0.28)], fill=GOLD, outline=NAVY, width=max(1, stroke // 2))
+    for eye_x in (cx - head * 0.34, cx + head * 0.34):
+        draw.ellipse([i(eye_x - head * 0.07), i(cy - head * 0.08), i(eye_x + head * 0.07), i(cy + head * 0.08)], fill=INK)
+        draw.ellipse([i(eye_x - head * 0.02), i(cy - head * 0.05), i(eye_x + head * 0.02), i(cy - head * 0.01)], fill=WHITE)
+    draw.ellipse([i(cx - head * 0.14), i(cy + head * 0.18), i(cx + head * 0.14), i(cy + head * 0.36)], fill=INK)
+    draw.line(arc_points(cx - head * 0.12, cy + head * 0.38, head * 0.2, 20, 105, 8), fill=INK, width=max(1, stroke // 2))
+    draw.line(arc_points(cx + head * 0.12, cy + head * 0.38, head * 0.2, 75, 160, 8), fill=INK, width=max(1, stroke // 2))
+
+
+def draw_logbook(draw: ImageDraw.ImageDraw, s: int, box: tuple[float, float, float, float], accent: bool = True) -> None:
+    x1, y1, x2, y2 = [s * v for v in box]
+    stroke = i(s * 0.026)
+    draw.rounded_rectangle([i(x1), i(y1), i(x2), i(y2)], radius=i(s * 0.075), fill=ORANGE, outline=NAVY, width=stroke)
+    draw.line([(i((x1 + x2) / 2), i(y1 + s * 0.02)), (i((x1 + x2) / 2), i(y2 - s * 0.02))], fill=ORANGE_DEEP, width=max(1, stroke // 2))
+    draw.rounded_rectangle([i(x1 + s * 0.06), i(y1 + s * 0.12), i(x1 + s * 0.22), i(y1 + s * 0.28)], radius=i(s * 0.025), fill=PAPER)
+    draw_paw(draw, x1 + s * 0.14, y1 + s * 0.21, s * 0.12, ORANGE)
+    if accent:
+        points = [(i(x1 + s * 0.36), i(y1 + s * 0.28)), (i(x1 + s * 0.45), i(y1 + s * 0.2)), (i(x1 + s * 0.55), i(y1 + s * 0.25)), (i(x1 + s * 0.66), i(y1 + s * 0.14))]
+        draw.line(points, fill=GREEN, width=i(s * 0.026), joint="curve")
+        for px, py in points:
+            draw.ellipse([px - i(s * 0.025), py - i(s * 0.025), px + i(s * 0.025), py + i(s * 0.025)], fill=GREEN)
+        for idx in range(3):
+            y = y1 + s * (0.38 + idx * 0.085)
+            draw.line([(i(x1 + s * 0.38), i(y)), (i(x1 + s * 0.68), i(y))], fill=NAVY_MID, width=i(s * 0.018))
+
+
+def draw_tailog_mark(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_tailog_dog(draw, s, s * 0.5, s * 0.34, 0.86)
+    draw_logbook(draw, s, (0.19, 0.46, 0.81, 0.82), accent=True)
+    draw.line(arc_points(s * 0.66, s * 0.31, s * 0.2, 310, 60, 12), fill=GREEN_SOFT, width=i(s * 0.025))
+    for idx, ratio in enumerate((0.0, 0.33, 0.66, 1.0)):
+        angle = math.radians(310 + (60 - 310 + 360) * ratio)
+        x = s * 0.66 + math.cos(angle) * s * 0.2
+        y = s * 0.31 + math.sin(angle) * s * 0.2
+        draw.ellipse([i(x - s * 0.018), i(y - s * 0.018), i(x + s * 0.018), i(y + s * 0.018)], fill=GREEN_SOFT)
 
 
 def draw_whistle_mark(draw: ImageDraw.ImageDraw, s: int, accent: tuple[int, int, int, int] = CREAM, sound: bool = True) -> None:
@@ -429,6 +539,71 @@ def draw_grooming(draw: ImageDraw.ImageDraw, s: int) -> None:
     draw.line([(i(s * 0.78), i(s * 0.26)), (i(s * 0.84), i(s * 0.32))], fill=CREAM, width=i(s * 0.04))
 
 
+def draw_ops(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.22), i(s * 0.24), i(s * 0.78), i(s * 0.74)], radius=i(s * 0.08), fill=ORANGE, outline=NAVY, width=i(s * 0.035))
+    for x in (0.34, 0.5, 0.66):
+        draw.line([(i(s * x), i(s * 0.34)), (i(s * x), i(s * 0.64))], fill=PAPER, width=i(s * 0.025))
+    for cx, cy in ((0.34, 0.44), (0.5, 0.56), (0.66, 0.4)):
+        draw.ellipse([i(s * cx - s * 0.045), i(s * cy - s * 0.045), i(s * cx + s * 0.045), i(s * cy + s * 0.045)], fill=GREEN)
+
+
+def draw_trainer(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_tailog_dog(draw, s, s * 0.42, s * 0.45, 0.72)
+    draw.rounded_rectangle([i(s * 0.52), i(s * 0.34), i(s * 0.78), i(s * 0.62)], radius=i(s * 0.05), fill=PAPER, outline=NAVY, width=i(s * 0.025))
+    draw.line([(i(s * 0.58), i(s * 0.44)), (i(s * 0.72), i(s * 0.44))], fill=GREEN, width=i(s * 0.025))
+    draw.line([(i(s * 0.58), i(s * 0.53)), (i(s * 0.68), i(s * 0.53))], fill=ORANGE, width=i(s * 0.025))
+
+
+def draw_stage(draw: ImageDraw.ImageDraw, s: int, stage: str) -> None:
+    scale = {"puppy": 0.62, "adult": 0.78, "senior": 0.74}[stage]
+    draw_tailog_dog(draw, s, s * 0.5, s * 0.48, scale)
+    if stage == "puppy":
+        draw.ellipse([i(s * 0.66), i(s * 0.2), i(s * 0.78), i(s * 0.32)], fill=GREEN_SOFT)
+    elif stage == "adult":
+        draw.line(arc_points(s * 0.52, s * 0.68, s * 0.25, 200, 340, 16), fill=GREEN, width=i(s * 0.035))
+    else:
+        draw.arc([i(s * 0.24), i(s * 0.2), i(s * 0.76), i(s * 0.72)], start=210, end=330, fill=ORANGE, width=i(s * 0.04))
+        draw.line([(i(s * 0.66), i(s * 0.66)), (i(s * 0.78), i(s * 0.78))], fill=ORANGE, width=i(s * 0.035))
+
+
+def draw_search(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.ellipse([i(s * 0.22), i(s * 0.2), i(s * 0.62), i(s * 0.6)], fill=PAPER, outline=NAVY, width=i(s * 0.045))
+    draw.line([(i(s * 0.56), i(s * 0.56)), (i(s * 0.78), i(s * 0.78))], fill=NAVY, width=i(s * 0.06))
+    draw_paw(draw, s * 0.42, s * 0.42, s * 0.18, ORANGE)
+
+
+def draw_target(draw: ImageDraw.ImageDraw, s: int) -> None:
+    for r, color in ((0.32, GREEN), (0.23, PAPER), (0.14, ORANGE), (0.06, NAVY)):
+        draw.ellipse([i(s * (0.5 - r)), i(s * (0.5 - r)), i(s * (0.5 + r)), i(s * (0.5 + r))], fill=color)
+    draw.line([(i(s * 0.64), i(s * 0.28)), (i(s * 0.78), i(s * 0.14))], fill=NAVY, width=i(s * 0.035))
+
+
+def draw_idea(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.ellipse([i(s * 0.28), i(s * 0.18), i(s * 0.72), i(s * 0.62)], fill=GOLD, outline=NAVY, width=i(s * 0.035))
+    draw.rounded_rectangle([i(s * 0.4), i(s * 0.6), i(s * 0.6), i(s * 0.76)], radius=i(s * 0.035), fill=ORANGE, outline=NAVY, width=i(s * 0.025))
+    draw.line(arc_points(s * 0.5, s * 0.44, s * 0.12, 200, 340, 10), fill=GREEN, width=i(s * 0.03))
+
+
+def draw_bolt(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.polygon([(i(s * 0.52), i(s * 0.14)), (i(s * 0.28), i(s * 0.54)), (i(s * 0.48), i(s * 0.54)), (i(s * 0.38), i(s * 0.86)), (i(s * 0.74), i(s * 0.42)), (i(s * 0.54), i(s * 0.42))], fill=GOLD, outline=NAVY)
+    draw.line(arc_points(s * 0.62, s * 0.64, s * 0.16, 210, 330, 10), fill=GREEN, width=i(s * 0.035))
+
+
+def draw_puzzle(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.22), i(s * 0.28), i(s * 0.72), i(s * 0.78)], radius=i(s * 0.06), fill=GREEN_SOFT, outline=NAVY, width=i(s * 0.03))
+    draw.ellipse([i(s * 0.42), i(s * 0.16), i(s * 0.58), i(s * 0.32)], fill=GOLD, outline=NAVY, width=i(s * 0.02))
+    draw.ellipse([i(s * 0.62), i(s * 0.46), i(s * 0.8), i(s * 0.64)], fill=CREAM)
+    draw_paw(draw, s * 0.44, s * 0.56, s * 0.18, ORANGE)
+
+
+def draw_report(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.26), i(s * 0.18), i(s * 0.74), i(s * 0.82)], radius=i(s * 0.07), fill=PAPER, outline=NAVY, width=i(s * 0.035))
+    draw.line([(i(s * 0.38), i(s * 0.38)), (i(s * 0.62), i(s * 0.38))], fill=GREEN, width=i(s * 0.03))
+    draw.line([(i(s * 0.38), i(s * 0.5)), (i(s * 0.66), i(s * 0.5))], fill=ORANGE, width=i(s * 0.03))
+    draw.line([(i(s * 0.38), i(s * 0.62)), (i(s * 0.56), i(s * 0.62))], fill=NAVY_SOFT, width=i(s * 0.03))
+    draw_paw(draw, s * 0.5, s * 0.25, s * 0.13, GOLD)
+
+
 def draw_soft_tile(draw: ImageDraw.ImageDraw, s: int, accent: tuple[int, int, int, int]) -> None:
     outer = [i(s * 0.16), i(s * 0.16), i(s * 0.84), i(s * 0.84)]
     inner = [i(s * 0.2), i(s * 0.2), i(s * 0.8), i(s * 0.8)]
@@ -437,32 +612,237 @@ def draw_soft_tile(draw: ImageDraw.ImageDraw, s: int, accent: tuple[int, int, in
     draw.ellipse([i(s * 0.64), i(s * 0.22), i(s * 0.76), i(s * 0.34)], fill=with_alpha(accent, 72))
 
 
+def draw_mini_dog_face(draw: ImageDraw.ImageDraw, s: int, cx: float, cy: float, r: float) -> None:
+    stroke = max(2, i(r * 0.14))
+    draw.ellipse([i(cx - r), i(cy - r), i(cx + r), i(cy + r)], fill=GOLD, outline=NAVY, width=stroke)
+    draw.ellipse([i(cx - r * 0.5), i(cy + r * 0.05), i(cx + r * 0.5), i(cy + r * 0.66)], fill=PAPER)
+    draw.ellipse([i(cx - r * 1.03), i(cy - r * 0.52), i(cx - r * 0.36), i(cy + r * 0.18)], fill=GOLD, outline=NAVY, width=max(1, stroke // 2))
+    draw.ellipse([i(cx + r * 0.36), i(cy - r * 0.52), i(cx + r * 1.03), i(cy + r * 0.18)], fill=GOLD, outline=NAVY, width=max(1, stroke // 2))
+    draw.ellipse([i(cx - r * 0.38), i(cy - r * 0.08), i(cx - r * 0.18), i(cy + r * 0.12)], fill=INK)
+    draw.ellipse([i(cx + r * 0.18), i(cy - r * 0.08), i(cx + r * 0.38), i(cy + r * 0.12)], fill=INK)
+    draw.ellipse([i(cx - r * 0.13), i(cy + r * 0.2), i(cx + r * 0.13), i(cy + r * 0.38)], fill=INK)
+    draw.arc([i(cx - r * 0.26), i(cy + r * 0.28), i(cx), i(cy + r * 0.56)], 20, 120, fill=INK, width=max(1, stroke // 2))
+    draw.arc([i(cx), i(cy + r * 0.28), i(cx + r * 0.26), i(cy + r * 0.56)], 60, 160, fill=INK, width=max(1, stroke // 2))
+
+
+def draw_mini_book(draw: ImageDraw.ImageDraw, s: int, x1: float, y1: float, x2: float, y2: float) -> None:
+    stroke = i(s * 0.055)
+    draw.rounded_rectangle([i(x1), i(y1), i(x2), i(y2)], radius=i(s * 0.11), fill=ORANGE, outline=NAVY, width=stroke)
+    draw.line([(i((x1 + x2) / 2), i(y1 + s * 0.04)), (i((x1 + x2) / 2), i(y2 - s * 0.04))], fill=ORANGE_DEEP, width=max(2, stroke // 2))
+    draw.rounded_rectangle([i(x1 + s * 0.1), i(y1 + s * 0.12), i(x1 + s * 0.28), i(y1 + s * 0.3)], radius=i(s * 0.035), fill=PAPER)
+    draw.line([(i(x1 + s * 0.44), i(y1 + s * 0.24)), (i(x1 + s * 0.56), i(y1 + s * 0.14)), (i(x1 + s * 0.7), i(y1 + s * 0.2))], fill=GREEN, width=i(s * 0.045), joint="curve")
+
+
+def draw_check(draw: ImageDraw.ImageDraw, s: int, color: tuple[int, int, int, int] = GREEN) -> None:
+    draw.line([(i(s * 0.24), i(s * 0.56)), (i(s * 0.42), i(s * 0.72)), (i(s * 0.76), i(s * 0.3))], fill=color, width=i(s * 0.095), joint="curve")
+
+
+def draw_simple_training(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_mini_dog_face(draw, s, s * 0.46, s * 0.34, s * 0.18)
+    draw_mini_book(draw, s, s * 0.2, s * 0.47, s * 0.8, s * 0.83)
+    draw_check(draw, s, GREEN_SOFT)
+
+
+def draw_simple_home(draw: ImageDraw.ImageDraw, s: int) -> None:
+    stroke = i(s * 0.07)
+    draw.polygon([(i(s * 0.18), i(s * 0.46)), (i(s * 0.5), i(s * 0.2)), (i(s * 0.82), i(s * 0.46))], fill=GOLD, outline=NAVY)
+    draw.rounded_rectangle([i(s * 0.27), i(s * 0.43), i(s * 0.73), i(s * 0.8)], radius=i(s * 0.09), fill=PAPER, outline=NAVY, width=stroke)
+    draw.rounded_rectangle([i(s * 0.46), i(s * 0.58), i(s * 0.58), i(s * 0.8)], radius=i(s * 0.035), fill=ORANGE)
+
+
+def draw_simple_chat(draw: ImageDraw.ImageDraw, s: int) -> None:
+    stroke = i(s * 0.065)
+    draw.rounded_rectangle([i(s * 0.16), i(s * 0.22), i(s * 0.84), i(s * 0.66)], radius=i(s * 0.15), fill=PAPER, outline=NAVY, width=stroke)
+    draw.polygon([(i(s * 0.38), i(s * 0.65)), (i(s * 0.56), i(s * 0.65)), (i(s * 0.43), i(s * 0.83))], fill=PAPER, outline=NAVY)
+    for x in (0.36, 0.5, 0.64):
+        draw.ellipse([i(s * x - s * 0.055), i(s * 0.43 - s * 0.055), i(s * x + s * 0.055), i(s * 0.43 + s * 0.055)], fill=GOLD)
+
+
+def draw_simple_gear(draw: ImageDraw.ImageDraw, s: int) -> None:
+    cx, cy = s * 0.5, s * 0.5
+    for deg in range(0, 360, 45):
+        angle = math.radians(deg)
+        x = cx + math.cos(angle) * s * 0.25
+        y = cy + math.sin(angle) * s * 0.25
+        draw.rounded_rectangle([i(x - s * 0.055), i(y - s * 0.055), i(x + s * 0.055), i(y + s * 0.055)], radius=i(s * 0.02), fill=NAVY)
+    draw.ellipse([i(s * 0.22), i(s * 0.22), i(s * 0.78), i(s * 0.78)], fill=NAVY)
+    draw.ellipse([i(s * 0.35), i(s * 0.35), i(s * 0.65), i(s * 0.65)], fill=GOLD)
+
+
+def draw_simple_paw(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_paw(draw, s * 0.5, s * 0.55, s * 0.56, GOLD, outline=NAVY, outline_width=i(s * 0.045))
+
+
+def draw_simple_add_log(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_mini_book(draw, s, s * 0.18, s * 0.2, s * 0.78, s * 0.82)
+    draw.line([(i(s * 0.52), i(s * 0.26)), (i(s * 0.52), i(s * 0.48))], fill=GOLD_LIGHT, width=i(s * 0.08))
+    draw.line([(i(s * 0.41), i(s * 0.37)), (i(s * 0.63), i(s * 0.37))], fill=GOLD_LIGHT, width=i(s * 0.08))
+
+
+def draw_simple_chart(draw: ImageDraw.ImageDraw, s: int) -> None:
+    for idx, (x, h, color) in enumerate(((0.24, 0.24, GREEN), (0.43, 0.36, ORANGE), (0.62, 0.52, GOLD))):
+        draw.rounded_rectangle([i(s * x), i(s * (0.78 - h)), i(s * (x + 0.12)), i(s * 0.78)], radius=i(s * 0.035), fill=color, outline=NAVY, width=i(s * 0.025))
+    draw.line([(i(s * 0.23), i(s * 0.58)), (i(s * 0.46), i(s * 0.45)), (i(s * 0.67), i(s * 0.33)), (i(s * 0.82), i(s * 0.22))], fill=NAVY, width=i(s * 0.055), joint="curve")
+
+
+def draw_simple_back(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.line([(i(s * 0.68), i(s * 0.22)), (i(s * 0.34), i(s * 0.5)), (i(s * 0.68), i(s * 0.78))], fill=NAVY, width=i(s * 0.12), joint="curve")
+
+
+def draw_simple_ops(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.18), i(s * 0.24), i(s * 0.82), i(s * 0.76)], radius=i(s * 0.11), fill=ORANGE, outline=NAVY, width=i(s * 0.055))
+    for x, y in ((0.34, 0.43), (0.5, 0.58), (0.66, 0.38)):
+        draw.line([(i(s * x), i(s * 0.34)), (i(s * x), i(s * 0.66))], fill=PAPER, width=i(s * 0.04))
+        draw.ellipse([i(s * x - s * 0.06), i(s * y - s * 0.06), i(s * x + s * 0.06), i(s * y + s * 0.06)], fill=GREEN)
+
+
+def draw_simple_dog_log(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_mini_dog_face(draw, s, s * 0.44, s * 0.34, s * 0.2)
+    draw_mini_book(draw, s, s * 0.2, s * 0.5, s * 0.8, s * 0.83)
+
+
+def draw_simple_trainer(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_mini_dog_face(draw, s, s * 0.34, s * 0.43, s * 0.17)
+    draw.rounded_rectangle([i(s * 0.48), i(s * 0.26), i(s * 0.82), i(s * 0.74)], radius=i(s * 0.07), fill=PAPER, outline=NAVY, width=i(s * 0.045))
+    draw.line([(i(s * 0.57), i(s * 0.43)), (i(s * 0.74), i(s * 0.43))], fill=GREEN, width=i(s * 0.04))
+    draw.line([(i(s * 0.57), i(s * 0.56)), (i(s * 0.7), i(s * 0.56))], fill=ORANGE, width=i(s * 0.04))
+
+
+def draw_simple_stage(draw: ImageDraw.ImageDraw, s: int, stage: str) -> None:
+    draw_mini_dog_face(draw, s, s * 0.48, s * 0.5, s * {"puppy": 0.2, "adult": 0.23, "senior": 0.22}[stage])
+    color = {"puppy": GREEN_SOFT, "adult": ORANGE, "senior": SKY}[stage]
+    draw.ellipse([i(s * 0.64), i(s * 0.2), i(s * 0.82), i(s * 0.38)], fill=color, outline=NAVY, width=i(s * 0.025))
+
+
+def draw_simple_search(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.ellipse([i(s * 0.18), i(s * 0.16), i(s * 0.63), i(s * 0.61)], fill=PAPER, outline=NAVY, width=i(s * 0.07))
+    draw.line([(i(s * 0.57), i(s * 0.57)), (i(s * 0.82), i(s * 0.82))], fill=NAVY, width=i(s * 0.085))
+    draw.ellipse([i(s * 0.34), i(s * 0.32), i(s * 0.48), i(s * 0.46)], fill=ORANGE)
+
+
+def draw_simple_target(draw: ImageDraw.ImageDraw, s: int) -> None:
+    for r, color in ((0.34, GREEN), (0.25, PAPER), (0.16, ORANGE), (0.07, NAVY)):
+        draw.ellipse([i(s * (0.5 - r)), i(s * (0.5 - r)), i(s * (0.5 + r)), i(s * (0.5 + r))], fill=color)
+
+
+def draw_simple_idea(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.ellipse([i(s * 0.24), i(s * 0.16), i(s * 0.76), i(s * 0.66)], fill=GOLD, outline=NAVY, width=i(s * 0.055))
+    draw.rounded_rectangle([i(s * 0.4), i(s * 0.63), i(s * 0.6), i(s * 0.82)], radius=i(s * 0.04), fill=ORANGE, outline=NAVY, width=i(s * 0.035))
+
+
+def draw_simple_bolt(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.polygon([(i(s * 0.56), i(s * 0.1)), (i(s * 0.24), i(s * 0.55)), (i(s * 0.48), i(s * 0.55)), (i(s * 0.39), i(s * 0.9)), (i(s * 0.78), i(s * 0.42)), (i(s * 0.54), i(s * 0.42))], fill=GOLD, outline=NAVY)
+
+
+def draw_simple_puzzle(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.2), i(s * 0.28), i(s * 0.74), i(s * 0.78)], radius=i(s * 0.08), fill=GREEN_SOFT, outline=NAVY, width=i(s * 0.05))
+    draw.ellipse([i(s * 0.41), i(s * 0.15), i(s * 0.59), i(s * 0.33)], fill=GOLD, outline=NAVY, width=i(s * 0.025))
+    draw.ellipse([i(s * 0.62), i(s * 0.48), i(s * 0.82), i(s * 0.68)], fill=CREAM)
+
+
+def draw_simple_report(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.25), i(s * 0.15), i(s * 0.75), i(s * 0.85)], radius=i(s * 0.08), fill=PAPER, outline=NAVY, width=i(s * 0.055))
+    for y, color, length in ((0.39, GREEN, 0.25), (0.53, ORANGE, 0.3), (0.67, NAVY_SOFT, 0.2)):
+        draw.line([(i(s * 0.38), i(s * y)), (i(s * (0.38 + length)), i(s * y))], fill=color, width=i(s * 0.045))
+    draw.rounded_rectangle([i(s * 0.4), i(s * 0.1), i(s * 0.6), i(s * 0.24)], radius=i(s * 0.035), fill=GOLD, outline=NAVY, width=i(s * 0.025))
+
+
+def draw_simple_speaker(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.2), i(s * 0.42), i(s * 0.36), i(s * 0.58)], radius=i(s * 0.035), fill=GOLD, outline=NAVY, width=i(s * 0.025))
+    draw.polygon([(i(s * 0.36), i(s * 0.42)), (i(s * 0.58), i(s * 0.28)), (i(s * 0.58), i(s * 0.72)), (i(s * 0.36), i(s * 0.58))], fill=GOLD, outline=NAVY)
+    for r in (0.16, 0.26):
+        draw.arc([i(s * (0.5 - r)), i(s * (0.5 - r)), i(s * (0.5 + r)), i(s * (0.5 + r))], -45, 45, fill=CORAL, width=i(s * 0.06))
+
+
+def draw_simple_bone(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.29), i(s * 0.43), i(s * 0.71), i(s * 0.57)], radius=i(s * 0.05), fill=GOLD, outline=NAVY, width=i(s * 0.025))
+    for cx in (0.25, 0.75):
+        draw.ellipse([i(s * cx - s * 0.1), i(s * 0.34), i(s * cx + s * 0.1), i(s * 0.54)], fill=GOLD, outline=NAVY, width=i(s * 0.025))
+        draw.ellipse([i(s * cx - s * 0.1), i(s * 0.46), i(s * cx + s * 0.1), i(s * 0.66)], fill=GOLD, outline=NAVY, width=i(s * 0.025))
+
+
+def draw_simple_bowl(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.pieslice([i(s * 0.22), i(s * 0.34), i(s * 0.78), i(s * 0.82)], 0, 180, fill=ORANGE, outline=NAVY)
+    draw.rounded_rectangle([i(s * 0.25), i(s * 0.55), i(s * 0.75), i(s * 0.68)], radius=i(s * 0.05), fill=GOLD_LIGHT)
+    for x in (0.4, 0.5, 0.6):
+        draw.ellipse([i(s * x - s * 0.04), i(s * 0.46 - s * 0.04), i(s * x + s * 0.04), i(s * 0.46 + s * 0.04)], fill=CORAL)
+
+
+def draw_simple_play(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.ellipse([i(s * 0.22), i(s * 0.22), i(s * 0.78), i(s * 0.78)], fill=GOLD_LIGHT, outline=NAVY, width=i(s * 0.04))
+    draw.arc([i(s * 0.32), i(s * 0.32), i(s * 0.68), i(s * 0.68)], 35, 145, fill=NAVY, width=i(s * 0.08))
+    draw.arc([i(s * 0.32), i(s * 0.32), i(s * 0.68), i(s * 0.68)], 215, 325, fill=NAVY, width=i(s * 0.08))
+
+
+def draw_simple_rest(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.ellipse([i(s * 0.22), i(s * 0.22), i(s * 0.62), i(s * 0.62)], fill=GOLD_LIGHT)
+    draw.ellipse([i(s * 0.4), i(s * 0.18), i(s * 0.78), i(s * 0.6)], fill=NAVY_MID)
+    draw_paw(draw, s * 0.56, s * 0.67, s * 0.22, CREAM)
+
+
+def draw_simple_grooming(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.24), i(s * 0.3), i(s * 0.76), i(s * 0.5)], radius=i(s * 0.07), fill=GOLD, outline=NAVY, width=i(s * 0.04))
+    for x in (0.34, 0.44, 0.54, 0.64):
+        draw.line([(i(s * x), i(s * 0.5)), (i(s * x), i(s * 0.78))], fill=NAVY, width=i(s * 0.035))
+
+
+def draw_simple_shield(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.polygon([(i(s * 0.5), i(s * 0.16)), (i(s * 0.76), i(s * 0.29)), (i(s * 0.7), i(s * 0.66)), (i(s * 0.5), i(s * 0.84)), (i(s * 0.3), i(s * 0.66)), (i(s * 0.24), i(s * 0.29))], fill=GOLD, outline=NAVY)
+    draw.polygon([(i(s * 0.42), i(s * 0.38)), (i(s * 0.52), i(s * 0.54)), (i(s * 0.44), i(s * 0.66))], fill=NAVY)
+    draw.polygon([(i(s * 0.58), i(s * 0.38)), (i(s * 0.48), i(s * 0.54)), (i(s * 0.56), i(s * 0.66))], fill=NAVY)
+
+
+def draw_simple_fear(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw_mini_dog_face(draw, s, s * 0.46, s * 0.48, s * 0.24)
+    draw.arc([i(s * 0.56), i(s * 0.24), i(s * 0.9), i(s * 0.72)], 80, 260, fill=SKY, width=i(s * 0.07))
+
+
+def draw_simple_toilet(draw: ImageDraw.ImageDraw, s: int) -> None:
+    draw.rounded_rectangle([i(s * 0.22), i(s * 0.5), i(s * 0.78), i(s * 0.7)], radius=i(s * 0.07), fill=PAPER, outline=NAVY, width=i(s * 0.04))
+    draw.rounded_rectangle([i(s * 0.32), i(s * 0.34), i(s * 0.68), i(s * 0.54)], radius=i(s * 0.07), fill=SKY, outline=NAVY, width=i(s * 0.035))
+
+
 TAB_RENDERERS = {
-    "ic-home": draw_house,
-    "ic-training": lambda draw, s: draw_whistle_mark(draw, s, accent=CREAM, sound=True),
-    "ic-coaching": draw_chat_bubble,
-    "ic-settings": draw_gear,
-    "ic-paw": lambda draw, s: draw_paw(draw, s * 0.5, s * 0.55, s * 0.42, GOLD, outline=NAVY, outline_width=i(s * 0.03)),
-    "ic-add-log": draw_note_plus,
-    "ic-analysis": draw_chart,
-    "ic-back": draw_back,
+    "ic-home": draw_simple_home,
+    "ic-training": draw_simple_training,
+    "ic-coaching": draw_simple_chat,
+    "ic-settings": draw_simple_gear,
+    "ic-paw": draw_simple_paw,
+    "ic-add-log": draw_simple_add_log,
+    "ic-analysis": draw_simple_chart,
+    "ic-back": draw_simple_back,
+}
+
+UTILITY_RENDERERS = {
+    "ic-ops": draw_simple_ops,
+    "ic-trainer": draw_simple_trainer,
+    "ic-stage-puppy": lambda draw, s: draw_simple_stage(draw, s, "puppy"),
+    "ic-stage-adult": lambda draw, s: draw_simple_stage(draw, s, "adult"),
+    "ic-stage-senior": lambda draw, s: draw_simple_stage(draw, s, "senior"),
+    "ic-search": draw_simple_search,
+    "ic-target": draw_simple_target,
+    "ic-idea": draw_simple_idea,
+    "ic-bolt": draw_simple_bolt,
+    "ic-puzzle": draw_simple_puzzle,
+    "ic-dog": draw_simple_dog_log,
+    "ic-report": draw_simple_report,
 }
 
 CATEGORY_RENDERERS = {
-    "ic-cat-barking": draw_megaphone,
-    "ic-cat-mounting": draw_mounting,
-    "ic-cat-excitement": draw_excitement,
-    "ic-cat-toilet": draw_toilet,
-    "ic-cat-destructive": draw_destructive,
-    "ic-cat-anxiety": draw_anxiety,
-    "ic-cat-aggression": draw_aggression,
-    "ic-cat-fear": draw_fear,
-    "ic-cat-walk": draw_walk,
-    "ic-cat-meal": draw_meal,
-    "ic-cat-train": draw_train,
-    "ic-cat-play": draw_play,
-    "ic-cat-rest": draw_rest,
-    "ic-cat-grooming": draw_grooming,
+    "ic-cat-barking": draw_simple_speaker,
+    "ic-cat-mounting": draw_simple_bone,
+    "ic-cat-excitement": draw_simple_bolt,
+    "ic-cat-toilet": draw_simple_toilet,
+    "ic-cat-destructive": draw_simple_bone,
+    "ic-cat-anxiety": draw_simple_home,
+    "ic-cat-aggression": draw_simple_shield,
+    "ic-cat-fear": draw_simple_fear,
+    "ic-cat-walk": draw_simple_search,
+    "ic-cat-meal": draw_simple_bowl,
+    "ic-cat-train": draw_simple_training,
+    "ic-cat-play": draw_simple_play,
+    "ic-cat-rest": draw_simple_rest,
+    "ic-cat-grooming": draw_simple_grooming,
 }
 
 
@@ -470,6 +850,15 @@ def render_tab_icon(kind: str, target_px: int) -> Image.Image:
     s = 512
     symbol = new_canvas(s)
     TAB_RENDERERS[kind](ImageDraw.Draw(symbol), s)
+    base = add_shadow(symbol, blur=i(s * 0.03), offset=(0, i(s * 0.025)), color=SHADOW)
+    base.alpha_composite(symbol)
+    return downsample(base, target_px)
+
+
+def render_utility_icon(kind: str, target_px: int) -> Image.Image:
+    s = 512
+    symbol = new_canvas(s)
+    UTILITY_RENDERERS[kind](ImageDraw.Draw(symbol), s)
     base = add_shadow(symbol, blur=i(s * 0.03), offset=(0, i(s * 0.025)), color=SHADOW)
     base.alpha_composite(symbol)
     return downsample(base, target_px)
@@ -596,7 +985,14 @@ def write_image(image: Image.Image, path: Path, dry_run: bool) -> None:
 
 
 def clean_output_dir(output_dir: Path, dry_run: bool) -> None:
+    generated_names = set()
+    for specs in (TAB_ICON_SPECS, UTILITY_ICON_SPECS, CATEGORY_ICON_SPECS, BADGE_ICON_SPECS, ILLUST_SPECS):
+        for name in specs:
+            for suffix in ("", "@2x", "@3x"):
+                generated_names.add(f"{name}{suffix}.png")
     for png_path in sorted(output_dir.glob("*.png")):
+        if png_path.name not in generated_names:
+            continue
         if dry_run:
             print(f"[dry-run] delete {png_path}")
             continue
@@ -617,11 +1013,45 @@ def copy_app_icon(source: Path, output_dir: Path, dry_run: bool) -> None:
     print(destination)
 
 
+def write_icon_sources(output_dir: Path, icon_sources_path: Path, dry_run: bool) -> None:
+    entries: list[str] = []
+    for name in ICON_SOURCE_ORDER:
+        png_path = output_dir / f"{name}.png"
+        if not png_path.exists():
+            raise FileNotFoundError(f"Missing generated base icon: {png_path}")
+        encoded = base64.b64encode(png_path.read_bytes()).decode("ascii")
+        entries.append(f"  '{name}': 'data:image/png;base64,{encoded}',")
+
+    content = "\n".join(
+        [
+            "/**",
+            " * iconSources — 모든 아이콘 base64 인라인",
+            " * Granite.js는 require() 로컬 에셋 미지원 → URI 방식 필수",
+            " * Generated by scripts/generate_custom_icons.py",
+            " */",
+            "",
+            "export const ICONS: Record<string, string> = {",
+            *entries,
+            "};",
+            "",
+        ]
+    )
+
+    if dry_run:
+        print(f"[dry-run] {icon_sources_path}")
+        return
+    icon_sources_path.parent.mkdir(parents=True, exist_ok=True)
+    icon_sources_path.write_text(content, encoding="utf-8")
+    print(icon_sources_path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate TaillogToss custom icon assets.")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--app-icon-source", type=Path, help="Path to the approved 1024x1024 app icon PNG.")
     parser.add_argument("--clean", action="store_true", help="Delete existing PNGs in the output directory before writing.")
+    parser.add_argument("--icon-sources", type=Path, default=ICON_SOURCES, help="Path to the generated iconSources.ts file.")
+    parser.add_argument("--skip-icon-sources", action="store_true", help="Do not regenerate iconSources.ts.")
     parser.add_argument("--dry-run", action="store_true", help="Print planned outputs without writing files.")
     args = parser.parse_args()
 
@@ -633,20 +1063,27 @@ def main() -> None:
         copy_app_icon(args.app_icon_source.resolve(), output_dir, args.dry_run)
 
     for name, sizes in TAB_ICON_SPECS.items():
-        for suffix, px in zip(("@2x", "@3x"), sizes):
+        for suffix, px in zip(("", "@2x", "@3x"), sizes):
             write_image(render_tab_icon(name, px), output_dir / f"{name}{suffix}.png", args.dry_run)
 
+    for name, sizes in UTILITY_ICON_SPECS.items():
+        for suffix, px in zip(("", "@2x", "@3x"), sizes):
+            write_image(render_utility_icon(name, px), output_dir / f"{name}{suffix}.png", args.dry_run)
+
     for name, sizes in CATEGORY_ICON_SPECS.items():
-        for suffix, px in zip(("@2x", "@3x"), sizes):
+        for suffix, px in zip(("", "@2x", "@3x"), sizes):
             write_image(render_category_icon(name, px), output_dir / f"{name}{suffix}.png", args.dry_run)
 
     for name, sizes in BADGE_ICON_SPECS.items():
-        for suffix, px in zip(("@2x", "@3x"), sizes):
+        for suffix, px in zip(("", "@2x", "@3x"), sizes):
             write_image(render_badge(name, px), output_dir / f"{name}{suffix}.png", args.dry_run)
 
     for name, sizes in ILLUST_SPECS.items():
-        for suffix, px in zip(("@2x", "@3x"), sizes):
+        for suffix, px in zip(("", "@2x", "@3x"), sizes):
             write_image(render_illustration(name, px), output_dir / f"{name}{suffix}.png", args.dry_run)
+
+    if not args.skip_icon_sources:
+        write_icon_sources(output_dir, args.icon_sources.resolve(), args.dry_run)
 
 
 if __name__ == "__main__":

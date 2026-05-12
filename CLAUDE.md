@@ -29,8 +29,10 @@ This file only keeps execution rules, priorities, and pointers.
 | Automation | Schedule | Source |
 |---|---|---|
 | CLAUDE.md slimming | daily 08:00 | keep this file pointer-only |
-| docs organizer | daily 22:00 (Asia/Seoul) | `.claude/automations/docs-nightly-organizer.prompt.md` |
-| training data maintenance | weekly Friday 10:00 (Asia/Seoul) | `.claude/automations/training-data-maintenance.prompt.md` |
+| **morning orchestrator** | daily 02:00 (Asia/Seoul) | `.claude/automations/taillog-morning-orchestrator.prompt.md` |
+| **nightly orchestrator** | daily 22:00 (Asia/Seoul) | `.claude/automations/taillog-nightly-orchestrator.prompt.md` |
+| **weekly orchestrator** | weekly Friday 10:00 (Asia/Seoul) | `.claude/automations/taillog-weekly-orchestrator.prompt.md` |
+| coaching synthetic gen | daily 15:00 (Asia/Seoul) | `.claude/automations/daily-coaching-synthetic-gen.md` |
 
 ## Next Automation (MUST)
 
@@ -101,6 +103,7 @@ Page/feature skill root: `.claude/skills/page-skills/`
 - `Skill("toss_db_migration")`
 - `Skill("toss-edge-hardening")`
 - `Skill("toss-phase13-gate")`
+- `Skill("toss-runtime-mode-ops")`
 - `Skill("toss-supabase-mcp")`
 - `Skill("toss-sandbox-metro")`
 - `Skill("toss-dev-server")`

@@ -38,50 +38,51 @@
 ```json
 [
   {
-    "name": "docs-nightly-organizer",
-    "file": "docs-nightly-organizer.prompt.md",
-    "task_id": "daily-docs-slim",
-    "schedule_kr": "매일 22:00 (Asia/Seoul)",
-    "lock": "docs/.docs-nightly.lock",
+    "name": "taillog-morning-orchestrator",
+    "file": "taillog-morning-orchestrator.prompt.md",
+    "task_id": "taillog-morning-orchestrator",
+    "schedule_kr": "매일 02:00 (Asia/Seoul)",
+    "lock": "docs/status/.morning-orchestrator.lock",
     "freshness_hours": 26,
     "artifacts": [
-      "docs/status/NIGHTLY-RUN-LOG.md"
-    ]
-  },
-  {
-    "name": "code-doc-align",
-    "file": "code-doc-align.prompt.md",
-    "task_id": "taillogtoss-code-doc-align",
-    "schedule_kr": "매일 03:30 (Asia/Seoul)",
-    "lock": "docs/status/.code-doc-align.lock",
-    "freshness_hours": 26,
-    "artifacts": [
+      "docs/status/MORNING-ORCHESTRATOR-LOG.md",
       "docs/status/INTEGRITY-REPORT.md",
-      "docs/status/INTEGRITY-HISTORY.ndjson"
-    ]
-  },
-  {
-    "name": "skills-web-enrichment-7day",
-    "file": "skills-web-enrichment-7day.prompt.md",
-    "task_id": "taillogtoss-training-data-pipeline",
-    "schedule_kr": "매일 03:00 (Asia/Seoul)",
-    "lock": "src/lib/data/.pipeline.lock",
-    "freshness_hours": 26,
-    "artifacts": [
-      "src/lib/data/catalog.json",
+      "docs/status/ARCHITECTURE-DIAGRAM-SYNC-LOG.md",
       "src/lib/data/CHANGELOG.ndjson"
     ]
   },
   {
-    "name": "architecture-diagrams-sync",
-    "file": "architecture-diagrams-sync.prompt.md",
-    "task_id": "taillogtoss-architecture-diagrams-sync",
-    "schedule_kr": "매일 04:00 (Asia/Seoul)",
-    "lock": "docs/ref/.architecture-sync.lock",
+    "name": "taillog-nightly-orchestrator",
+    "file": "taillog-nightly-orchestrator.prompt.md",
+    "task_id": "taillog-nightly-orchestrator",
+    "schedule_kr": "매일 22:00 (Asia/Seoul)",
+    "lock": "docs/status/.nightly-orchestrator.lock",
     "freshness_hours": 26,
     "artifacts": [
-      "docs/status/ARCHITECTURE-DIAGRAM-SYNC-LOG.md",
-      "docs/status/ARCHITECTURE-DIAGRAM-SYNC-HISTORY.ndjson"
+      "docs/status/NIGHTLY-RUN-LOG.md",
+      "docs/status/VISION-LABEL-LOG.md"
+    ]
+  },
+  {
+    "name": "taillog-weekly-orchestrator",
+    "file": "taillog-weekly-orchestrator.prompt.md",
+    "task_id": "taillog-weekly-orchestrator",
+    "schedule_kr": "매주 금요일 10:00 (Asia/Seoul)",
+    "lock": "docs/status/.weekly-orchestrator.lock",
+    "freshness_hours": 170,
+    "artifacts": [
+      "docs/status/TRAINING-DATA-LOG.md"
+    ]
+  },
+  {
+    "name": "daily-coaching-synthetic-gen",
+    "file": "daily-coaching-synthetic-gen.md",
+    "task_id": "daily-coaching-synthetic-gen",
+    "schedule_kr": "매일 15:00 (Asia/Seoul)",
+    "lock": null,
+    "freshness_hours": 26,
+    "artifacts": [
+      "docs/status/TRAINING-DATA-LOG.md"
     ]
   }
 ]

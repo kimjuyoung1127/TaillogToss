@@ -55,10 +55,10 @@ const LIVING_TYPES = [
 ] as const;
 
 const ALONE_HOURS = [
-  { id: '0', label: '거의 없어요', iconSource: ICONS['ic-paw'] },
-  { id: '1.5', label: '1~2시간', iconSource: ICONS['ic-paw'] },
-  { id: '3', label: '2~4시간', iconSource: ICONS['ic-paw'] },
-  { id: '5', label: '4~6시간', iconSource: ICONS['ic-paw'] },
+  { id: '0', label: '거의 없어요', iconSource: ICONS['ic-none'] },
+  { id: '1.5', label: '1~2시간', iconSource: ICONS['ic-clock'] },
+  { id: '3', label: '2~4시간', iconSource: ICONS['ic-clock'] },
+  { id: '5', label: '4~6시간', iconSource: ICONS['ic-clock'] },
   { id: '7', label: '6시간 이상', iconSource: ICONS['ic-cat-anxiety'] },
 ];
 
@@ -76,7 +76,7 @@ const PAST_ATTEMPTS = [
   { id: 'youtube_diy', label: '유튜브·독학', iconSource: ICONS['ic-search'] },
   { id: 'professional', label: '전문 훈련사', iconSource: ICONS['ic-trainer'] },
   { id: 'kindergarten', label: '유치원', iconSource: ICONS['ic-training'] },
-  { id: 'none', label: '없어요', iconSource: ICONS['ic-paw'] },
+  { id: 'none', label: '없어요', iconSource: ICONS['ic-none'] },
 ];
 
 const WALK_FREQ = [
@@ -96,7 +96,7 @@ const WALK_DURATION = [
 const REWARDS = [
   { id: 'treat', label: '간식', iconSource: ICONS['ic-cat-meal'] },
   { id: 'toy', label: '장난감', iconSource: ICONS['ic-cat-play'] },
-  { id: 'praise', label: '칭찬·스킨십', iconSource: ICONS['ic-paw'] },
+  { id: 'praise', label: '칭찬·스킨십', iconSource: ICONS['ic-praise'] },
   { id: 'walk', label: '산책', iconSource: ICONS['ic-cat-walk'] },
 ];
 
@@ -270,7 +270,7 @@ function Stage2FormPage() {
         <Section label="함께 사는 동물이 있나요?">
           <View style={styles.chipRow}>
             <ChoiceChip label="있어요" iconSource={ICONS['ic-dog']} selected={hasOtherPets === true} onPress={() => setHasOtherPets(true)} />
-            <ChoiceChip label="없어요" iconSource={ICONS['ic-paw']} selected={hasOtherPets === false} onPress={() => setHasOtherPets(false)} />
+            <ChoiceChip label="없어요" iconSource={ICONS['ic-none']} selected={hasOtherPets === false} onPress={() => setHasOtherPets(false)} />
           </View>
         </Section>
 

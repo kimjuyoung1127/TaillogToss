@@ -1,7 +1,7 @@
 # TaillogToss 진행도 체크리스트
 
-> 생성: 2026-04-02 | 갱신: 2026-04-02 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
-> 종합 완성도: **82%** (P2 Quick-Win 3종 Done + mTLS 실전환 완료 반영)
+> 생성: 2026-04-02 | 갱신: 2026-05-12 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
+> 종합 완성도: **88%** (IAP/Ads/Smart Message 정합성 재스캔 + 테스트 재검증 반영)
 
 ---
 
@@ -23,14 +23,14 @@
   - [ ] 인증서 만료일 캘린더 등록
 - [ ] 🔴 **실기기 E2E 통합 검증** — 23화면 + 핵심 플로우 실기기 테스트
 - [x] ~~🔴 **번들 크기 100MB 미만 확인**~~ — ✅ 4.9MB (100MB 한도 대비 5%)
-- [ ] 🟠 **Ads SDK 콜백 패턴 리팩토링** — Promise→이벤트 콜백 전환 필요 (신규 발견) → `docs/ref/AIT-ADS-SDK-REFERENCE.md`
-- [ ] 🟠 **IAP `completeProductGrant()` 호출 누락** — 복원 플로우 미완성 (신규 발견) → `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md`
-- [ ] 🟠 **Smart Message 템플릿 등록** — 콘솔에서 templateSetCode 발급 필요 (신규 발견)
+- [x] ~~🟠 **Ads SDK 콜백 패턴 리팩토링**~~ — ✅ `loadFullScreenAd`/`showFullScreenAd` 이벤트 콜백 경로 확인 (2026-05-12)
+- [x] ~~🟠 **IAP `completeProductGrant()` 호출 누락**~~ — ✅ 서버 grant 성공 후 `completeProductGrant()` 호출 확인 (2026-05-12)
+- [x] ~~🟠 **Smart Message 템플릿 등록**~~ — ✅ `TAILLOG_BEHAVIOR_REMIND` 승인/실발송 확인. 추가 캠페인은 Phase 2+로 관리
 - [ ] 🟡 **퍼블리싱 심사 준비** — `docs/ref/AIT-PUBLISHING-READINESS.md`
-  - [ ] 앱 로고 600x600 각진 정사각형 준비
-  - [ ] 탭 바 토스 플로팅 컴포넌트 사용 확인
-  - [ ] 개인정보처리방침 업데이트 (위탁 업체: Supabase, OpenAI 명시)
-  - [ ] AI 코칭 결과 "AI 생성물" 문구 명시 확인 (보안 심사 요건)
+  - [x] 앱 로고 600x600 각진 정사각형 준비
+  - [x] 탭 바/하단 네비게이션 구현 확인
+  - [x] 개인정보처리방침 업데이트 (위탁 업체: Supabase, OpenAI 명시)
+  - [x] AI 코칭 결과 "AI 생성물" 문구 명시 확인 (보안 심사 요건)
   - [ ] QR 테스트 최소 1회 완료 (심사 요청 버튼 활성화 조건)
 
 ---
@@ -66,7 +66,7 @@
 
 ### C1. Done (2/11 = 18%)
 
-- [x] **AD-001** 광고 — mock SDK + R1/R2/R3 통합 + test 5케이스
+- [x] **AD-001** 광고 — real SDK wrapper + live ID fallback + R/B/I 슬롯 통합 + test 통과
 - [x] **REG-001** 등록 — legal + toss-disconnect + 약관 + 사업자등록/배포
 
 ### C2. In Progress (9/11 = 82%) — 잔여 TODO
@@ -116,7 +116,7 @@
   - [x] iap.test 8케이스 + usePendingOrderRecovery
   - [x] subscription API backend-first 전환
   - [ ] 결제 E2E (앱 UI 3시나리오 증적)
-  - [ ] mock orderId 제거 → 실 SDK 교체
+  - [x] mock orderId 제거 → 실 SDK 교체
 
 - [ ] **MSG-001** 알림
   - [x] send-smart-message Edge v9 + 쿨다운 정책
@@ -184,7 +184,7 @@
 - [x] BE-P5 AI 코칭 엔진 (6블록 + 예산 게이팅)
 - [x] BE-P6 Training + Settings
 - [x] BE-P7 B2B Org + Report
-- [x] BE-P8 테스트 (pytest 39 pass)
+- [x] BE-P8 테스트 (pytest 57 pass, 2026-05-12)
 - [ ] BE↔DB 통합 테스트 (FastAPI + 실 Supabase 연결)
 
 ### E2. Edge Functions (7종)
@@ -209,9 +209,9 @@
 
 ## F. 테스트 커버리지 (60%)
 
-- [x] FE 단위 테스트: 77 tests, 21 suites
-- [x] BE 단위 테스트: pytest 39 tests
-- [x] Edge 단위 테스트: 30 tests, 12 suites
+- [x] FE 단위 테스트: 101 tests, 16 suites (2026-05-12)
+- [x] BE 단위 테스트: pytest 57 tests (2026-05-12)
+- [x] Edge 단위 테스트: 45 tests, 13 suites (2026-05-12)
 - [ ] BE↔DB 통합 테스트
 - [ ] E2E 테스트 (로그인→기록→코칭→결제 풀플로우)
 - [ ] 성능 테스트 (40마리 FlatList, API p95 < 300ms)
@@ -231,10 +231,10 @@
 - [ ] 디자인 심사 — TDS 가이드라인 준수
 - [ ] 보안 심사 — 개인정보/데이터 보호
 
-### G2. Mock→Real 전환 (1/7)
+### G2. Mock→Real 전환 (5/7)
 
 - [x] `@apps-in-toss/framework` 1.3 → 2.4.1 ✅
-- [ ] Ads SDK mock → 실 Ad Group ID
+- [x] Ads SDK mock → 실 SDK wrapper + live Ad Group ID fallback
 - [x] ~~verify-iap-order mock mTLS → real~~ ✅
 - [x] ~~send-smart-message mock mTLS → real~~ ✅
 - [x] ~~grant-toss-points mock mTLS → real~~ ✅
@@ -261,9 +261,9 @@
 | 지표 | 수치 | 판정 |
 |------|------|------|
 | TypeScript 에러 | 0 | ✅ |
-| TODO 잔존 | 2건 | ✅ 양호 |
+| TODO 잔존 | 2건 | ✅ 런타임 출시 차단 아님 |
 | FIXME/HACK | 0건 | ✅ |
-| Mock 코드 (테스트 외) | 3곳 | ⚠️ 전환 필요 |
+| Mock 코드 (테스트 외) | 3곳 | ⚠️ Dev/local 또는 B2B report 실모드 전환 대상 |
 | 페이지 파일 | 24개 | ✅ |
 | 컴포넌트 파일 | 84개 | ✅ |
 | API 모듈 | 16개 | ✅ |

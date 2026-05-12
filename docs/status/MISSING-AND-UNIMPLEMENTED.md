@@ -124,9 +124,9 @@
 | Ads SDK | `src/lib/ads/config.ts` | ✅ real FullScreen SDK wrapper + live Ad Group ID 7종 상수 fallback 적용. 새 AIT `019e00c2...` test ad id 0개, B1 real SDK `ad_error` 확인 | render success 또는 no-fill 사유 세부값 확보 |
 | IAP | `src/lib/api/iap.ts` | ✅ 실 SDK `createOneTimePurchaseOrder`/`getPendingOrders`/`completeProductGrant` 연결. 서버 grant 실패 시 `GRANT_FAILED` 처리 | 새 AIT 업로드 후 성공 UI 최종 재검증 |
 | generate-report | `supabase/functions/generate-report/` | 배포 완료(v3), mock/real 스위치(`REPORT_AI_MODE`) + staff role guard | OpenAI 실키 검증 (BE-P7) |
-| verify-iap-order | `supabase/functions/verify-iap-order/` | real mTLS | Sandbox order 검증 404 원인 확인 및 성공 경로 재검증 |
+| verify-iap-order | `supabase/functions/verify-iap-order/` | ✅ real mTLS(v17) | Sandbox order 성공 경로 최종 재검증 |
 | send-smart-message | `supabase/functions/send-smart-message/` | ✅ real mTLS + `toss_user_key` 해석 후 실발송 200 확인 | 추가 캠페인 등록/회귀 발송 |
-| grant-toss-points | `supabase/functions/grant-toss-points/` | mock mTLS | real mTLS 전환 |
+| grant-toss-points | `supabase/functions/grant-toss-points/` | ✅ real mTLS(v14) | 포인트 happy-path 회귀 증적 추가 |
 | IAP 복원 | `src/lib/api/iap.ts`, `src/lib/hooks/useSubscription.ts` | ✅ SDK `getPendingOrders()` 우선 + DB fallback | 서버 검증 성공 order로 복원 완료 증적 추가 |
 
 ### 4.1 2026-05-05 실기기 QA 반영
@@ -139,7 +139,7 @@
 | Root/404 리다이렉트 | `src/pages/index.tsx`, `src/pages/_404.tsx` | 인증/온보딩 상태 기반 리다이렉트로 대기 화면 고착 수정 | 딥링크 전체 route sweep 추가 권장 |
 | 텍스트 이모지 아이콘 | onboarding stage1/2/3/notification/survey-result, coaching result, training detail, dashboard/dog common avatars, subscription | 기존 `iconSources.ts` custom asset으로 1차 교체. Stage1/2/3 칩, notification hero, survey-result/header, legacy survey profile/container/deep labels, `/training/detail` widgets/sheets, coaching trend/locked/error/empty icons, common empty/error/speech fallback, dashboard/dog avatar fallback, subscription PRO features 교체 완료 | DevMenu 개발 표식, 보호자 리포트 reaction emoji, 별점/닫기/체크 같은 의미형 텍스트 컨트롤은 의도 잔여. 전용 imagegen icon set 적용 시 2차 정리 |
 | DevMenu FAB 가림 | `src/lib/devTools.ts`, `src/_app.tsx`, `src/components/shared/DevMenu.tsx` | ✅ `EXPO_PUBLIC_SHOW_DEV_MENU=true`일 때만 DevMenu/플랜 override/가드 bypass/DEV IAP bypass 활성. 새 AIT에서 `isDevToolsEnabled() -> return false` 확인 | 업로드 후 FAB 미노출 실기기 확인 |
-| AIT standalone host error | `src/_app.tsx`, `granite.config.ts`, `taillog-app.ait` | ⚠️ `brand.icon` 로컬 경로/data URI 후보와 `Granite.registerApp` 직접 사용 후보 소거 완료. 콘솔 HTTPS 로고 URL + 공식 `AppsInToss.registerApp` 적용 후 API deploy `019e01b9-3c4c-7677-b6b9-d80529a2d868` 성공, 번들 스캔/문법검사/tsc 통과. 그러나 Metro-off standalone에서 JS 진입 전 host error가 계속 재현됨 | Toss 개발자 커뮤니티/지원에 deploymentId `019e01b9...`, CLI URL, no-JS-marker logcat, UI error text를 전달해 test host/deployment 실행, 샌드박스앱 버전, QR 실행 경로 차이를 확인 요청 |
+| AIT standalone host error | `src/_app.tsx`, `granite.config.ts`, `taillog-app.ait` | ✅ production Toss app + Metro off + deploymentId `019e14a7-ca44-7f9b-bd58-a9be19376360` standalone PASS(2026-05-11). 이전 host error는 Toss 앱 계정/워크스페이스 멤버 매핑 이슈로 재분류 | 새 아이콘/새 AIT 업로드 후 1회 회귀 확인 |
 | Dog Profile route crash | `src/pages/dog/profile.tsx` | ✅ `dogEnv.triggers` live shape 정규화 완료. DEV_LOCAL 재진입 PASS | 회귀 테스트 유지 |
 | Shared report dynamic route | `src/pages/report/[shareToken].tsx` | ✅ React Navigation raw params로 bracket/colon strict mismatch 회피. 잘못된 토큰은 정상 empty/error state 표시 | 실제 share token happy-path 검증 필요 |
 | Onboarding direct-entry fallback | `src/pages/onboarding/stage2-form.tsx`, `src/pages/onboarding/stage3-form.tsx` | ✅ `activeDog` fallback + dog id 부재 submit guard 추가. 단독 딥링크 `undefined` 문구 제거 | 신규 유저 dog 없음 상태 UX 확인 필요 |
@@ -152,15 +152,15 @@
 
 | Function | 배포 | verify_jwt | 실연동 |
 |----------|------|-----------|--------|
-| login-with-toss | v13 ✅ (ACTIVE) | false | ✅ Sandbox 200 + 실패 400 증적 / stale code 502(`invalid_grant`) 이력 |
-| legal | ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
-| toss-disconnect | ✅ | false | ✅ invoke smoke(GET/POST 401, 인증정책 동작) / 콘솔 콜백 대기 |
-| verify-iap-order | ⚠️ Mock mTLS (v12) | false | ✅ 실기기 `POST 200` 누적 5건 + `toss_orders` 영속(`order_count=5`, `latest_order_at=2026-02-28 22:31:22 KST`) / 잔여: 앱 UI 3시나리오 증적 |
-| send-smart-message | ⚠️ Mock mTLS (v9) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403) + 429(`QUIET_HOURS`) 확인 / 신청·승인 완료 후 Sandbox 실발송 검증 |
-| grant-toss-points | ⚠️ Mock mTLS (v9) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403), happy-path 미검증 |
-| generate-report | ✅ v3 (mock/real switch) | true | ✅ invoke smoke + 위조 `x-user-role` 우회 차단(POST 403, v3), ⚠️ OpenAI 실키/실모드 미검증 |
+| login-with-toss | v18 ✅ | false | ✅ Sandbox 200 + 실패 400 증적 / fresh authCode 최종 증적 잔여 |
+| legal | v9 ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
+| toss-disconnect | v10 ✅ | false | ✅ invoke smoke(GET/POST 401, 인증정책 동작) / 콘솔 콜백 대기 |
+| verify-iap-order | v17 ✅ real mTLS | false | ✅ `completeProductGrant` 경로 포함 테스트 통과 / IAP 성공 실기기 최종 증적 잔여 |
+| send-smart-message | v14 ✅ real mTLS | true | ✅ current user HTTP 200 + `noti_history.success=true` 확인 / 추가 캠페인 등록 잔여 |
+| grant-toss-points | v14 ✅ real mTLS | true | ✅ 위조 role 우회 차단 + real mTLS 전환 / 포인트 happy-path 회귀 증적 잔여 |
+| generate-report | v4 ✅ mock/real switch | true | ✅ Edge test 통과 / `REPORT_AI_MODE=real` + OpenAI 실키 검증 잔여 |
 
-기준: 2026-02-28 22:31 KST (Supabase MCP Edge Logs + DB 집계)
+기준: 2026-05-12 KST (PROJECT-STATUS 최신 상태 + 로컬 코드/테스트 재스캔)
 
 ---
 
@@ -168,8 +168,9 @@
 
 | 테스트 유형 | 상태 | 갭 |
 |-----------|------|-----|
-| FE 단위 테스트 | 완료 | Jest 77 tests, 21 suites (auth 7 + iap 8 + roleGuard 8 + ads 5 + guards 8 + pageGuard 5 + postLogin 2 + training/dashboard API 포함) |
-| BE 단위 테스트 | 완료 | pytest 39 tests (health 3 + models 12 + schemas 14 + security 7 + routers 6) |
+| FE 단위 테스트 | 완료 | Jest 101 tests, 16 suites (2026-05-12) |
+| BE 단위 테스트 | 완료 | pytest 57 tests (2026-05-12) |
+| Edge 단위 테스트 | 완료 | Jest 45 tests, 13 suites (2026-05-12) |
 | BE↔DB 통합 테스트 | 미구현 | FastAPI + 실 Supabase 연결 테스트 (DB 마이그레이션 완료, 연결만 미검증) |
 | E2E 테스트 | 부분 | 로그인 + Edge invoke smoke 검증, IAP/광고 happy-path 미검증 |
 | 성능 테스트 | 미구현 | 40마리 FlatList, API p95 < 300ms |

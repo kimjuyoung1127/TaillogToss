@@ -187,8 +187,8 @@ function Stage1FormPage() {
           {sex !== null && (
             <Section label="중성화를 했나요?">
               <View style={styles.chipRow}>
-                <ChoiceChip label="했어요" iconSource={ICONS['ic-target']} selected={isNeutered === true} onPress={() => setIsNeutered(true)} />
-                <ChoiceChip label="안 했어요" iconSource={ICONS['ic-paw']} selected={isNeutered === false} onPress={() => setIsNeutered(false)} />
+                <ChoiceChip label="했어요" iconSource={ICONS['ic-health']} selected={isNeutered === true} onPress={() => setIsNeutered(true)} />
+                <ChoiceChip label="안 했어요" iconSource={ICONS['ic-none']} selected={isNeutered === false} onPress={() => setIsNeutered(false)} />
                 <ChoiceChip label="모르겠어요" iconSource={ICONS['ic-idea']} selected={isNeutered === null && sex !== null} onPress={() => setIsNeutered(null)} />
               </View>
             </Section>

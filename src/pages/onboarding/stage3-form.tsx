@@ -51,7 +51,7 @@ type FocusLevel = 'treat_only' | 'good' | 'distracted' | 'uninterested';
 type AttachLevel = 'velcro' | 'moderate' | 'independent';
 
 const HEALTH_ISSUES = [
-  { id: 'joint_disc', label: '관절·디스크', iconSource: ICONS['ic-paw'] },
+  { id: 'joint_disc', label: '관절·디스크', iconSource: ICONS['ic-health'] },
   { id: 'skin_allergy', label: '피부·알레르기', iconSource: ICONS['ic-idea'] },
   { id: 'heart', label: '심장·호흡', iconSource: ICONS['ic-bolt'] },
   { id: 'digestive', label: '소화기', iconSource: ICONS['ic-cat-meal'] },
@@ -60,7 +60,7 @@ const HEALTH_ISSUES = [
 const REWARDS = [
   { id: 'treat', label: '간식', iconSource: ICONS['ic-cat-meal'] },
   { id: 'toy', label: '장난감·놀이', iconSource: ICONS['ic-cat-play'] },
-  { id: 'praise', label: '칭찬·스킨십', iconSource: ICONS['ic-paw'] },
+  { id: 'praise', label: '칭찬·스킨십', iconSource: ICONS['ic-praise'] },
   { id: 'walk', label: '산책', iconSource: ICONS['ic-cat-walk'] },
 ];
 
@@ -194,11 +194,11 @@ function Stage3FormPage() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── 건강 섹션 ── */}
-        <SectionHeader iconSource={ICONS['ic-paw']} title="건강 상태" />
+        <SectionHeader iconSource={ICONS['ic-health']} title="건강 상태" />
 
         <Section label="지금 건강 상태가 어때요?">
           <ChipGroup>
-            <Chip label="튼튼해요" iconSource={ICONS['ic-paw']} selected={healthStatus === 'healthy'} onPress={() => setHealthStatus('healthy')} />
+            <Chip label="튼튼해요" iconSource={ICONS['ic-health']} selected={healthStatus === 'healthy'} onPress={() => setHealthStatus('healthy')} />
             <Chip label="신경 쓰이는 게 있어요" iconSource={ICONS['ic-idea']} selected={healthStatus === 'concern'} onPress={() => setHealthStatus('concern')} />
             <Chip label="치료 중이에요" iconSource={ICONS['ic-bolt']} selected={healthStatus === 'treatment'} onPress={() => setHealthStatus('treatment')} />
           </ChipGroup>
@@ -232,8 +232,8 @@ function Stage3FormPage() {
 
         <Section label="수술 경험이 있나요? (중성화 제외)">
           <ChipGroup>
-            <Chip label="있어요" iconSource={ICONS['ic-paw']} selected={hadSurgery === true} onPress={() => setHadSurgery(true)} />
-            <Chip label="없어요" iconSource={ICONS['ic-target']} selected={hadSurgery === false} onPress={() => setHadSurgery(false)} />
+            <Chip label="있어요" iconSource={ICONS['ic-health']} selected={hadSurgery === true} onPress={() => setHadSurgery(true)} />
+            <Chip label="없어요" iconSource={ICONS['ic-none']} selected={hadSurgery === false} onPress={() => setHadSurgery(false)} />
           </ChipGroup>
           {hadSurgery ? (
             <TextInput
@@ -253,9 +253,9 @@ function Stage3FormPage() {
         <Section label="낯선 곳에 가면 어떻게 해요?">
           <ChipGroup wrap>
             <Chip label="신나게 탐험해요" iconSource={ICONS['ic-search']} selected={envReaction === 'explore'} onPress={() => setEnvReaction('explore')} />
-            <Chip label="천천히 적응해요" iconSource={ICONS['ic-paw']} selected={envReaction === 'adapt'} onPress={() => setEnvReaction('adapt')} />
+            <Chip label="천천히 적응해요" iconSource={ICONS['ic-calm']} selected={envReaction === 'adapt'} onPress={() => setEnvReaction('adapt')} />
             <Chip label="많이 불안해해요" iconSource={ICONS['ic-cat-anxiety']} selected={envReaction === 'anxious'} onPress={() => setEnvReaction('anxious')} />
-            <Chip label="관심 없어요" iconSource={ICONS['ic-target']} selected={envReaction === 'indifferent'} onPress={() => setEnvReaction('indifferent')} />
+            <Chip label="관심 없어요" iconSource={ICONS['ic-none']} selected={envReaction === 'indifferent'} onPress={() => setEnvReaction('indifferent')} />
           </ChipGroup>
         </Section>
 
@@ -264,22 +264,22 @@ function Stage3FormPage() {
             <Chip label="달려가서 반가워해요" iconSource={ICONS['ic-bolt']} selected={personReaction === 'rush'} onPress={() => setPersonReaction('rush')} />
             <Chip label="살펴보다 다가가요" iconSource={ICONS['ic-search']} selected={personReaction === 'observe'} onPress={() => setPersonReaction('observe')} />
             <Chip label="숨거나 피해요" iconSource={ICONS['ic-cat-fear']} selected={personReaction === 'hide'} onPress={() => setPersonReaction('hide')} />
-            <Chip label="별 반응 없어요" iconSource={ICONS['ic-target']} selected={personReaction === 'indifferent'} onPress={() => setPersonReaction('indifferent')} />
+            <Chip label="별 반응 없어요" iconSource={ICONS['ic-calm']} selected={personReaction === 'indifferent'} onPress={() => setPersonReaction('indifferent')} />
           </ChipGroup>
         </Section>
 
         <Section label="다른 개를 만나면?">
           <ChipGroup wrap>
-            <Chip label="먼저 달려가요" iconSource={ICONS['ic-paw']} selected={dogReaction === 'approach'} onPress={() => setDogReaction('approach')} />
+            <Chip label="먼저 달려가요" iconSource={ICONS['ic-bolt']} selected={dogReaction === 'approach'} onPress={() => setDogReaction('approach')} />
             <Chip label="냄새 맡으며 탐색해요" iconSource={ICONS['ic-search']} selected={dogReaction === 'sniff'} onPress={() => setDogReaction('sniff')} />
             <Chip label="짖거나 공격해요" iconSource={ICONS['ic-cat-barking']} selected={dogReaction === 'bark'} onPress={() => setDogReaction('bark')} />
-            <Chip label="무관심해요" iconSource={ICONS['ic-target']} selected={dogReaction === 'indifferent'} onPress={() => setDogReaction('indifferent')} />
+            <Chip label="무관심해요" iconSource={ICONS['ic-none']} selected={dogReaction === 'indifferent'} onPress={() => setDogReaction('indifferent')} />
           </ChipGroup>
         </Section>
 
         <Section label="큰 소리가 나면?">
           <ChipGroup wrap>
-            <Chip label="별 반응 없어요" iconSource={ICONS['ic-target']} selected={noiseReaction === 'calm'} onPress={() => setNoiseReaction('calm')} />
+            <Chip label="별 반응 없어요" iconSource={ICONS['ic-calm']} selected={noiseReaction === 'calm'} onPress={() => setNoiseReaction('calm')} />
             <Chip label="놀라지만 금방 괜찮아요" iconSource={ICONS['ic-bolt']} selected={noiseReaction === 'recover'} onPress={() => setNoiseReaction('recover')} />
             <Chip label="오래 불안해해요" iconSource={ICONS['ic-cat-anxiety']} selected={noiseReaction === 'prolonged'} onPress={() => setNoiseReaction('prolonged')} />
           </ChipGroup>
@@ -287,16 +287,16 @@ function Stage3FormPage() {
 
         <Section label="훈련이나 놀이에 얼마나 집중해요?">
           <ChipGroup wrap>
-            <Chip label="간식 있으면 최고예요" iconSource={ICONS['ic-target']} selected={focusLevel === 'treat_only'} onPress={() => setFocusLevel('treat_only')} />
+            <Chip label="간식 있으면 최고예요" iconSource={ICONS['ic-cat-meal']} selected={focusLevel === 'treat_only'} onPress={() => setFocusLevel('treat_only')} />
             <Chip label="집중력 좋아요" iconSource={ICONS['ic-training']} selected={focusLevel === 'good'} onPress={() => setFocusLevel('good')} />
             <Chip label="금방 딴짓해요" iconSource={ICONS['ic-puzzle']} selected={focusLevel === 'distracted'} onPress={() => setFocusLevel('distracted')} />
-            <Chip label="별 관심 없어요" iconSource={ICONS['ic-target']} selected={focusLevel === 'uninterested'} onPress={() => setFocusLevel('uninterested')} />
+            <Chip label="별 관심 없어요" iconSource={ICONS['ic-none']} selected={focusLevel === 'uninterested'} onPress={() => setFocusLevel('uninterested')} />
           </ChipGroup>
         </Section>
 
         <Section label="보호자한테 얼마나 붙어 있어요?">
           <ChipGroup>
-            <Chip label="껌딱지예요" iconSource={ICONS['ic-paw']} selected={attachLevel === 'velcro'} onPress={() => setAttachLevel('velcro')} />
+            <Chip label="껌딱지예요" iconSource={ICONS['ic-praise']} selected={attachLevel === 'velcro'} onPress={() => setAttachLevel('velcro')} />
             <Chip label="적당히 가까이요" iconSource={ICONS['ic-dog']} selected={attachLevel === 'moderate'} onPress={() => setAttachLevel('moderate')} />
             <Chip label="독립적이에요" iconSource={ICONS['ic-cat-walk']} selected={attachLevel === 'independent'} onPress={() => setAttachLevel('independent')} />
           </ChipGroup>

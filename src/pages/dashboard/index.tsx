@@ -329,7 +329,7 @@ function DashboardPage() {
             defaultTab="record"
             headerLeft={
               <Image
-                source={{ uri: ICONS['ic-stage-adult'] }}
+                source={{ uri: ICONS['ic-paw'] }}
                 style={{ width: 28, height: 28 }}
                 resizeMode="contain"
               />

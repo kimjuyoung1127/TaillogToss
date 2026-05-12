@@ -1,6 +1,6 @@
 # Skill Doc Matrix
 
-Decision-complete mapping between page skills, code touch points, and required references.
+Decision-complete mapping between successful `.claude/skills` entries, code touch points, and required references.
 
 | page_skill | target_route | primary_code_paths | required_docs | optional_docs | feature_skills | acceptance_checks |
 |---|---|---|---|---|---|---|
@@ -30,6 +30,8 @@ Decision-complete mapping between page skills, code touch points, and required r
 
 - Page skill root: `.claude/skills/page-skills/page/`
 - Feature skill root: `.claude/skills/page-skills/feature/`
+- Domain skill root: `.claude/skills/toss-guide/`
+- Legacy mirror: `.agents/skills` is not the source of truth for this matrix.
 - Load one page skill + up to two feature skills.
 - Keep context inputs narrow to route-specific files and docs.
 - Update `PAGE-UPGRADE-BOARD.md` status and date at task end.
@@ -38,5 +40,20 @@ Decision-complete mapping between page skills, code touch points, and required r
 
 | skill | purpose | primary_docs | acceptance_checks |
 |---|---|---|---|
+| `toss_apps` | Toss mini-app, TDS, SDK, Supabase integration baseline | `docs/ref/AIT-SDK-2X-MIGRATION.md`, `docs/ref/AIT-PUBLISHING-READINESS.md`, `docs/ref/PRD-TailLog-Toss.md` | SDK/TDS usage follows current app patterns |
+| `toss_journey` | User journey, route transitions, engagement hooks | `docs/ref/PRD-TailLog-Toss.md`, `docs/status/PAGE-UPGRADE-BOARD.md` | route journey parity and transition state match docs |
+| `toss_wireframes` | Screen wireframes and TDS component mapping | `docs/status/PAGE-UPGRADE-BOARD.md`, `docs/ref/ASSET-GUIDE.md` | layout/component parity checked against route board |
+| `toss_db_migration` | Supabase schema, migration, and RLS alignment | `docs/ref/SUPABASE-SCHEMA-INDEX.md`, `docs/ref/SCHEMA-B2B.md` | migration/schema/RLS drift reviewed |
+| `toss-login-token-ops` | Toss Login OAuth token flow and QA evidence | `docs/status/11-FEATURE-PARITY-MATRIX.md`, `docs/ref/AIT-PUBLISHING-READINESS.md` | fresh authCode/login evidence captured |
+| `toss-mock-auth-ops` | Mock auth stability, stable userKey, and survey loop diagnosis | `docs/daily/05-05/runtime-mode-switch-test.md`, `docs/status/PROJECT-STATUS.md` | stable userKey and route loop evidence captured |
+| `toss-growth-ops` | Smart Message, Segment, Promotion, Reward, and OG operations | `docs/ref/AIT-SMART-MESSAGE-CONSOLE-GUIDE.md`, `docs/status/11-FEATURE-PARITY-MATRIX.md` | console/send evidence and history updated |
+| `toss-monetization-ops` | Ads, IAP, TossPay console and sandbox operations | `docs/ref/AIT-IAP-CONSOLE-GUIDE.md`, `docs/ref/AIT-ADS-CONSOLE-GUIDE.md`, `docs/ref/AIT-PUBLISHING-READINESS.md` | sandbox/console evidence captured |
+| `toss-iap-proxy-ops` | IAP proxy, service role JWT detection, and subscriptions E2E recovery | `docs/daily/05-05/page-coaching-result.md`, `docs/daily/05-07/iap-ads-smart-message-device-qa.md`, `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md` | subscription active state and proxy path verified |
 | `toss-runtime-mode-ops` | `DEV_LOCAL` / `SANDBOX_REAL` / `PROD_READY` runtime mode 판정과 AIT, Supabase CLI, mTLS, Ads, IAP, Smart Message, Report AI 토글 분리 | `docs/status/MISSING-AND-UNIMPLEMENTED.md`, `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md`, `docs/ref/AIT-ADS-SDK-REFERENCE.md` | mode snapshot, toggle matrix, PASS/PARTIAL/BLOCKED gate |
 | `toss-ait-build-ops` | `.ait` 빌드/업로드/standalone private launch 패턴, env/runtime setup 검증, `brand.icon` HTTPS URL 우선 규칙, host error escalation | `docs/daily/05-07/iap-ads-smart-message-device-qa.md`, `docs/daily/05-07/ait-private-standalone-launch.md`, `docs/ref/AIT-PUBLISHING-READINESS.md`, `docs/status/PROJECT-STATUS.md` | bundle scan: Supabase marker + no local/data URI `brandIcon`; preferred `brandIcon:"https://"`; if Metro-off launch fails before JS marker, collect deploymentId/CLI URL/UI text/logcat and escalate |
+| `toss-dev-server` | Metro, FastAPI, and adb reverse local server startup | `docs/status/PROJECT-STATUS.md`, `docs/daily/05-05/full-app-qa-readiness-report.md` | 8081/8765 health and adb reverse verified |
+| `toss-phase13-gate` | AUTH/IAP/MSG/AD E2E gate and evidence sync | `docs/status/11-FEATURE-PARITY-MATRIX.md`, `docs/status/PRELAUNCH-BLOCKER-SCAN.md` | gate evidence and blocker state synced |
+| `toss-sandbox-metro` | Toss Sandbox device, Metro entry scheme, and device QA | `docs/daily/05-07/iap-ads-smart-message-device-qa.md`, `docs/ref/AIT-PUBLISHING-READINESS.md` | device launch and network path verified |
+| `toss-supabase-mcp` | Supabase MCP, Edge deploy, logs, and key checks | `docs/ref/SUPABASE-SCHEMA-INDEX.md`, `docs/status/PRELAUNCH-BLOCKER-SCAN.md` | Edge/schema/log evidence captured without key leakage |
+| `toss-edge-hardening` | Edge Function auth, header trust removal, redeploy, and bypass verification | `docs/status/PRELAUNCH-BLOCKER-SCAN.md`, `docs/ref/AIT-PUBLISHING-READINESS.md` | privilege bypass and auth boundary checked |
+| `toss-iap-edge-recovery` | `verify-iap-order` 401/403 diagnosis and safe recovery | `docs/ref/AIT-IAP-MESSAGE-POINTS-REFERENCE.md`, `docs/daily/05-07/iap-ads-smart-message-device-qa.md` | auth failure path separated from IAP success path |

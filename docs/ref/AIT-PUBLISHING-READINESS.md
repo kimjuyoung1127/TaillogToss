@@ -160,7 +160,7 @@ NFT/디지털 자산 거래, 도박, 대출/보험/증권, 투자 조언, 현금
 
 ## 7. TaillogToss 퍼블리싱 체크리스트
 
-> 2차 갱신: 2026-04-21 | 11개 → 23개 항목
+> 3차 갱신: 2026-05-12 | 출시 전 코드/문서 정합성 스캔 반영
 
 ### 공통 준비
 
@@ -177,7 +177,7 @@ NFT/디지털 자산 거래, 도박, 대출/보험/증권, 투자 조언, 현금
 - [x] 앱 로고 600x600 각진 정사각형 준비 (`src/assets/icons/app-logo-600.png`)
 - [x] 앱 로고 `granite.config.ts` `brand.icon` 최종 적용 — 콘솔 이미지 HTTPS URL 적용 완료, bundle scan에서 `brandIcon:"https://static.toss.im/..."` 확인(2026-05-07)
 - [x] 앱 로고 콘솔 업로드 + 승인 완료 — 2026-05-07
-- [ ] AIT private standalone 실행 확인 — CLI deploy `019e01b9-3c4c-7677-b6b9-d80529a2d868`는 공식 `AppsInToss.registerApp` wrapper 적용 후 업로드 성공했지만 Metro-off에서 JS 진입 전 host error. Apps in Toss test host/샌드박스앱/QR 실행 경로 확인 필요
+- [x] AIT private standalone 실행 확인 — production Toss app + Metro off + deploymentId `019e14a7-ca44-7f9b-bd58-a9be19376360`에서 온보딩 렌더 PASS(2026-05-11). 새 아이콘/새 AIT 업로드 후 회귀 확인 필요
 - [x] 앱 이름 한글 명사형 확인 (15자 이하) + 영문명 등록 — 2026-04-23 콘솔 신청 완료
 - [x] 앱 검색 키워드 + 카테고리 등록 — 2026-04-23 콘솔 신청 완료
 - [x] 스크린샷 세로형 3장 (636×1048) + 가로형 1장 (1504×741) — 2026-04-23 콘솔 신청 완료
@@ -195,12 +195,13 @@ NFT/디지털 자산 거래, 도박, 대출/보험/증권, 투자 조언, 현금
 
 - [ ] IAP 샌드박스 테스트 3종 완료 (구매 성공 / 서버 실패 / 에러 처리)
 - [ ] 기기 변경 후 구매내역 보존 구현 확인
-- [ ] `completeProductGrant()` 구현 확인
+- [x] `completeProductGrant()` 구현 확인 — `src/lib/api/iap.ts` 서버 grant 성공 후 SDK 호출
 
 ### Smart Message
 
-- [ ] Smart Message 템플릿 승인 완료 (2-3 영업일)
-- [ ] 마케팅 수신 동의 사용자 세그먼트 구성
+- [x] Smart Message `log_reminder` 템플릿 승인 + 실발송 확인
+- [x] 세그먼트 `테일로그_앱방문365` 생성 확인
+- [ ] 추가 Smart Message 캠페인 4종 등록
 
 ### 개인정보 / 보안
 

@@ -225,8 +225,8 @@ This file only keeps execution rules, priorities, and pointers.
 
 ## Skill Routing Index (MUST)
 
-Skill root: `.Codex/skills/toss-guide/`
-Page/feature skill root: `.Codex/skills/page-skills/`
+Skill root: `.claude/skills/toss-guide/`
+Page/feature skill root: `.claude/skills/page-skills/`
 
 ### Base domain skills
 - `Skill("toss_wireframes")`
@@ -242,6 +242,9 @@ Page/feature skill root: `.Codex/skills/page-skills/`
 - `Skill("toss-supabase-mcp")`
 - `Skill("toss-sandbox-metro")`
 - `Skill("toss-dev-server")`
+- `Skill("toss-iap-proxy-ops")`
+- `Skill("toss-mock-auth-ops")`
+- `Skill("toss-ait-build-ops")`
 
 ### Page hardening skills
 - Source of truth: `docs/status/PAGE-UPGRADE-BOARD.md`
