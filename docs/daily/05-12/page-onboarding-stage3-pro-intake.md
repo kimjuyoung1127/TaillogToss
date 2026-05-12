@@ -33,6 +33,9 @@
 - [x] B2B 무한 로딩 해소
 - [x] 무료 B2B 상담지 작성 가능, AI 리포트 생성 잠금 경로 유지
 - [x] AI 결과가 `case_summary`, `behavior_episodes`, `grooming_handling`, `noise_sensitivity`, `protective_factors`, `owner_goals`를 반영
+- [x] `Backend/.env` 기반 실제 OpenAI 호출로 우디 + 5 fixture 6블록 생성
+- [x] ADB 실기기 `SM_S926N`에서 `/onboarding/stage3-form` 렌더 확인
+- [x] ADB 실기기 `SM_S926N`에서 `/dog/profile` Pro 상담지 요약 카드 렌더 확인
 
 ## 작업 로그
 
@@ -40,3 +43,5 @@
 - 2026-05-12: Stage 3 Pro 상담지, `case_intakes`, profile summary, B2B guard/org redirect, AI prompt expansion 구현.
 - 2026-05-12: `npm run typecheck`, `npm run test:app -- --runInBand --passWithNoTests`, `Backend/venv/bin/pytest Backend/tests/ -v` PASS.
 - 2026-05-12: `python3 scripts/pro_intake_fixture_report.py`로 우디 + 5 합성 fixture 병렬 추천 비교표 생성.
+- 2026-05-12: `Backend/.env`의 `OPENAI_API_KEY`를 사용해 실제 OpenAI 병렬 호출 성공. 6케이스 합산 비용 약 `$0.004838`, 입력/출력 토큰 범위 `1028~1136 / 992~1154`, latency `15.1~17.5s`.
+- 2026-05-12: ADB reverse `tcp:8081`, `tcp:8765` 설정 후 `viva.republica.toss.test` 실행. `GraniteActivity` resumed, `/onboarding/stage3-form` 및 `/dog/profile` 스크린샷 검증 완료.
