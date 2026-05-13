@@ -76,6 +76,20 @@
 5. action별 behavior matching을 고도화해 reference id 보정과 품질점수 평가를 더 정교하게 만든다.
 6. 50건마다 개선 리포트를 만들고, 실제 프롬프트/품질점수/reference matching 수정은 별도 승인 후 진행한다.
 
+### 2026-05-13 — coaching-review-telegram-daily 수동 실발송 검증
+
+| 항목 | 결과 |
+|------|------|
+| 합성 후보 생성 | ✅ `destructive` 3건 생성/태깅 |
+| 새 후보 발송 | ✅ 1건 (`separation_anxiety`, score 70) |
+| Telegram queue | ✅ `pending` 기록 후 `rejected` 처리 |
+| 반려 코멘트 연결 | ✅ `추천이 너무 일반적이고 파괴 행동 케이스인데 분리불안 중심으로 보임` |
+| 개선 태그 | ✅ `too_generic`, `wrong_behavior_focus` |
+| DB 반영 | ✅ 해당 coaching 후보 목록에서 제외 |
+| 후보 JSON export | 0건 — 반려라 생성하지 않음 |
+| 앱 커리큘럼 변경 | ✅ 없음 (`published/runtime.ts`, `curriculum.ts`, `approved/`) |
+| 특이사항 | 여러 버튼 탭이 한 번에 수거되어 최신 valid callback(`reject`)과 반려 코멘트를 최종 의도로 처리 |
+
 ---
 
 ## 일별 생성 로그
