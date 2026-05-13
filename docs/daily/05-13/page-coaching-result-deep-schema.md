@@ -19,7 +19,7 @@ Status: Done
 ## Validation
 - [x] `npm run typecheck` PASS
 - [x] `npm run test:app -- --runInBand --passWithNoTests` PASS — 16 suites / 103 tests
-- [x] `Backend/venv/bin/pytest Backend/tests/ -v` PASS — 65 tests
+- [x] `Backend/venv/bin/pytest Backend/tests/ -v` PASS — 66 tests
 - [x] 실제 OpenAI 우디 + 5 fixture 호출 PASS
 - [x] label leak check PASS — `[기법]`, `[도구]` 등 화면 문장 누출 없음
 - [x] Case E 자원보호 우선순위 보정 후 `impulse_control` 반영 PASS

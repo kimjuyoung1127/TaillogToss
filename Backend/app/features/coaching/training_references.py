@@ -8,6 +8,7 @@ small planning cues so the model adapts from intake instead of copying lessons.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from copy import deepcopy
 from typing import Any
 
 
@@ -220,6 +221,32 @@ def format_training_references_for_prompt(references: list[TrainingReference]) -
     return "\n".join(lines) + "\n"
 
 
+def sanitize_reference_curriculum_ids(
+    blocks: dict[str, Any],
+    references: list[TrainingReference],
+) -> dict[str, Any]:
+    """Keep model-provided reference IDs inside retrieved references.
+
+    LLMs occasionally hallucinate a valid-looking curriculum ID. The prompt
+    already forbids that; this runtime guard keeps persisted coaching results
+    consistent with the retrieval set used for that generation.
+    """
+    allowed_ids = [ref.curriculum_id for ref in references]
+    if not allowed_ids:
+        return blocks
+
+    cleaned = deepcopy(blocks)
+    _sanitize_items(
+        ((cleaned.get("action_plan") or {}).get("items") or []),
+        allowed_ids,
+    )
+    _sanitize_items(
+        ((cleaned.get("next_7_days") or {}).get("days") or []),
+        allowed_ids,
+    )
+    return cleaned
+
+
 def _collect_text(
     issues: list[str] | None,
     triggers: list[str] | None,
@@ -251,3 +278,15 @@ def _dedupe(values: list[str]) -> list[str]:
             seen.add(value)
             result.append(value)
     return result
+
+
+def _sanitize_items(items: list[Any], allowed_ids: list[str]) -> None:
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        refs = item.get("reference_curriculum_ids")
+        if isinstance(refs, list):
+            sanitized = [ref for ref in refs if ref in allowed_ids]
+        else:
+            sanitized = []
+        item["reference_curriculum_ids"] = sanitized or [allowed_ids[0]]

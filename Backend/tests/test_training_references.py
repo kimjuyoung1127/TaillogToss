@@ -1,6 +1,7 @@
 from app.features.coaching.training_references import (
     extract_behavior_candidates,
     retrieve_training_references,
+    sanitize_reference_curriculum_ids,
 )
 
 
@@ -84,3 +85,30 @@ def test_resource_guarding_takes_priority_over_generic_dog_reactivity():
     )
 
     assert refs[0].curriculum_id == "impulse_control"
+
+
+def test_sanitize_reference_curriculum_ids_keeps_only_retrieved_ids_and_fills_empty():
+    refs = retrieve_training_references(
+        issues=["resource_guarding"],
+        triggers=["food_bowl", "other_dog"],
+        onboarding_context={"stage": 3, "stage3": {"case_intake": {"sections": {"case_summary": "자원 보호"}}}},
+    )
+    blocks = {
+        "action_plan": {
+            "items": [
+                {"description": "식사 공간을 분리해요.", "reference_curriculum_ids": ["socialization"]},
+                {"description": "그릇을 빼앗지 않아요.", "reference_curriculum_ids": []},
+            ]
+        },
+        "next_7_days": {
+            "days": [
+                {"day_number": 1, "reference_curriculum_ids": ["not_real"]},
+            ]
+        },
+    }
+
+    cleaned = sanitize_reference_curriculum_ids(blocks, refs)
+
+    assert cleaned["action_plan"]["items"][0]["reference_curriculum_ids"] == ["impulse_control"]
+    assert cleaned["action_plan"]["items"][1]["reference_curriculum_ids"] == ["impulse_control"]
+    assert cleaned["next_7_days"]["days"][0]["reference_curriculum_ids"] == ["impulse_control"]

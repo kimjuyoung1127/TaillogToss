@@ -16,6 +16,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import BadRequestException, NotFoundException
 from app.features.coaching import budget, prompts, rule_engine, schemas
+from app.features.coaching.training_references import (
+    retrieve_training_references,
+    sanitize_reference_curriculum_ids,
+)
 from app.shared.clients.openai_client import OpenAIError, openai_client
 from app.shared.models import AICoaching, BehaviorLog, Dog, DogEnv, UserSettings
 from app.shared.utils.ownership import verify_dog_ownership
@@ -102,6 +106,10 @@ async def generate_coaching(
             )
 
             parsed = _parse_ai_response(result["content"])
+            parsed = sanitize_reference_curriculum_ids(
+                parsed,
+                retrieve_training_references(issues, triggers, onboarding_ctx, limit=3),
+            )
             blocks = schemas.CoachingBlocks(**parsed)
             blocks = _apply_safety_filter(blocks)  # 앱인토스 AI 심사 필수: 위험 콘텐츠 사후 필터
             ai_tokens_used = result["input_tokens"] + result["output_tokens"]
