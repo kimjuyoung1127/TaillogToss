@@ -1,6 +1,6 @@
 # 자동화 상태 보고서
 
-점검 시각: 2026-05-13 (Asia/Seoul)
+점검 시각: 2026-05-19 (Asia/Seoul)
 총 자동화 프롬프트: 13개 | 기본 오케스트레이터: 4개 | 수동 전용: 1개 | 이슈: 0개
 Hooks: 1개 | Commands: 4개 | MCP: 2개
 
@@ -17,7 +17,7 @@ Hooks: 1개 | Commands: 4개 | MCP: 2개
 | coaching-review-telegram-daily | AI data TASK 2 | ✅ SUBTASK | — | 05-13 반려 시나리오 PASS | 단독 스케줄 금지, 오케스트레이터에서 호출 |
 | code-doc-align | morning TASK 2 | ✅ SUBTASK | LOCK_RELEASED | 03-02 03:06 | 단독 실행 가능 |
 | architecture-diagrams-sync | morning TASK 3 | ✅ SUBTASK | LOCK_RELEASED | 03-02 19:22 | 단독 실행 가능 |
-| automation-health-monitor | morning TASK 4 | ✅ SUBTASK | — | 05-13 문서 정렬 | health report만 갱신 |
+| automation-health-monitor | morning TASK 4 | ✅ SUBTASK | — | 05-19 문서 정렬 | health report만 갱신 |
 | docs-nightly-organizer | nightly TASK 1 | ✅ SUBTASK | LOCK_RELEASED | 03-01 22:02 | Mac 경로로 수정됨 |
 | training-data-maintenance | weekly TASK 1 | ✅ SUBTASK | — | 문서 정렬 완료 | 초안/리포트 중심 |
 | weekly-coaching-finetune-review | weekly TASK 2 | ✅ SUBTASK | — | 문서 정렬 완료 | approved >= 50 readiness 보고 |

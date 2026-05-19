@@ -151,7 +151,7 @@ Page/feature skill root: `.claude/skills/page-skills/`
 | `docs/status/11-FEATURE-PARITY-MATRIX.md` | parity notes and verification logs |
 | `docs/status/MISSING-AND-UNIMPLEMENTED.md` | missing implementations and V2 candidates |
 | `docs/status/PAGE-UPGRADE-BOARD.md` | route-level execution board |
-| `docs/status/PROGRESS-CHECKLIST.md` | 종합 완성도 체크리스트 (72%) |
+| `docs/status/PROGRESS-CHECKLIST.md` | 종합 완성도 체크리스트 (89%) |
 | `docs/status/SKILL-DOC-MATRIX.md` | page skill to code/doc mapping |
 | `docs/status/NIGHTLY-RUN-LOG.md` | nightly organizer execution history |
 | `docs/ref/BACKEND-PLAN.md` | backend implementation details |

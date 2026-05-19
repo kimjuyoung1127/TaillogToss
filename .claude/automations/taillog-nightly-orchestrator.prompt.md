@@ -43,6 +43,24 @@ lock: docs/status/.nightly-orchestrator.lock
 주의: 이 TASK는 자체 lock(docs/.docs-nightly.lock)을 가짐.
       lock 충돌 시 "TASK 1: 스킵 (다른 nightly run 진행 중)" 기록 후 완료.
 
+### TASK 2: docs-dashboard-sync
+
+역할: 마크다운 문서를 파싱하여 HTML 대시보드와 AI 컨텍스트 JSON을 재생성한다.
+
+실행 명령:
+```bash
+cd /Users/family/jason/TaillogToss
+python3 scripts/generate-dashboard-html.py --docs-root ./docs --output-dir ./docs/html --git-root .
+```
+
+성공 조건:
+- docs/html/dashboard-data.json 생성 (유효한 JSON, pages > 0)
+- docs/html/project-structure.json 생성 (유효한 JSON)
+- docs/html/index.html 생성 (HTML 파일 크기 > 0)
+- 실행 시간 < 10초
+
+실패 처리: 에러 메시지 기록 후 TASK 3(없으면 종료)으로 진행. HTML 갱신 실패는 치명적이지 않음.
+
 ---
 
 제외된 TASK:
@@ -56,6 +74,7 @@ lock: docs/status/.nightly-orchestrator.lock
 ```
 [나이틀리 오케스트레이터 완료] YYYY-MM-DD HH:mm (Asia/Seoul)
 - TASK 1 docs-nightly-organizer: <결과 한 줄>
+- TASK 2 docs-dashboard-sync: pages N / features N / completion N% / blockers N
 이슈: <없음 | N건>
 ```
 
@@ -68,4 +87,5 @@ docs/status/NIGHTLY-RUN-LOG.md 에 아래 형식으로 append (기존 docs-night
 ```
 ## YYYY-MM-DD 22:00 [오케스트레이터]
 - docs-organizer: ref N / status N / weekly N / daily-삭제 N
+- docs-dashboard-sync: pages N / features N / completion N% / blockers N건
 ```

@@ -1,7 +1,7 @@
 # TaillogToss 진행도 체크리스트
 
-> 생성: 2026-04-02 | 갱신: 2026-05-12 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
-> 종합 완성도: **88%** (IAP/Ads/Smart Message 정합성 재스캔 + 테스트 재검증 반영)
+> 생성: 2026-04-02 | 갱신: 2026-05-19 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
+> 종합 완성도: **89%** (Backend 5개 버그 수정 + E2E Wave 1~9 로컬 완료 + 신규 skill 생성)
 
 ---
 
@@ -21,7 +21,15 @@
   - [x] Supabase secrets에 Base64 인코딩 등록 (`TOSS_CLIENT_CERT_BASE64`, `TOSS_CLIENT_KEY_BASE64`)
   - [x] Edge Function 4종 `resolveMtlsMode()` 자동 감지 + 재배포 (login-with-toss v18, verify-iap-order v17, send-smart-message v14, grant-toss-points v14)
   - [ ] 인증서 만료일 캘린더 등록
-- [ ] 🔴 **실기기 E2E 통합 검증** — 23화면 + 핵심 플로우 실기기 테스트
+- [x] ~~🔴 **Backend 5개 모델-DB 정합성 수정**~~ — ✅ 2026-05-19 완료 (commit 2dc579b, Railway 배포)
+  - [x] BUG-01: `BehaviorLog.daily_activity` String(50) → JSONB
+  - [x] BUG-02: `StepFeedbackUpdate.reaction` str → `StepReaction(str, Enum)` (Pydantic 검증)
+  - [x] BUG-03: Dog/AICoaching 관계 `passive_deletes=True` 추가
+  - [x] BUG-04: B2B 8개 컬럼 `Enum(name=...)` → `String`
+  - [x] BUG-05: `DailyReport.behavior_summary` Text→JSONB, `highlight_photo_urls` JSONB→ARRAY(String)
+  - [x] pytest 74→75 passed (JSONB 회귀 테스트 추가)
+- [x] ✅ **로컬 E2E 개발모드 완전 검증** — Wave 1~9 전체 기록 완료 (2026-05-19)
+- [ ] 🔴 **실기기 E2E 통합 검증** — 23화면 + 핵심 플로우 실기기 테스트 (최신 AIT 배포 후)
 - [x] ~~🔴 **번들 크기 100MB 미만 확인**~~ — ✅ 4.9MB (100MB 한도 대비 5%)
 - [x] ~~🟠 **Ads SDK 콜백 패턴 리팩토링**~~ — ✅ `loadFullScreenAd`/`showFullScreenAd` 이벤트 콜백 경로 확인 (2026-05-12)
 - [x] ~~🟠 **IAP `completeProductGrant()` 호출 누락**~~ — ✅ 서버 grant 성공 후 `completeProductGrant()` 호출 확인 (2026-05-12)

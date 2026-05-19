@@ -195,9 +195,24 @@ unzip -p taillog-app.ait "bundle.android.0_84_0.js" | rg -o "ait-ad-test-[A-Za-z
 ### 3. 콘솔 업로드
 
 ```bash
-/Users/family/jason/TaillogToss/node_modules/.bin/ait deploy
-# → API 키 입력 (AIT 콘솔 → 앱 설정 → 배포 API 키)
+# 1회성: API 키를 명시해서 업로드
+/Users/family/jason/TaillogToss/node_modules/.bin/ait deploy \
+  --api-key "<AIT_CONSOLE_DEPLOY_API_KEY>" \
+  --location ./taillog-app.ait \
+  --scheme-only
+
+# 반복 사용: API 키를 default 프로필로 저장 후 업로드
+/Users/family/jason/TaillogToss/node_modules/.bin/ait token add \
+  --api-key "<AIT_CONSOLE_DEPLOY_API_KEY>" \
+  default
+
+/Users/family/jason/TaillogToss/node_modules/.bin/ait deploy \
+  --profile default \
+  --location ./taillog-app.ait \
+  --scheme-only
 ```
+
+API 키 위치: AIT 콘솔 → 앱 설정 → 배포 API 키. 키는 문서/git에 남기지 말고 터미널 입력 또는 `ait token add` 프로필에만 저장한다.
 
 ### 4. 테스트 진입 URL
 
@@ -238,6 +253,7 @@ adb reverse tcp:8765 tcp:8765
 | Babel 플러그인 에러 | transform-inline-env + esbuild define 충돌 | babel.config.js에서 플러그인 제거 |
 | `[granite.config] env var missing` | RN 0.72.6 빌드에서 `__dirname`이 `.granite/` | `findEnvFile()` 상위 탐색 |
 | `intoss-private://`가 Metro 없이 "앱 실행도중 문제가 발생했습니다." | `brand.icon` 로컬 경로/data URI 또는 AIT test host deployment 실행/호환성 문제 | 먼저 콘솔 앱 정보 이미지의 HTTPS URL을 `brand.icon`에 넣고 재빌드. 그래도 JS marker 없이 실패하면 deploymentId, CLI URL, UI error text, logcat(no `ReactNativeJS`)을 묶어 Toss 지원에 문의 |
+| `인증정보를 찾을 수 없음` / `앱인토스 배포 API 키를 입력해주세요` | 로컬 AIT token profile이 없거나 만료됨 (`~/.ait` 비어 있음) | `ait deploy --api-key "<key>" --location ./taillog-app.ait --scheme-only`로 1회 업로드하거나, `ait token add --api-key "<key>" default` 후 `ait deploy --profile default --location ./taillog-app.ait --scheme-only` 사용 |
 | `ait deploy` Code 4097 | 동일 콘텐츠 이미 업로드됨 | 무시 가능, 기존 deploymentId 사용 |
 | IAP 크래시 `Already resumed` | AIT 테스트앱 `getEdgeValue` SDK 버그 | `__DEV__` 바이패스 버튼으로 우회 |
 
