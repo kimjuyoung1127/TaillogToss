@@ -12,6 +12,7 @@ from app.features.coaching.schemas import (
     ActionItem,
     CoachingBlocks,
     CoachingRequest,
+    DailyUsageResponse,
     DayPlan,
     FeedbackRequest,
 )
@@ -56,6 +57,30 @@ class TestCoachingSchemas:
         req = CoachingRequest(dog_id="abc")
         assert req.report_type == "DAILY"
         assert req.window_days == 7
+        assert req.user_context is None
+
+    def test_coaching_request_user_context_accepted(self):
+        req = CoachingRequest(dog_id="abc", user_context="산책 중 줄 당김 발생")
+        assert req.user_context == "산책 중 줄 당김 발생"
+
+    def test_coaching_request_user_context_max_length(self):
+        with pytest.raises(ValidationError):
+            CoachingRequest(dog_id="abc", user_context="x" * 601)
+
+    def test_coaching_request_user_context_boundary(self):
+        # 600자 정확히 → 허용
+        req = CoachingRequest(dog_id="abc", user_context="x" * 600)
+        assert len(req.user_context) == 600
+
+    def test_daily_usage_response_default_limit_is_one(self):
+        resp = DailyUsageResponse()
+        assert resp.limit == 1, "무료 기본 한도가 1이어야 합니다 (3이면 버그)"
+        assert resp.used == 0
+
+    def test_daily_usage_response_explicit_values(self):
+        resp = DailyUsageResponse(used=1, limit=10)
+        assert resp.used == 1
+        assert resp.limit == 10
 
     def test_feedback_score_range(self):
         FeedbackRequest(score=1)

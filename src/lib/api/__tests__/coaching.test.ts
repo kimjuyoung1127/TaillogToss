@@ -79,6 +79,33 @@ describe('generateCoaching', () => {
     );
   });
 
+  it('userContext 전달 시 body에 user_context 포함된다', async () => {
+    mockRequestBackend.mockResolvedValue({ id: 'c-3' });
+
+    await generateCoaching('dog-1', 'DAILY', '오늘 산책 중 줄 당김 발생');
+
+    expect(mockRequestBackend).toHaveBeenCalledWith(
+      '/api/v1/coaching/generate',
+      expect.objectContaining({
+        body: {
+          dog_id: 'dog-1',
+          report_type: 'DAILY',
+          user_context: '오늘 산책 중 줄 당김 발생',
+        },
+      }),
+    );
+  });
+
+  it('userContext 빈 문자열 시 body에 user_context 미포함', async () => {
+    mockRequestBackend.mockResolvedValue({ id: 'c-4' });
+
+    await generateCoaching('dog-1', 'DAILY', '   ');
+
+    const call = mockRequestBackend.mock.calls[0]!;
+    const body = (call[1] as { body: Record<string, unknown> }).body;
+    expect(body.user_context).toBeUndefined();
+  });
+
   it('백엔드 에러 시 예외를 전파한다', async () => {
     mockRequestBackend.mockRejectedValue({ status: 429, details: { remaining: 0 } });
 
@@ -123,6 +150,26 @@ describe('parseCoachingError', () => {
     const parsed = parseCoachingError({});
 
     expect(parsed.status).toBe(500);
+  });
+
+  it('429에서 remaining 없고 daily_limit 있으면 daily_limit으로 폴백한다', () => {
+    const error = {
+      status: 429,
+      details: { daily_limit: 1, daily_used: 1, retry_after_sec: 82800 },
+    };
+
+    const parsed = parseCoachingError(error);
+
+    expect(parsed.status).toBe(429);
+    expect(parsed.remaining).toBe(1);
+    expect(parsed.retryAfterSec).toBe(82800);
+    expect(parsed.message).toBe('일일 코칭 한도에 도달했어요');
+  });
+
+  it('429에서 remaining도 daily_limit도 없으면 0 반환', () => {
+    const parsed = parseCoachingError({ status: 429, details: {} });
+
+    expect(parsed.remaining).toBe(0);
   });
 });
 
