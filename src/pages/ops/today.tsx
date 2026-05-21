@@ -1,16 +1,16 @@
 /**
- * Ops Today — B2B 오늘의 운영 큐 (4탭: 미기록/주의필요/리포트미발송/내담당)
+ * Ops Today — B2B 오늘의 운영 큐 (4탭: 전체/확인 필요/리포트 필요/내 담당)
  * FlatList 40마리 성능 최적화. Wave 3 게이트 #1 핵심 화면.
  * Parity: B2B-001
  */
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Modal, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import { SafeAreaView } from '@granite-js/native/react-native-safe-area-context';
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
 import { useOrg } from 'stores/OrgContext';
 import { useAuth } from 'stores/AuthContext';
-import { useOrgDogs } from 'lib/hooks/useOrg';
+import { useAssignDog, useMyAssignments, useOrgDogs, useUnassignDog } from 'lib/hooks/useOrg';
 import { useCreateQuickLog } from 'lib/hooks/useLogs';
 import { useGenerateReport, useSendReport, useUpdateReport } from 'lib/hooks/useReport';
 import { tracker } from 'lib/analytics/tracker';
@@ -22,9 +22,11 @@ import { BulkPresetSheet } from 'components/features/ops/BulkPresetSheet';
 import { ReportPreviewSheet } from 'components/features/ops/ReportPreviewSheet';
 import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ErrorState } from 'components/tds-ext/ErrorState';
+import { Toast } from 'components/tds-ext/Toast';
 import { TabLayout } from 'components/shared/layouts/TabLayout';
 import { BottomNavBar } from 'components/shared/BottomNavBar';
 import { PRESET_OPTIONS } from 'lib/data/presets';
+import { markStartupPerformance } from 'lib/performance/startupPerformance';
 import type { OpsItem } from 'components/features/ops/OpsListItem';
 import type { OpsStatus } from 'components/features/ops/OpsBadge';
 import type { DailyReport } from 'types/b2b';
@@ -44,6 +46,9 @@ function OpsTodayPage() {
   const { org, isOrgLoading } = useOrg();
   const { user } = useAuth();
   const { data: orgDogs, isLoading, isError, refetch } = useOrgDogs(org?.id);
+  const { data: myAssignments } = useMyAssignments(user?.id);
+  const assignDog = useAssignDog();
+  const unassignDog = useUnassignDog();
   const createQuickLog = useCreateQuickLog();
   const generateReport = useGenerateReport();
   const sendReport = useSendReport();
@@ -56,6 +61,30 @@ function OpsTodayPage() {
   const [reportSourceItem, setReportSourceItem] = useState<OpsItem | null>(null);
   const [reportForPreview, setReportForPreview] = useState<DailyReport | null>(null);
   const [generatingDogId, setGeneratingDogId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [recordToastMessage, setRecordToastMessage] = useState('');
+  const [showRecordToast, setShowRecordToast] = useState(false);
+  const opsPerfMarkedRef = useRef(false);
+
+  const showPageToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+  }, []);
+
+  const showRecordFeedback = useCallback((message: string) => {
+    setRecordToastMessage(message);
+    setShowRecordToast(true);
+  }, []);
+
+  const myAssignmentDogIds = useMemo(() => {
+    const orgId = org?.id;
+    return new Set(
+      (myAssignments ?? [])
+        .filter((assignment) => !orgId || assignment.org_id === orgId)
+        .map((assignment) => assignment.dog_id),
+    );
+  }, [myAssignments, org?.id]);
 
   // OrgDogWithStatus[] → OpsItem[] 변환 (실 데이터 JOIN 결과 사용)
   const allItems: OpsItem[] = useMemo(() => {
@@ -63,16 +92,19 @@ function OpsTodayPage() {
     return orgDogs.map((od) => {
       const todayLogCount = od.today_log_count;
       const hasReport = od.has_today_report;
-      let status: OpsStatus = 'pending';
-      if (todayLogCount === 0) status = 'pending';
-      else if (todayLogCount > 0 && hasReport) status = 'done';
-      else if (todayLogCount > 0 && !hasReport) status = 'normal';
+      let status: OpsStatus = 'unrecorded';
+      if (od.needs_attention) status = 'needs_check';
+      else if (todayLogCount === 0) status = 'unrecorded';
+      else if (!hasReport) status = 'needs_report';
+      else status = 'shared';
 
       return {
         orgDogId: od.id,
         dogName: od.dogs?.name ?? `Dog ${od.dog_id.slice(0, 6)}`,
         parentName: od.parent_name,
         trainerName: od.trainer_name,
+        isMyAssignment: myAssignmentDogIds.has(od.dog_id),
+        attentionReason: od.attention_reason,
         status,
         lastLogTime: od.last_log_time,
         todayLogCount,
@@ -80,24 +112,51 @@ function OpsTodayPage() {
         dogId: od.dog_id,
       };
     });
-  }, [orgDogs]);
+  }, [myAssignmentDogIds, orgDogs]);
 
   // 탭별 필터
   const unrecordedItems = useMemo(
     () => allItems.filter((i) => i.todayLogCount === 0), [allItems]
   );
   const attentionItems = useMemo(
-    () => allItems.filter((i) => i.status === 'urgent' || i.status === 'warning'), [allItems]
+    () => allItems.filter((i) => i.status === 'needs_check'), [allItems]
   );
   const unreportedItems = useMemo(
     () => allItems.filter((i) => !i.hasReport && i.todayLogCount > 0), [allItems]
   );
   const myItems = useMemo(
-    () => allItems.filter((i) => i.trainerName !== null), [allItems]
+    () => allItems.filter((i) => i.isMyAssignment), [allItems]
+  );
+  const selectedItems = useMemo(
+    () => allItems.filter((i) => selectedIds.has(i.orgDogId)),
+    [allItems, selectedIds],
+  );
+  const selectedHasUnassigned = useMemo(
+    () => selectedItems.some((item) => !item.isMyAssignment),
+    [selectedItems],
+  );
+  const selectedAllMine = useMemo(
+    () => selectedItems.length > 0 && selectedItems.every((item) => item.isMyAssignment),
+    [selectedItems],
   );
   const completedCount = useMemo(
-    () => allItems.filter((i) => i.status === 'done').length, [allItems]
+    () => allItems.filter((i) => i.status === 'shared').length, [allItems]
   );
+
+  useEffect(() => {
+    opsPerfMarkedRef.current = false;
+  }, [org?.id]);
+
+  useEffect(() => {
+    if (!isReady || !org || isLoading || opsPerfMarkedRef.current) return;
+    opsPerfMarkedRef.current = true;
+    markStartupPerformance('ops_today_data_ready', {
+      route: '/ops/today',
+      totalCount: allItems.length,
+      unrecordedCount: unrecordedItems.length,
+      unreportedCount: unreportedItems.length,
+    });
+  }, [allItems.length, isLoading, isReady, org, unrecordedItems.length, unreportedItems.length]);
 
   // 개별 기록: 아이템 탭 → RecordModal 열기
   const handleItemPress = useCallback((item: OpsItem) => {
@@ -137,7 +196,6 @@ function OpsTodayPage() {
         report_date: today,
         template_type: 'daycare_general',
         created_by_org_id: org?.id,
-        created_by_trainer_id: user?.id,
       },
       {
         onSuccess: (report) => {
@@ -152,7 +210,7 @@ function OpsTodayPage() {
         },
       },
     );
-  }, [selectedIds.size, generatingDogId, org?.id, user?.id, generateReport]);
+  }, [selectedIds.size, generatingDogId, org?.id, generateReport]);
 
   const handleReportSend = useCallback((reportId: string) => {
     sendReport.mutate(reportId, {
@@ -161,7 +219,7 @@ function OpsTodayPage() {
         setReportForPreview(null);
         setReportSourceItem(null);
         void refetch();
-        Alert.alert('발송 완료', '보호자에게 리포트가 발송되었어요.');
+        Alert.alert('공유 준비 완료', '보호자에게 보낼 리포트 링크를 열었어요.');
       },
       onError: () => {
         Alert.alert('리포트를 보내지 못했어요', '잠시 후 다시 시도해주세요.');
@@ -187,10 +245,72 @@ function OpsTodayPage() {
     });
   }, []);
 
-  // 개별 저장
-  const handleRecordSave = useCallback((data: { dogId: string; presetId: string; memo: string; intensity: number }) => {
+  const handleAssignSelectedToMe = useCallback(async () => {
+    if (!org?.id || !user?.id) {
+      showPageToast('센터 정보를 다시 불러와주세요');
+      return;
+    }
+    const selectedItems = allItems.filter((item) => selectedIds.has(item.orgDogId));
+    const itemsToAssign = selectedItems.filter((item) => !item.isMyAssignment);
+    if (itemsToAssign.length === 0) {
+      setSelectedIds(new Set());
+      showPageToast('이미 내 담당에 있어요');
+      return;
+    }
+    try {
+      await Promise.all(itemsToAssign.map((item) =>
+        assignDog.mutateAsync({
+          dog_id: item.dogId,
+          org_id: org.id,
+          trainer_user_id: user.id,
+          role: 'primary',
+        }),
+      ));
+      setSelectedIds(new Set());
+      void refetch();
+      showPageToast(`${itemsToAssign.length}마리를 내 담당에 추가했어요`);
+    } catch {
+      showPageToast('내 담당에 추가하지 못했어요');
+    }
+  }, [allItems, assignDog, org?.id, refetch, selectedIds, showPageToast, user?.id]);
+
+  const handleUnassignSelectedFromMe = useCallback(async () => {
+    if (!org?.id || !user?.id) {
+      showPageToast('센터 정보를 다시 불러와주세요');
+      return;
+    }
+    const itemsToUnassign = selectedItems.filter((item) => item.isMyAssignment);
+    if (itemsToUnassign.length === 0) {
+      setSelectedIds(new Set());
+      showPageToast('내 담당 강아지를 선택해주세요');
+      return;
+    }
+    try {
+      await Promise.all(itemsToUnassign.map((item) =>
+        unassignDog.mutateAsync({
+          dog_id: item.dogId,
+          org_id: org.id,
+          trainer_user_id: user.id,
+        }),
+      ));
+      setSelectedIds(new Set());
+      void refetch();
+      showPageToast(`${itemsToUnassign.length}마리를 내 담당에서 해제했어요`);
+    } catch {
+      showPageToast('내 담당에서 해제하지 못했어요');
+    }
+  }, [org?.id, refetch, selectedItems, showPageToast, unassignDog, user?.id]);
+
+  const saveRecord = useCallback((
+    data: { dogId: string; presetId: string; memo: string; intensity: number },
+    onSuccess: () => void,
+  ) => {
     const preset = PRESET_OPTIONS.find((p) => p.id === data.presetId);
     if (!preset) return;
+    if (!org?.id) {
+      showRecordFeedback('센터 정보를 다시 불러와주세요');
+      return;
+    }
     createQuickLog.mutate(
       {
         dog_id: data.dogId,
@@ -198,49 +318,73 @@ function OpsTodayPage() {
         intensity: data.intensity as any,
         occurred_at: new Date().toISOString(),
         memo: data.memo,
-        org_id: org?.id,
+        org_id: org.id,
       },
       {
         onSuccess: () => {
           tracker.opsLogCreated('preset', false);
-          setRecordModalItem(null);
+          void refetch();
+          onSuccess();
         },
         onError: () => {
-          Alert.alert('기록을 저장하지 못했어요', '잠시 후 다시 시도해주세요.');
+          showRecordFeedback('저장하지 못했어요. 다시 시도해주세요');
         },
       },
     );
-  }, [createQuickLog, org?.id]);
+  }, [createQuickLog, org?.id, refetch, showRecordFeedback]);
+
+  // 개별 저장
+  const handleRecordSave = useCallback((data: { dogId: string; presetId: string; memo: string; intensity: number }) => {
+    saveRecord(data, () => {
+      setShowRecordToast(false);
+      setRecordModalItem(null);
+      showPageToast('기록을 저장했어요');
+    });
+  }, [saveRecord, showPageToast]);
 
   // 저장 & 다음
   const handleRecordSaveAndNext = useCallback((data: { dogId: string; presetId: string; memo: string; intensity: number }) => {
-    handleRecordSave(data);
     // 다음 미기록 아이템 자동 이동
     const currentIdx = unrecordedItems.findIndex((i) => i.dogId === data.dogId);
     const nextItem = unrecordedItems[currentIdx + 1];
-    if (nextItem) {
-      setRecordModalItem(nextItem);
-    }
-  }, [handleRecordSave, unrecordedItems]);
+    saveRecord(data, () => {
+      setRecordModalItem(nextItem ?? null);
+      if (nextItem) {
+        showRecordFeedback('저장했어요. 다음 강아지로 이동해요');
+      } else {
+        setShowRecordToast(false);
+        showPageToast('마지막 기록까지 저장했어요');
+      }
+    });
+  }, [saveRecord, showPageToast, showRecordFeedback, unrecordedItems]);
 
   // 벌크 저장
-  const handleBulkSave = useCallback((_presetId: string, memo: string, intensity: number) => {
-    selectedIds.forEach((orgDogId) => {
-      const item = allItems.find((i) => i.orgDogId === orgDogId);
-      if (!item) return;
-      createQuickLog.mutate({
-        dog_id: item.dogId,
-        category: 'other_behavior',
-        intensity: intensity as any,
-        occurred_at: new Date().toISOString(),
-        memo,
-        org_id: org?.id,
-      });
-    });
-    tracker.opsBulkSaved(selectedIds.size);
-    setSelectedIds(new Set());
-    setShowBulkSheet(false);
-  }, [selectedIds, allItems, createQuickLog]);
+  const handleBulkSave = useCallback(async (_presetId: string, memo: string, intensity: number) => {
+    if (!org?.id) {
+      showPageToast('센터 정보를 다시 불러와주세요');
+      return;
+    }
+    const itemsToSave = allItems.filter((i) => selectedIds.has(i.orgDogId));
+    try {
+      await Promise.all(itemsToSave.map((item) =>
+        createQuickLog.mutateAsync({
+          dog_id: item.dogId,
+          category: 'other_behavior',
+          intensity: intensity as any,
+          occurred_at: new Date().toISOString(),
+          memo,
+          org_id: org.id,
+        }),
+      ));
+      tracker.opsBulkSaved(selectedIds.size);
+      setSelectedIds(new Set());
+      setShowBulkSheet(false);
+      showPageToast(`${itemsToSave.length}마리 기록을 저장했어요`);
+      void refetch();
+    } catch {
+      showPageToast('저장하지 못했어요. 다시 시도해주세요');
+    }
+  }, [selectedIds, allItems, createQuickLog, org?.id, refetch, showPageToast]);
 
   const selectedDogNames = useMemo(
     () => allItems.filter((i) => selectedIds.has(i.orgDogId)).map((i) => i.dogName),
@@ -253,26 +397,26 @@ function OpsTodayPage() {
 
   const tabs = useMemo(() => [
     {
-      key: 'unrecorded',
-      label: `미기록(${unrecordedItems.length})`,
+      key: 'all',
+      label: `전체 ${allItems.length}`,
       content: (
-        <OpsList items={unrecordedItems} isLoading={isLoading} selectedIds={selectedIds}
+        <OpsList items={allItems} isLoading={isLoading} selectedIds={selectedIds}
           onItemPress={handleItemPress} onItemLongPress={handleItemLongPress}
           ListEmptyComponent={emptyComponent} />
       ),
     },
     {
       key: 'attention',
-      label: `주의(${attentionItems.length})`,
+      label: `확인 ${attentionItems.length}`,
       content: (
         <OpsList items={attentionItems} selectedIds={selectedIds}
           onItemPress={handleItemPress} onItemLongPress={handleItemLongPress}
-          ListEmptyComponent={<EmptyState title="주의 필요한 강아지가 없어요" description="" icon={'\u2705'} />} />
+          ListEmptyComponent={<EmptyState title="확인할 강아지가 없어요" description="강도 높은 기록이나 이상징후가 있으면 여기에 모여요" icon={'\u2705'} />} />
       ),
     },
     {
       key: 'unreported',
-      label: `리포트(${unreportedItems.length})`,
+      label: `리포트 ${unreportedItems.length}`,
       content: (
         <OpsList items={unreportedItems} selectedIds={selectedIds}
           onItemPress={handleReportItemPress} onItemLongPress={handleItemLongPress}
@@ -281,15 +425,15 @@ function OpsTodayPage() {
     },
     {
       key: 'mine',
-      label: `내담당(${myItems.length})`,
+      label: `내담당 ${myItems.length}`,
       content: (
         <OpsList items={myItems} selectedIds={selectedIds}
           onItemPress={handleItemPress} onItemLongPress={handleItemLongPress}
-          ListEmptyComponent={<EmptyState title="배정된 담당 강아지가 없어요" description="" icon={'\uD83D\uDC64'} />} />
+          ListEmptyComponent={<EmptyState title="내 담당 강아지가 없어요" description="전체 탭에서 강아지를 길게 눌러 추가해보세요" icon={'\uD83D\uDC64'} />} />
       ),
     },
   ], [
-    unrecordedItems, attentionItems, unreportedItems, myItems,
+    allItems, attentionItems, unreportedItems, myItems,
     isLoading, selectedIds, handleItemPress, handleItemLongPress,
     handleReportItemPress, generatingDogId,
   ]);
@@ -323,10 +467,14 @@ function OpsTodayPage() {
       <View style={styles.container}>
         <BulkActionBar
           selectedCount={selectedIds.size}
+          onAssignMine={selectedHasUnassigned ? handleAssignSelectedToMe : undefined}
+          onUnassignMine={selectedAllMine ? handleUnassignSelectedFromMe : undefined}
           onBulkRecord={() => setShowBulkSheet(true)}
           onCancel={() => setSelectedIds(new Set())}
+          isAssigning={assignDog.isPending}
+          isUnassigning={unassignDog.isPending}
         />
-        <TabLayout title="오늘의 운영" tabs={tabs} defaultTab="unrecorded" />
+        <TabLayout title="오늘의 운영" tabs={tabs} defaultTab="all" />
         <OpsBottomInfo totalCount={allItems.length} completedCount={completedCount} />
       </View>
 
@@ -337,7 +485,14 @@ function OpsTodayPage() {
             item={recordModalItem}
             onSave={handleRecordSave}
             onSaveAndNext={handleRecordSaveAndNext}
-            onClose={() => setRecordModalItem(null)}
+            onClose={() => {
+              setShowRecordToast(false);
+              setRecordModalItem(null);
+            }}
+            isSaving={createQuickLog.isPending}
+            feedbackMessage={recordToastMessage}
+            feedbackVisible={showRecordToast}
+            onFeedbackDismiss={() => setShowRecordToast(false)}
           />
         )}
       </Modal>
@@ -376,6 +531,12 @@ function OpsTodayPage() {
       )}
 
       <BottomNavBar activeTab="ops" />
+      <Toast
+        message={toastMessage}
+        visible={showToast}
+        duration={1200}
+        onDismiss={() => setShowToast(false)}
+      />
     </SafeAreaView>
   );
 }

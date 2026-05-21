@@ -1,0 +1,184 @@
+# 2026-05-21 B2B Ops / Report DEV_LOCAL + Metro-off AIT QA
+
+Scope: `B2B-001`
+
+## Result
+
+- [x] DEV_LOCAL B2B/B2C 전환 2회 반복 PASS.
+  - Cycle 1: B2C `토스로 시작하기` → `/dashboard`, 하단 `홈/훈련/설정`, `운영` 탭 미노출.
+  - Cycle 1: B2B `센터·훈련사 관계자이신가요?` → `/ops/today`, `오늘의 운영`, 하단 `운영` 탭 표시.
+  - Cycle 2도 동일 패턴으로 PASS.
+- [x] QA user/org seed.
+  - current Toss QA user `2732a53d-...`를 org `22ada339-...` active owner membership으로 연결.
+  - org active dog count 40 준비: 기존 `메이` + `QA Perf 01~39`.
+  - 오늘 behavior log 1건을 `메이`에 추가해 `/ops/today` `리포트(1)` 상태 구성.
+- [x] DEV_LOCAL 40마리 성능 실측 PASS.
+  - Fresh launch marker: `js_entry → ops_today_data_ready = 1015ms`.
+  - `loadingStart → ops_today_data_ready = 2699ms`.
+  - Payload: `totalCount=40`, `unrecordedCount=39`, `unreportedCount=1`.
+- [x] DEV_LOCAL 리포트 생성/공유 CTA PASS.
+  - 실패 원인: Edge `generate-report` v2가 stale JWT role `user`를 보고 403 차단.
+  - 수정: Edge v3에서 JWT role은 계속 신뢰하되, 일반 user role인 경우 `daily_reports.created_by_org_id` 기준 active `org_members` owner/staff/trainer를 service key로 검증.
+  - FastAPI pending row 생성 201 → Edge v3 생성 성공 → `ReportPreviewSheet` 표시.
+  - `보호자에게 공유` CTA → Android 공유시트 표시, `https://minion.toss.im/...` 링크 확인.
+  - DB 확인: `generation_status=sent`, `share_token=true`, `toss_share_url` 저장, `sent_at` 저장.
+- [x] 미발송 리포트 상태 보정.
+  - `has_today_report`를 모든 리포트 row가 아니라 `generation_status='sent'` 기준으로 맞춤.
+  - 생성만 되고 공유 전인 리포트가 재진입 시 `리포트` 탭에서 사라지는 UX를 방지.
+- [x] 새 AIT 빌드/업로드.
+  - deploymentId: `019e481f-07f3-7fa5-8d14-388ba45f23f0`.
+  - RN 0.84/0.72 build: 0 errors / 0 warnings.
+  - Bundle scan: Supabase URL present, HTTPS brand icon, local/data icon leak 0, `ait-ad-test-*` 0, `isDevToolsEnabled() -> false`.
+  - Upload private URL: `intoss-private://taillog-app?_deploymentId=019e481f-07f3-7fa5-8d14-388ba45f23f0`.
+- [x] Metro-off actual Toss 재검증 PASS.
+  - Connected device: `R3CXB0QH0LY`.
+  - Actual app package: `viva.republica.toss`.
+  - Metro off: `localhost:8081/status` no response.
+  - Launch: `intoss-private://taillog-app?_deploymentId=019e481f-07f3-7fa5-8d14-388ba45f23f0`.
+  - Bundle proof: `Bundle loading completed successfully`, `Running "shared"`, `[AIT-BUILD] taillog-startup-perf-20260511-1545`.
+  - 40-dog render: `/ops/today`, `오늘의 운영`, `총 40마리 / 오늘 완료 2마리 (5%)`, `미기록(38)`, `리포트(0)` after the seeded report was shared.
+  - Fresh actual Toss perf after force-stop relaunch: `js_entry` 619ms from loadingStart, `first_paint_boundary` 913ms, `org_bootstrap_done` 1106ms, `ops_today_data_ready` 3853ms with `totalCount=40`, `unrecordedCount=38`, `unreportedCount=1` before share.
+- [x] Metro-off actual Toss 리포트 공유 CTA PASS.
+  - Report tab showed `QA Perf 15 / QA Parent 15 / 오늘 1건`.
+  - Report preview opened with `QA Perf 15 리포트`, AI summary text, and `보호자에게 공유`.
+  - Share CTA opened Android OS share sheet with message `테일로그 일일 리포트가 도착했어요.` and `https://minion.toss.im/Np...`.
+  - DB check: `daily_reports.id=23ef89a8-5fee-4018-a56c-0d9e39ac4188`, `generation_status=sent`, `share_token=true`, `toss_share_url=https://minion.toss.im/...`, `sent_at=true`, `behavior_summary=true`.
+- [x] Metro-off actual Toss B2B/B2C 전환 2회 반복 PASS.
+  - Cycle 1 B2C: `토스로 시작하기` → `/dashboard`, 하단 `홈/훈련/설정`, `운영` 탭 미노출.
+  - Cycle 1 B2B: `센터·훈련사 관계자이신가요?` → `/ops/today`, `오늘의 운영`, 하단 `홈/운영/훈련/설정`, `총 40마리`.
+  - Cycle 2 B2C: 동일하게 `/dashboard`, 하단 `홈/훈련/설정`.
+  - Cycle 2 B2B: 동일하게 `/ops/today`, `오늘의 운영`, 하단 `운영`, `총 40마리 / 오늘 완료 2마리 (5%)`.
+
+## Validation
+
+- `npx tsc --noEmit` PASS.
+- `npx jest supabase/functions/__tests__/generate-report.test.ts src/stores/__tests__/AuthContext.test.ts src/lib/guards/__tests__/roleGuard.test.ts src/lib/hooks/__tests__/usePageGuard.test.ts --runInBand` PASS, 27 tests.
+- `git diff --check` PASS.
+- Supabase Edge `generate-report` deployed v3.
+- ADB Metro-off actual Toss QA PASS for deployment `019e481f-07f3-7fa5-8d14-388ba45f23f0`.
+
+## Evidence
+
+- DEV_LOCAL screenshots: `/tmp/taillog-qa/devlocal-b2b-switch-share-perf/`.
+- Metro-off actual Toss screenshots: `/tmp/taillog-qa/ait-019e481f-b2b-switch-share-perf/`.
+  - `03-report-tab.png`
+  - `04-report-preview.png`
+  - `05-share-after-tap.png`
+  - `07-cycle1-b2c-after-login.png`
+  - `08-cycle1-b2b-ops.png`
+  - `09-cycle2-b2c-after-login.png`
+  - `10-cycle2-b2b-ops.png`
+- Key files:
+  - `src/pages/index.tsx`
+  - `src/pages/_404.tsx`
+  - `src/pages/onboarding/welcome.tsx`
+  - `src/pages/ops/today.tsx`
+  - `src/lib/api/org.ts`
+  - `Backend/app/features/org/service.py`
+  - `supabase/functions/generate-report/index.ts`
+  - `supabase/functions/_shared/httpAdapter.ts`
+  - `supabase/functions/_shared/contracts.ts`
+
+## Next
+
+- [x] Reconnect Android device and run Metro-off actual Toss QA for AIT `019e481f-07f3-7fa5-8d14-388ba45f23f0`.
+- [x] Capture actual Toss screenshots/logcat for B2B/B2C 2-cycle, 40-dog list, and share sheet.
+- [x] Close B2B-001 remaining `verify_parent_phone_last4` server follow-up.
+  - FastAPI `POST /api/v1/report/share/verify-parent-phone` added.
+  - Server lookup joins `daily_reports.share_token` → `org_dogs.parent_phone_last4`, with `expires_at` guard.
+  - FE `/parent/reports?token=...` now enters public 보호자 인증 flow instead of B2B-only report list.
+  - FE report data fetch is delayed until phone verification succeeds.
+  - DEV_LOCAL HTTP check: missing token/last4 returns `{"verified":false}` with 200.
+  - Unit checks: positive match, mismatch, invalid last4 no-query path.
+  - Connected device DEV_LOCAL token entry PASS: `intoss://taillog-app/parent/reports?token=1e819876-...` reached `보호자 인증`.
+- [x] B2B quick record safe-area spacing polish.
+  - `RecordModal` header uses top inset, content has top/bottom padding, footer uses larger bottom inset, memo input keeps `textAlignVertical="top"`.
+  - Connected device DEV_LOCAL modal PASS: first item modal shows title at safe top, footer above nav area, memo focus keeps memo and save buttons visible.
+- [x] B2B quick record B2C spacing parity polish.
+  - Compared against B2C `/dashboard/quick-log`: page-level safe area plus inner header/footer breathing room.
+  - `RecordModal` now uses `topInset + spacing.lg` and `bottomInset + spacing.lg` instead of replacing design padding with the inset value.
+  - Footer buttons now match B2C button rhythm with `spacing.screenHorizontal`, 12px radius, and 16px vertical padding.
+  - `BulkPresetSheet` now has the same SafeAreaProvider/inset treatment as individual quick record.
+  - Connected device DEV_LOCAL PASS:
+    - Individual quick record opened from `/ops/today` `전체` tab; title, close button, and footer were not cramped.
+    - Memo focus kept the memo input and both save buttons visible above the keyboard.
+    - Bulk quick record opened from long-press selection; top title and bottom CTA kept the same safe spacing.
+  - Evidence: `/tmp/taillog-qa/devlocal-b2b-quick-record-spacing/`.
+- [x] Pre-AIT `/ops/today` quick record smoke + upload.
+  - Connected device DEV_LOCAL smoke PASS before upload.
+    - Bulk quick record: long-press selection sheet → `정상 산책` → `1마리 일괄 저장`; returned to list and `메이` moved to `오늘 3건`.
+    - Individual quick record: `메이` modal → `정상 산책` → `저장 후 닫기`; returned to list and `메이` moved `오늘 3건 → 오늘 4건`.
+  - Static validation before upload: `npx tsc --noEmit` PASS, `git diff --check` PASS.
+  - AIT build PASS: `deploymentId=019e48e5-205a-770e-b0de-d4d963a030de`, RN 0.84/0.72 both `0 errors / 0 warnings`.
+  - Bundle scan PASS: Supabase URL present, DigitalOcean backend URL present, brand icon HTTPS, local/data brand icon leak 0, `ait-ad-test-*` 0, secret markers 0, `isDevToolsEnabled() -> false`.
+  - AIT upload PASS: `intoss-private://taillog-app?_deploymentId=019e48e5-205a-770e-b0de-d4d963a030de`.
+  - Evidence: `/tmp/taillog-qa/devlocal-b2b-record-before-ait/`.
+- [x] B2B quick record save path fix.
+  - Root cause: FE sent `org_id`, but FastAPI `QuickLogCreate` ignored it; backend-created logs could be saved without `behavior_logs.org_id`, so `/ops/today` B2B counts did not move from `미기록` to `리포트`.
+  - Fix: FastAPI quick-log accepts `org_id/recorded_by`, verifies active org membership + active `org_dogs` membership for that dog, and stores both fields.
+  - UX fix: individual save refetches `/ops/today`; `저장 & 다음` now advances only after mutation success. Bulk save waits for all mutations, then refetches.
+  - Static validation: `npx tsc --noEmit`, Backend scoped pytest 47 PASS, `git diff --check`.
+  - Connected device DEV_LOCAL PASS: `QA Perf 07` quick record save returned FastAPI `POST /api/v1/logs/quick 201`.
+  - UI count moved `미기록(34) → 미기록(33)` and `리포트(2) → 리포트(3)`.
+  - DB evidence: `behavior_logs.id=d0bf3a35-4f93-4a7c-b06d-e444a89836c9`, `dog_id=0c9a553d-6f6c-4bda-9b60-e6230b66e3d0`, `org_id=22ada339-d6a5-4628-9018-28134db8f5d6`, `recorded_by=0b74ada9-9ae3-4aec-907b-3ee84db251b2`, memo `정상 산책 완료`.
+- [x] B2B quick record save button/feedback UX polish.
+  - Decision: keep both actions because they support different staff workflows.
+    - `저장 후 닫기`: save current dog and return to the list.
+    - `저장하고 다음`: save current dog and continue to the next unrecorded dog.
+  - UI copy changed from ambiguous `저장` / `저장 & 다음` to explicit labels.
+  - Post-save feedback now uses the shared Toss-style `Toast` pattern instead of a blocking native alert for quick-record save outcomes.
+  - DEV_LOCAL connected device PASS:
+    - Modal footer showed `저장 후 닫기` and `저장하고 다음`.
+    - `저장 후 닫기` saved and closed with toast `기록을 저장했어요`; counts moved `미기록(19) → 미기록(18)`, `리포트(16) → 리포트(17)`.
+    - `저장하고 다음` saved, stayed in the modal, moved from `QA Perf 36` to `QA Perf 26`, and showed toast `저장했어요. 다음 강아지로 이동해요`.
+  - Static validation: `npx tsc --noEmit` PASS, `git diff --check` PASS.
+- [x] B2B `/ops/today` task-queue tab refactor.
+  - UX decision: move from ambiguous data labels to work-completion labels.
+    - `전체`: all active org dogs, with status badges.
+    - `확인 필요`: today's records with attention signals.
+    - `리포트 필요`: dogs with today logs but no `sent` report.
+    - `내담당`: dogs the current user explicitly selected from the full dog list.
+  - Status badges changed from `대기/일반/완료` to user-facing work states:
+    - `기록 전`, `확인 필요`, `리포트 필요`, `공유 완료`.
+  - Attention signal payload added to org-dog status:
+    - Backend/FastAPI and Supabase fallback now expose `needs_attention` and `attention_reason`.
+    - Criteria v1: intensity >= 7, `aggression` quick category, or memo keywords `구토/설사/절뚝/공격/격리/무기력/불안/보호자 연락/수의사`.
+  - Dog-centric `내 담당` flow added:
+    - Long-press a dog from `전체`, then tap `내 담당 추가`.
+    - Existing active assignment is reused to avoid duplicate inserts.
+    - Card displays `내 담당`, and the `내담당` tab count updates.
+  - DEV_LOCAL connected device PASS:
+    - `/ops/today` showed `전체(41)`, `확인 필요(0)`, `리포트 필요(22)`, `내담당(0)`.
+    - Badges rendered as `공유 완료` and `리포트 필요`.
+    - Long-press selected `메이`; bulk bar showed `내 담당 추가`.
+    - After tap, `내담당(1)` and the card showed `내 담당`.
+  - Static validation: `npx tsc --noEmit` PASS, Backend schema/router/model pytest 43 PASS, `git diff --check` PASS.
+- [x] B2B `/ops/today` 내 담당 해제 flow.
+  - UX fix: tab labels were shortened from parenthesized long labels to `전체 41 / 확인 0 / 리포트 22 / 내담당 1`, so the `내담당` tab is fully tappable on the connected Android viewport.
+  - API/hook: active `dog_assignments` rows are ended with `status='ended'` and `ended_at`, rather than deleted.
+  - Bulk action: when every selected dog is already mine, the bulk bar shows `내 담당 해제` instead of `내 담당 추가`.
+  - DEV_LOCAL connected device PASS:
+    - Full list: long-press `메이` → `내 담당 해제` → `내담당 2 → 내담당 1`, and `메이` no longer displayed `내 담당`.
+    - My tab: tap `내담당 1` → long-press `QA Perf 07` → `내 담당 해제` → `내담당 0` empty state.
+  - Static validation: `npx tsc --noEmit` PASS, `git diff --check` PASS.
+- [x] B2B `/ops/today` staff/trainer self-assignment RLS.
+  - Failure reproduced before policy fix:
+    - staff self insert: `42501 new row violates row-level security policy for table "dog_assignments"`.
+    - trainer self insert: `42501 new row violates row-level security policy for table "dog_assignments"`.
+  - Migration applied: `20260521000100_dog_assignments_self_service_rls.sql`.
+    - owner/manager can still manage org assignments.
+    - staff/trainer can insert/update only rows where `trainer_user_id = auth.uid()`.
+  - Remote apply: `supabase db query --linked -f ...` PASS, then `supabase migration repair --status applied 20260521000100` PASS.
+  - Positive RLS proof:
+    - staff self insert PASS, staff self update PASS `status=ended`, `ended_at=true`.
+    - trainer self insert PASS, trainer self update PASS `status=ended`, `ended_at=true`.
+  - Negative RLS proof:
+    - staff inserting another trainer's assignment denied with `42501`.
+    - staff updating another trainer's assignment denied with 0-row/PGRST116.
+- [x] Share-return repeat check.
+  - Connected device DEV_LOCAL 3-cycle PASS with screenshots in `/tmp/taillog-qa/devlocal-share-return-3x/`.
+    - Cycle 1: `QA Perf 07` → Android text share sheet with `https://minion.toss.im/...` → back returned to `/ops/today`; `리포트 22 → 21`.
+    - Cycle 2: `QA Perf 04` → Android text share sheet with `https://minion.toss.im/...` → back returned to `/ops/today`; `리포트 21 → 20`.
+    - Cycle 3: `QA Perf 24` → Android text share sheet with `https://minion.toss.im/...` → back returned to `/ops/today`; `리포트 20 → 19`.
+  - DB proof: latest sent reports have `share_token`, `toss_share_url`, `sent_at`, and `toss_share_url` host `minion.toss.im`.
+  - `/ops/today` smoke after repeat: route stayed alive with `오늘의 운영`, `리포트 19`, and bottom nav `운영`.

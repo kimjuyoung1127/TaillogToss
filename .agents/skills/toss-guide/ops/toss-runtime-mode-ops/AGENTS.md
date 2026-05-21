@@ -1,6 +1,6 @@
 # toss-runtime-mode-ops Skill Folder
 
-Role: runtime mode switch and evidence collection for TaillogToss DEV_LOCAL and AIT private standalone.
+Role: runtime mode orchestration skill for TaillogToss AIT, Toss console, Supabase Edge, and local QA.
 
 Rules:
 - Keep this folder small: `SKILL.md` only unless deterministic scripts become necessary.

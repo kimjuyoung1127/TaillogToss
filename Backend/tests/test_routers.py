@@ -59,6 +59,7 @@ def test_openapi_paths():
     assert "/api/v1/coaching/admin/training-candidates" in paths
     assert "/api/v1/coaching/admin/training-candidates/{coaching_id}/candidate-payload" in paths
     assert "/api/v1/coaching/admin/training-candidates/{coaching_id}/review" in paths
+    assert "/api/v1/report/share/verify-parent-phone" in paths
 
 
 def test_tags():

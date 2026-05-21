@@ -19,7 +19,7 @@ import { usePendingOrderRecovery } from 'lib/hooks/useSubscription';
 import { useAppStateRefetch } from 'lib/hooks/useAppStateRefetch';
 import { ErrorBoundary } from 'components/tds-ext/ErrorBoundary';
 import { getMyOrg } from 'lib/api/org';
-import { useOrg } from 'stores/OrgContext';
+import { isB2BRole, useOrg } from 'stores/OrgContext';
 import { DevMenu } from 'components/shared/DevMenu';
 import { isDevToolsEnabled } from 'lib/devTools';
 import { POST_PAINT_BOOTSTRAP_DELAY_MS } from 'lib/api/queryConfig';
@@ -44,15 +44,21 @@ function OrgBootstrap() {
     // 인증 로딩 중이면 대기
     if (isAuthLoading) return;
 
-    // 비인증이거나 org가 이미 있으면 로딩 완료
-    if (!user?.id || org) {
+    // 비인증/B2C 전환 시 이전 B2B org 상태가 남지 않도록 즉시 비운다.
+    if (!user?.id || !isB2BRole(user.role)) {
+      setOrg(null);
+      setMembership(null);
+      setOrgLoading(false);
+      return;
+    }
+
+    if (org) {
       setOrgLoading(false);
       return;
     }
 
     markStartupPerformance('org_bootstrap_start', { userId: user.id });
 
-    // role 체크 없이 시도 — B2C 유저는 org_members 레코드가 없으므로 null 반환
     getMyOrg(user.id)
       .then((result) => {
         if (result) {
@@ -67,7 +73,7 @@ function OrgBootstrap() {
         setOrgLoading(false);
         markStartupPerformance('org_bootstrap_done', { userId: user.id });
       });
-  }, [user?.id, isAuthLoading, org, setOrg, setMembership, setOrgLoading]);
+  }, [user?.id, user?.role, isAuthLoading, org, setOrg, setMembership, setOrgLoading]);
 
   return null;
 }

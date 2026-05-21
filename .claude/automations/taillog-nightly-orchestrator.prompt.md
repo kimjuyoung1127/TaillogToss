@@ -35,6 +35,21 @@ lock: docs/status/.nightly-orchestrator.lock
 
 ## TASK 목록 (순서 고정)
 
+### TASK 0: skill-mirror-sync
+
+역할: `.claude/skills`를 source of truth로 보고 `.agents/skills` active mirror를 동일하게 맞춘다. Legacy archive 폴더(`_backup`, `_enrichment`)는 제외한다.
+
+실행 명령:
+```bash
+cd /Users/family/jason/TaillogToss
+bash scripts/sync-agent-skills.sh --apply
+```
+
+성공 조건:
+- `bash scripts/sync-agent-skills.sh --check`가 `Skill mirrors in sync.`를 출력한다.
+
+실패 처리: 에러 메시지 기록 후 TASK 1로 진행. 스킬 mirror 실패는 다음 작업의 스킬 로딩 품질에 영향을 주므로 이슈에 반드시 남긴다.
+
 ### TASK 1: docs-nightly-organizer
 
 프롬프트 파일: `.claude/automations/docs-nightly-organizer.prompt.md`
@@ -73,6 +88,7 @@ python3 scripts/generate-dashboard-html.py --docs-root ./docs --output-dir ./doc
 
 ```
 [나이틀리 오케스트레이터 완료] YYYY-MM-DD HH:mm (Asia/Seoul)
+- TASK 0 skill-mirror-sync: <결과 한 줄>
 - TASK 1 docs-nightly-organizer: <결과 한 줄>
 - TASK 2 docs-dashboard-sync: pages N / features N / completion N% / blockers N
 이슈: <없음 | N건>
@@ -86,6 +102,7 @@ docs/status/NIGHTLY-RUN-LOG.md 에 아래 형식으로 append (기존 docs-night
 
 ```
 ## YYYY-MM-DD 22:00 [오케스트레이터]
+- skill-mirror-sync: synced|already-in-sync|failed
 - docs-organizer: ref N / status N / weekly N / daily-삭제 N
 - docs-dashboard-sync: pages N / features N / completion N% / blockers N건
 ```

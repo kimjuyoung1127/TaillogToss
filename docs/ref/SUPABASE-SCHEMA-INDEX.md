@@ -1,6 +1,6 @@
 # Supabase Schema Index (Single View)
 
-Last updated: 2026-04-22 (Asia/Seoul) — `training_step_attempts` 테이블 신규 (20260422100000 마이그레이션 remote 적용 완료)
+Last updated: 2026-05-21 (Asia/Seoul) — `dog-profiles`/`org-logos` Storage bucket policies and B2B logo upload evidence reflected.
 Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3) `Backend/app/shared/models.py`
 
 ## 0) 프로젝트 이전 (2026-04-20)
@@ -17,7 +17,7 @@ Source priority: 1) Supabase MCP live metadata 2) `supabase/migrations/*.sql` 3)
 - RLS enabled tables: 40 / 40
 - Key B2B helper functions: 9 (is_org_member, is_org_member_with_role, is_parent_of_dog, purge_expired_pii, update_updated_at_column, get_parent_contact, create_organization, verify_parent_phone_last4 + 1)
 - Public enums: 13
-- Applied migrations on remote DB: 1 (신규 프로젝트 초기화 단일 마이그레이션)
+- Applied migrations on remote DB: see §6; latest verified repair/apply includes `20260520000300_org_logos_storage_policies`.
 
 ## 2) Public Table Inventory (Live DB)
 
@@ -96,6 +96,11 @@ Canonical DDL: `supabase/migrations/20260228020042_b2b_tables_and_extensions.sql
 - `user_role`: user, trainer, org_owner, org_staff
 - `user_status`: active, inactive, banned
 
+## 4.1) Storage Buckets
+
+- `dog-profiles` — public profile image bucket. Owner-folder RLS was applied via `20260520000100_dog_profiles_storage_policies.sql`; DEV_LOCAL and production Toss AIT photo upload were verified on 2026-05-20.
+- `org-logos` — public center logo bucket. Owner-folder insert/update/delete plus public read policies were applied via `20260520000300_org_logos_storage_policies.sql`; remote bucket `public=true`, policies `org_logos_public_read`, `org_logos_owner_insert`, `org_logos_owner_update`, `org_logos_owner_delete`, and migration history repair were verified on 2026-05-20.
+
 ## 5) RLS Policy Summary (Live DB)
 
 All public tables have RLS enabled.
@@ -103,7 +108,7 @@ All public tables have RLS enabled.
 High-signal policy counts:
 - `behavior_logs`: 4
 - `daily_reports`: 3
-- `dog_assignments`: 3
+- `dog_assignments`: 3 — `20260521000100_dog_assignments_self_service_rls.sql` lets staff/trainer insert/update only their own active assignment rows while preserving owner/manager org-wide management.
 - `dog_env`: 5
 - `dogs`: 5
 - `org_dogs`: 4
@@ -136,6 +141,8 @@ B2B helper functions present:
 - `20260228020042_b2b_tables_and_extensions`
 - `20260228034127_dogs_and_dog_env_rls_write_policies`
 - `20260301111950_add_user_training_status_rls_policies`
+- `20260520000100_dog_profiles_storage_policies`
+- `20260520000300_org_logos_storage_policies`
 
 ### Local migration files in repo
 - `20260227121000_phase11_expand_noti_history.sql`
@@ -148,6 +155,8 @@ B2B helper functions present:
 - `20260420010000_verify_parent_phone_last4_rpc.sql` ← **적용 완료** (2026-04-21, `gxvtgrcqkbdibkyeqyil`에 직접 적용)
 - `20260421100000_create_org_rpc.sql` ← **적용 완료** (2026-04-21, `create_organization(p_name, p_type) RETURNS organizations` RPC, 조직 생성 + owner 멤버 자동 등록)
 - `20260301160000_add_reaction_to_training_status.sql` ← **적용 완료** (2026-04-27, psql 직접 적용, `user_training_status.reaction VARCHAR(20)` + `idx_training_status_reaction` 인덱스)
+- `20260520000100_dog_profiles_storage_policies.sql` ← **적용 완료** (2026-05-20, profile image upload RLS)
+- `20260520000300_org_logos_storage_policies.sql` ← **적용 완료** (2026-05-20, org logo bucket/RLS + migration history repair)
 
 ### Drift notes (needs sync)
 - Remote has versions not present in local repo: `20260212083318`, `20260212092350`, `20260212095042`, `20260214134529`, `20260301111950`.
@@ -160,12 +169,13 @@ B2B helper functions present:
 
 | Function | Version | Config | Purpose |
 |---|---|---|---|
-| `login-with-toss` | v13 | verify_jwt=false | Toss authCode → UUID user_id upsert + Supabase session bridge. |
-| `verify-iap-order` | v12 | verify_jwt=false | Toss IAP 주문 검증 + toss_orders 영속화. |
-| `send-smart-message` | v2 | verify_jwt=false | 쿨다운 정책(10분/일3회/22~08) + noti_history 기록. |
-| `grant-toss-points` | v1 | verify_jwt=false | IAP 완료 후 Toss Points 적립 (mock). |
-| `generate-report` | v3 | verify_jwt=false | B2B 일일/주간 리포트 AI 생성. |
-| `legal` | v1 | verify_jwt=false | 약관/개인정보 HTML 서빙 + toss-disconnect 콜백. |
+| `login-with-toss` | v18 | verify_jwt=false | Toss authCode → UUID user_id upsert + Supabase session bridge. |
+| `verify-iap-order` | v17 | verify_jwt=true | Toss IAP 주문 검증 + toss_orders 영속화, real mTLS. |
+| `send-smart-message` | v14 | verify_jwt=true | notification_pref/marketing_agreed guard + Toss Smart Message send, real mTLS. |
+| `grant-toss-points` | v14 | verify_jwt=true | IAP 완료 후 Toss Points 적립, real mTLS. |
+| `generate-report` | v8 | verify_jwt=true | B2B 일일/주간 리포트 AI 생성. |
+| `legal` | v13 | verify_jwt=false | 약관/개인정보 HTML 서빙. |
+| `toss-disconnect` | v17 | verify_jwt=false | Toss 연결해제 콜백 + ping 처리. |
 | `withdraw-user` | v3 | verify_jwt=false | 본인 계정 실삭제: public.users CASCADE → auth.users. ES256 JWT 호환(Admin API 검증). |
 | `assign-b2b-role` | v2 | verify_jwt=false | B2B 역할 자동 부여 → `auth.users.raw_user_meta_data.b2b_role` 업데이트. 내부 JWT 수동 검증. (2026-04-21 올바른 프로젝트에 재배포) |
 

@@ -72,7 +72,8 @@ async def update_org(
 ) -> schemas.OrgResponse:
     """조직 설정 업데이트 (owner/manager만)"""
     member = await verify_org_membership(db, org_id, user_id)
-    if member.role.value not in ("owner", "manager"):
+    member_role = member.role.value if hasattr(member.role, "value") else str(member.role)
+    if member_role not in ("owner", "manager"):
         raise ForbiddenException("Only owner or manager can update organization")
 
     stmt = select(Organization).where(Organization.id == org_id)
@@ -87,6 +88,8 @@ async def update_org(
         org.phone = updates.phone
     if updates.address is not None:
         org.address = updates.address
+    if updates.logo_url is not None:
+        org.logo_url = updates.logo_url
     if updates.settings is not None:
         org.settings = updates.settings
     org.updated_at = datetime.now(timezone.utc)
@@ -153,6 +156,19 @@ async def get_org_dogs_with_status(
     db: AsyncSession, org_id: UUID,
 ) -> List[schemas.OrgDogWithStatus]:
     """조직 소속 강아지 + 오늘 상태 (FE getOrgDogs JOIN 미러)"""
+    attention_keywords = ("구토", "설사", "절뚝", "공격", "격리", "무기력", "불안", "보호자 연락", "수의사")
+
+    def get_attention_reason(intensity: int | None, quick_category: str | None, memo: str | None) -> str | None:
+        normalized_memo = memo or ""
+        if quick_category == "aggression":
+            return "공격 행동"
+        if intensity is not None and intensity >= 7:
+            return f"강도 {intensity}"
+        for keyword in attention_keywords:
+            if keyword in normalized_memo:
+                return keyword
+        return None
+
     today = date.today()
     today_start = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
     today_end = datetime.combine(today, datetime.max.time(), tzinfo=timezone.utc)
@@ -175,12 +191,14 @@ async def get_org_dogs_with_status(
     dog_result = await db.execute(dog_stmt)
     dogs_map = {d.id: d for d in dog_result.scalars().all()}
 
-    # 3) 오늘 기록 집계
+    # 3) 오늘 기록 집계 + 확인 필요 신호
     log_stmt = (
         select(
             BehaviorLog.dog_id,
-            func.count(BehaviorLog.id).label("cnt"),
-            func.max(BehaviorLog.occurred_at).label("last_time"),
+            BehaviorLog.occurred_at,
+            BehaviorLog.intensity,
+            BehaviorLog.quick_category,
+            BehaviorLog.memo,
         )
         .where(
             BehaviorLog.org_id == org_id,
@@ -188,13 +206,23 @@ async def get_org_dogs_with_status(
             BehaviorLog.occurred_at >= today_start,
             BehaviorLog.occurred_at <= today_end,
         )
-        .group_by(BehaviorLog.dog_id)
     )
     log_result = await db.execute(log_stmt)
-    log_map = {
-        row.dog_id: {"count": row.cnt, "last_time": str(row.last_time) if row.last_time else None}
-        for row in log_result
-    }
+    log_map: dict[UUID, dict[str, object]] = {}
+    for row in log_result:
+        info = log_map.setdefault(row.dog_id, {
+            "count": 0,
+            "last_time": None,
+            "needs_attention": False,
+            "attention_reason": None,
+        })
+        info["count"] = int(info["count"]) + 1
+        if not info["last_time"] or row.occurred_at > info["last_time"]:
+            info["last_time"] = row.occurred_at
+        reason = get_attention_reason(row.intensity, row.quick_category, row.memo)
+        if reason and not info["attention_reason"]:
+            info["needs_attention"] = True
+            info["attention_reason"] = reason
 
     # 4) 오늘 리포트 여부
     report_stmt = (
@@ -203,6 +231,7 @@ async def get_org_dogs_with_status(
             DailyReport.created_by_org_id == org_id,
             DailyReport.report_date == today,
             DailyReport.dog_id.in_(dog_ids),
+            DailyReport.generation_status == "sent",
         )
     )
     report_result = await db.execute(report_stmt)
@@ -224,7 +253,13 @@ async def get_org_dogs_with_status(
     items = []
     for od in org_dogs:
         dog_info = dogs_map.get(od.dog_id)
-        log_info = log_map.get(od.dog_id, {"count": 0, "last_time": None})
+        log_info = log_map.get(od.dog_id, {
+            "count": 0,
+            "last_time": None,
+            "needs_attention": False,
+            "attention_reason": None,
+        })
+        last_time = log_info["last_time"]
         items.append(schemas.OrgDogWithStatus(
             id=od.id,
             org_id=od.org_id,
@@ -239,8 +274,10 @@ async def get_org_dogs_with_status(
             dog_breed=dog_info.breed if dog_info else None,
             today_log_count=log_info["count"],
             has_today_report=od.dog_id in reported_ids,
-            last_log_time=log_info["last_time"],
+            last_log_time=str(last_time) if last_time else None,
             trainer_name=trainer_map.get(od.dog_id),
+            needs_attention=bool(log_info["needs_attention"]),
+            attention_reason=log_info["attention_reason"],
         ))
     return items
 

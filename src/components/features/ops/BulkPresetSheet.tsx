@@ -4,7 +4,8 @@
  */
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { colors, typography } from 'styles/tokens';
+import { SafeAreaProvider, useSafeAreaInsets } from '@granite-js/native/react-native-safe-area-context';
+import { colors, typography, spacing } from 'styles/tokens';
 import { PresetChipGrid } from './PresetChipGrid';
 import type { PresetOption } from 'lib/data/presets';
 
@@ -15,6 +16,21 @@ interface BulkPresetSheetProps {
 }
 
 export function BulkPresetSheet({ selectedDogNames, onSave, onClose }: BulkPresetSheetProps) {
+  return (
+    <SafeAreaProvider>
+      <BulkPresetSheetInner
+        selectedDogNames={selectedDogNames}
+        onSave={onSave}
+        onClose={onClose}
+      />
+    </SafeAreaProvider>
+  );
+}
+
+function BulkPresetSheetInner({ selectedDogNames, onSave, onClose }: BulkPresetSheetProps) {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, 0);
+  const bottomInset = Math.max(insets.bottom, 0);
   const [selectedPreset, setSelectedPreset] = useState<PresetOption | null>(null);
 
   const handlePresetSelect = useCallback((preset: PresetOption) => {
@@ -28,7 +44,7 @@ export function BulkPresetSheet({ selectedDogNames, onSave, onClose }: BulkPrese
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: topInset + spacing.lg }]}>
         <Text style={styles.title}>일괄 기록</Text>
         <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
           <Text style={styles.closeBtn}>{'\u2715'}</Text>
@@ -42,11 +58,16 @@ export function BulkPresetSheet({ selectedDogNames, onSave, onClose }: BulkPrese
         </Text>
       </View>
 
-      <ScrollView style={styles.body}>
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={[styles.bodyContent, { paddingBottom: bottomInset + spacing.xxxl }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <PresetChipGrid onSelect={handlePresetSelect} selectedId={selectedPreset?.id} />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: bottomInset + spacing.lg }]}>
         <TouchableOpacity
           style={[styles.saveBtn, !selectedPreset && styles.saveBtnDisabled]}
           onPress={handleSave}
@@ -71,8 +92,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingBottom: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -87,8 +108,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   selectedInfo: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.md,
     backgroundColor: colors.surfaceSecondary,
   },
   selectedText: {
@@ -98,16 +119,20 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
   },
+  bodyContent: {
+    flexGrow: 1,
+    paddingTop: spacing.lg,
+  },
   footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingTop: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   saveBtn: {
     backgroundColor: colors.primaryBlue,
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
   saveBtnDisabled: {

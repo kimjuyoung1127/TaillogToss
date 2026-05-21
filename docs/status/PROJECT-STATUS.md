@@ -1,6 +1,18 @@
 # TaillogToss Project Status
 
+Current AIT B2B QA: 2026-05-21 (KST) — DEV_LOCAL B2B/B2C 전환 2회 반복은 PASS. QA org `멍멍피트`에 current Toss QA user membership을 추가하고 active org dog 40마리(기존 1 + QA seed 39)를 준비했다. DEV_LOCAL `/ops/today` 40마리 fresh launch 성능은 `js_entry → ops_today_data_ready = 1015ms`, `loadingStart → data_ready = 2699ms`; 화면에는 `미기록(39)`, `리포트(1)`가 렌더됐다. 리포트 생성은 FastAPI pending row 201 후 Edge `generate-report` v2가 JWT role=user 때문에 403으로 막히는 문제가 있었고, `generate-report` v3로 재배포하여 JWT role이 user여도 report org의 active `org_members` owner/staff/trainer이면 허용하도록 보강했다. DEV_LOCAL 공유 CTA는 PASS: `보호자에게 공유` 탭 후 Android 공유시트에 `https://minion.toss.im/...` 링크가 표시되고 DB `daily_reports`는 `generation_status=sent`, `share_token`, `toss_share_url`, `sent_at` 저장 확인. 새 AIT `019e481f-07f3-7fa5-8d14-388ba45f23f0` 빌드/업로드 및 번들 스캔 PASS. Metro-off actual Toss 재검증도 PASS: 실제 `viva.republica.toss` 앱에서 Metro off 상태로 bundle load, `/ops/today` 40마리 렌더, 공유 CTA OS 공유시트(`https://minion.toss.im/...`) 표시, DB `daily_reports.id=23ef89a8-5fee-4018-a56c-0d9e39ac4188` `sent/share_token/toss_share_url/sent_at` 확인, B2B/B2C 로그아웃 전환 2회 반복 확인. DEV_LOCAL follow-up: FastAPI `verify_parent_phone_last4` 서버 endpoint와 `/parent/reports?token` 보호자 인증 진입을 구현했고 connected device에서 `보호자 인증` 화면 진입 PASS, B2B quick record modal top/bottom safe-area spacing PASS. B2B quick record save bug fixed and verified: `QA Perf 07` save returned FastAPI `POST /api/v1/logs/quick 201`, DB persisted `org_id/recorded_by`, and `/ops/today` counts moved `미기록(34)→(33)`, `리포트(2)→(3)`. Quick record footer UX now keeps both staff workflows but clarifies labels as `저장 후 닫기` and `저장하고 다음`; DEV_LOCAL connected device verified Toss-style toast feedback for close-save and save-next flows. `/ops/today` task queue was also refactored to `전체/확인 필요/리포트 필요/내담당`, badges now read `기록 전/확인 필요/리포트 필요/공유 완료`, dog-centric `내 담당 추가` from full list was DEV_LOCAL verified, and `내담당` 탭 long-press `내 담당 해제` was DEV_LOCAL verified with assignment end-state persistence. Staff/trainer self-assignment RLS was fixed by `20260521000100_dog_assignments_self_service_rls.sql` and verified with real staff/trainer sessions: self insert/update PASS, other-user insert/update denied. Share-return repeat is now DEV_LOCAL PASS for 3 cycles (`QA Perf 07/04/24`): Android share sheet opened with `minion.toss.im` links, back returned to `/ops/today`, and `리포트 22→19`.
+
+Current AI-001 Check: 2026-05-21 (KST) — `.claude/skills` and `.agents/skills` active entries are now synchronized, with `scripts/sync-agent-skills.sh` and nightly orchestrator `TASK 0` added to keep the mirror aligned while excluding legacy archive folders. Production AI coaching regression is PASS: DigitalOcean backend force-build deployment `2cbc66b6-9de9-4f19-89d4-9918e7952f08` made `POST /api/v1/coaching/generation-jobs` resolve to the expected authenticated route (401 instead of stale 405), AIT `019e47f8-1d41-72e4-b9d5-dcdae97066b9` was built/uploaded with SHA256 `0849df0539ba28c1bd5f8adc17b3de6583a1109fd44177ed5144728343013ad6`, and production Toss app Metro-off `/coaching/result` generated async job `8180ac6a-746c-447f-82e1-b3e268ffe97f`. Loader copy rendered, app force-stop/re-entry recovered to the completed result, DB completed in `36.18s` with coaching `0dbc0511-a64b-47bf-9032-8b794bab81e3`, and QA rows were cleaned after evidence capture. AI-001 residual production AIT regression is closed.
+
+Current Docs Check: 2026-05-21 (KST) — Documentation consistency pass aligned the B2B P2 route state with `PAGE-UPGRADE-BOARD.md`: `/ops/today`, `/ops/settings`, and `/parent/reports` remain `QA`; `verify_parent_phone_last4` server follow-up is now implemented and DEV_LOCAL token-entry verified, while B2B parity stays `In Progress` for final manual 3-repeat share-return evidence. `/ops/settings` logo upload itself is DEV_LOCAL green with remote `org-logos` bucket/policies applied. B2B/B2C logout switching regression is now DEV_LOCAL and Metro-off actual Toss green: B2C re-entry hides the B2B `운영` tab and center banner, then B2B re-entry returns to `/ops/today` with `오늘의 운영`.
+
+Current Note: 2026-05-20 (KST) — Railway is not part of the current operating path. Production backend target remains DigitalOcean App Platform, and DEV_LOCAL QA uses local FastAPI plus the current Supabase project. `/coaching/result` DEV_LOCAL route QA is now complete and the board is `Done`: async leave/re-enter QA PASS with job `f6906397-95a2-498a-ab4d-3ab8cab8fb1c` (force-stop/relaunch restored polling, OpenAI 200, DB completed at ~55.3s with coaching `42d238b5-004b-40bd-87a6-ec66c2ccfd06`), and unlocked PRO 7-day bottom-sheet QA PASS on latest coaching `f7993682-3b3e-492a-b134-26c08a7eb121` (`next_7_days.days=7`, timeline cards render, `1일차 자세히 보기` sheet shows tasks/time/place/tools/progression/reference fields and closes cleanly). QA test job/coaching/subscription rows were cleaned up.
+
+Latest B2B Addendum: 2026-05-20 (KST) — `/ops/settings` center logo DEV_LOCAL path is now green. Remote `org-logos` Storage bucket/policies were applied from `20260520000300_org_logos_storage_policies.sql` and migration history was repaired for `20260520000300`; verification shows public bucket plus owner-folder insert/update/delete and public read policies. Auth bootstrap now reconciles stale `auth.users.user_metadata.role=user` with `public.users.role=org_owner`, so the connected B2B user reaches `/ops/settings` directly. Device proof: OS photo permission sheet → Android Photo Picker → preview → save; Storage object `org-logos/0b74ada9-.../22ada339...-1779287745880.jpg` created, `organizations.logo_url` updated, and a follow-up FastAPI `PATCH /api/v1/org/22ada...` returned HTTP 200 after fixing string/Enum role handling in org update.
+
 Latest Update: 2026-05-20 (KST) — Railway backend outage was bypassed with DigitalOcean App Platform. New backend is ACTIVE at `https://taillogtoss-backend-l35lj.ondigitalocean.app` (`app_id=ae33cc5a-0811-48d1-b8bb-ae78f4e768b7`, region `sgp`, size `apps-s-1vcpu-0.5gb`, 1 container, estimated `$5/mo`), `/health` returns HTTP 200 and auth-protected routes return HTTP 401 as expected. Backend hotfix commit `4ceb3c2` and backend fallback commit `73718e9` were pushed to `codex/ait-standalone-diagnosis`. Latest AIT upload now points to DigitalOcean: `deploymentId=019e431b-e775-7044-ab90-96d92933e91e`, SHA256 `6f97723c5a521a33ad4fb1e3793419affb91c73cbf4a420dbfea86dab87295f5`, RN 0.84/0.72 both `0 errors / 0 warnings`, bundle scan has DigitalOcean URL `8`, Railway URL `0`, secret markers `0`, `ait-ad-test-*` `0`. Metro-off ADB launch PASS in actual Toss app with dashboard render, `first_paint_boundary=798ms`, `api_dashboard_backend_done=3202ms`, and no `BACKEND_404` marker in the captured log filter. New reusable Codex skill created outside repo: `/Users/family/.codex/skills/toss-do-backend-deploy`.
+
+Latest Addendum: 2026-05-20 (KST) — `/coaching/result` AI coaching generation is now async v1 at code/runtime level. The previous DEV_LOCAL synchronous measurement was ~53.8s, so `coaching_generation_jobs` + FastAPI background runner + 2s polling + Storage re-entry recovery were implemented. DEV_LOCAL E2E proof: job `f5ccfe2d-e6e9-4f79-a657-4ed489f03227` started from `새 코칭 받기`, loader showed the async 30~60s copy, polling returned HTTP 200 while the backend generated, OpenAI returned 200, DB marked `completed` at ~42s with coaching `5168449b-5d61-4d8c-b33a-e8761bad8b97`, and the UI switched from loader to result at ~46s. Validation: `npx tsc --noEmit`, scoped coaching Jest, and backend coaching/schema pytest all PASS. Follow-up DEV_LOCAL leave/re-enter recovery and unlocked PRO 7-day bottom-sheet QA are now PASS, so `/coaching/result` route board is `Done`.
 
 Latest Addendum: 2026-05-20 (KST) — `/settings` notification preference hardening is code/test green in DEV_LOCAL. The user-facing notification UI remains reduced to `중요 알림` and `혜택/이벤트 알림`; promo consent now writes both `notification_pref.types.promo` and `marketing_agreed`, and `send-smart-message` reads `notification_pref,marketing_agreed` before Toss S2S send. Edge tests cover channel/type opt-out, user quiet-hours, promo consent block/allow paths (`send-smart-message` 9 tests; `npm run test:edge` 13 suites / 52 tests). DEV_LOCAL device proof: `/settings` launched in `viva.republica.toss.test`, promo toggle ON emitted `promo=true + marketing_agreed=true`, then restored OFF with both false. Supabase Edge deploy/runtime invoke proof remains pending explicit upload/deploy instruction.
 
@@ -130,7 +142,7 @@ vibehub-media 하네스 이식 완료:
 | `grant-toss-points` | v14→재배포 | true | **real** | 신규 프로젝트 재배포 |
 | `legal` | v13→재배포 | false | — | 신규 프로젝트 재배포 |
 | `toss-disconnect` | v17→ping수정 | false | — | ping(빈 body) 200 pong 처리 추가, 콘솔 콜백 검증 대기 |
-| `generate-report` | v8→재배포 | true | — | 신규 프로젝트 재배포 |
+| `generate-report` | v3 | true | — | 2026-05-21 재배포: JWT role stale user여도 active org membership으로 report 생성 허용, 위조 헤더는 계속 미신뢰 |
 | `withdraw-user` | v3 | false | — | 신규 배포: verify_jwt=false + 내부 Admin API JWT검증(ES256 호환), public/auth 실삭제 |
 | `assign-b2b-role` | v2 | false | **real** | 재배포(2026-04-21): 올바른 프로젝트(gxvtgrcqkbdibkyeqyil)에 배포, verify_jwt=false + 내부 JWT 수동 검증 |
 
@@ -144,7 +156,7 @@ vibehub-media 하네스 이식 완료:
 | APP-001 | 앱 셸 | In Progress | 23라우트, _app.tsx, 레이아웃 5종, 딥엔트리 3종 | 실기기 라우팅 완전 검증 |
 | UI-001 | 디자인 | In Progress | 52컴포넌트, 토큰 중앙화 70+파일, Lottie 3종, 상태UI 8화면 | 실기기 비주얼 QA |
 | LOG-001 | 행동 기록 | In Progress | 대시보드/빠른기록/상세기록/분석, backend-first 전환 + useDeleteLog 낙관적 삭제 훅 + LogCard 롱프레스 UI (2026-04-20) | FastAPI 로그 API 실기기 E2E |
-| AI-001 | AI 코칭 | In Progress | 6블록 코칭, 피드백, BE-P5, backend-first, 실연동 E2E 완료(2026-04-20): subscriptions drift 수정, max_tokens 1800, ownership 검증, CoachingGenerationLoader 5단계, FreeBlock Plan C | 실기기 QA (typing/Lottie/bg-flash 시각 확인) |
+| AI-001 | AI 코칭 | Done | 6블록 코칭, 피드백, BE-P5, backend-first, 실연동 E2E 완료, 2026-05-20 async v1 전환(`coaching_generation_jobs`, background runner, polling, Storage re-entry), DEV_LOCAL loader→completed→result 전환 PASS(~46s UI), leave/re-enter recovery PASS(~55.3s), PRO unlocked 7-day sheet PASS, Production AIT async leave/re-enter PASS(job `8180ac6a-746c-447f-82e1-b3e268ffe97f`, total `36.18s`, AIT `019e47f8`, 2026-05-21) | — |
 | AI-COACHING-ANALYTICS-001 | 코칭 행동 분석 | Done | `_build_behavior_analytics_text()`, Behavior Analytics 프롬프트 섹션, `analytics_metadata` 반환, AnalysisBadge 프론트 통합, `/behavior-analytics` API, pytest 5/5 | — |
 | UI-TRAINING-PERSONALIZATION-001 | 훈련 추천 개인화 | QA | `getRecommendationsV2` ScoreBand, `useBehaviorAnalytics` useQuery, academy 3섹션(AI추천/관련훈련/전체), cold start fallback, RecommendedCurriculumCard, RelatedCurriculumCarousel, StreakBadge, `useStepAttempts`+`AttemptHistorySheet` 실데이터 연결 완료(2026-04-23), tsc 0 errors | 실기기 시각 QA (AttemptHistorySheet 렌더 + InsightSummaryBar 애니) |
 | UI-TRAINING-DETAIL-001 | 훈련 상세 UX | Done | `training_step_attempts` DB 마이그레이션+RLS, StepCompletionSheet 2경로, StepAttemptHistory(PRO), ReactionTrendBar(PRO), detail.tsx useSubmitStepAttempt 연결, RecordModal B2B 훈련이력 탭, StreakBadge/ReactionTrendBar/AttemptHistorySheet 실데이터 배치 완료(2026-04-23), 스텝 체크 저장 버그 수정+reaction DB 저장 ADB E2E 확인(2026-04-27) | — |
@@ -152,7 +164,7 @@ vibehub-media 하네스 이식 완료:
 | IAP-001 | 결제 | QA | 구독 화면, useIsPro, verifyAndGrant, Edge v12, iap.test 11케이스, 서버 3시나리오+복구 재검증 증적 + DB 영속(5건) 확인, `getPendingOrders`/`completeProductGrant` 실 SDK 연결, 실기기 Sandbox 3시나리오 패널 확인 + false-success/loading 잔여 버그 수정 및 새 AIT 업로드 후 버튼 복귀 확인(2026-05-07), backend hardcoded fallback 재점검 완료, Railway redeploy SUCCESS + `/health` 200 | 최신 AIT 업로드 후 IAP 성공 재검증 |
 | MSG-001 | 알림 | QA | Edge v3 실배포, 쿨다운, noti_history 영속, 우회차단, 테스트 통과, Smart Message 승인 캠페인 `TAILLOG_BEHAVIOR_REMIND`, 실기기 current user HTTP 200 + noti_history success=true(2026-05-07) | 추가 캠페인 등록 및 회귀 발송 |
 | AD-001 | 광고 | QA | 타입, real FullScreen SDK wrapper, useRewardedAd, R1/R2/R3/B1~B3/I1 통합, live Ad Group ID 7종 상수 fallback, 최신 AIT `019e00dd...` B1/B2/B3 실 SDK 호출 + `ad_error` 상세 payload 확보(`code=1007`) | Toss 지원 환경에서 render success/no-fill 최종 판정 |
-| B2B-001 | B2B 운영 | In Progress | P1~P7, 스키마 정합, roleGuard test 8케이스, BE-P7, `/ops/setup` 페이지(2026-04-21), `create_organization` RPC(2026-04-21), `assign-b2b-role` Edge(2026-04-21), B2B 무료 전환(2026-04-21), `/dashboard` B2B 배너(2026-04-21), `/ops/dog-add` 페이지(2026-04-21), `createOrgDog()` API(2026-04-21) | 40마리 FlatList 성능, 공유 링크, B2C 회귀, verify_parent_phone RPC |
+| B2B-001 | B2B 운영 | In Progress | P1~P7, 스키마 정합, roleGuard test 8케이스, BE-P7, `/ops/setup` 페이지(2026-04-21), `create_organization` RPC(2026-04-21), `assign-b2b-role` Edge(2026-04-21), B2B 무료 전환(2026-04-21), `/dashboard` B2B 배너(2026-04-21), `/ops/dog-add` 페이지(2026-04-21), `createOrgDog()` API(2026-04-21), Metro-off actual Toss 40마리/공유 CTA/B2B-B2C 2회 반복 PASS(2026-05-21), FastAPI verify_parent_phone_last4 endpoint + `/parent/reports?token` 보호자 인증 DEV_LOCAL PASS(2026-05-21) | 공유 후 앱 복귀 3회 수동 반복 증적 |
 | REG-001 | 등록 | Done | legal, toss-disconnect, mTLS 구현, 약관 2종, 사업자등록/배포 완료 | 콘솔 테스트 콜백 검증 |
 
 ## Phase 진행 현황
@@ -163,7 +175,7 @@ vibehub-media 하네스 이식 완료:
 | 11 | Done | 보안(mTLS, rate-limit, pii) 완료 |
 | 12 | Done | 광고 SDK mock 적용 |
 | 13 | In Progress | IAP/MSG/AD E2E 잔여 |
-| B2B | Done | 코드/문서 정합 완료, 성능/실기기 검증 대기 |
+| B2B | In Progress | 코드 구현, `/ops/settings` 로고 DEV_LOCAL, Metro-off actual Toss 성능/공유/B2C 회귀 PASS; 부모 인증 후속 검증 대기 |
 | REG | Done | legal + toss-disconnect + 약관 페이지 완료 |
 | BE | Done | BE-P1~P8 완료 (12모듈, 60+ endpoints, pytest 39 pass) |
 | INFRA-1 | Done | DB 26->38 + RLS 적용 |
@@ -206,7 +218,7 @@ vibehub-media 하네스 이식 완료:
 | Edge 단위 | 완료 | 31 tests, 12 suites |
 | BE<->DB 통합 | 미구현 | FastAPI + 실 Supabase 연결 테스트 필요 |
 | E2E | 부분 | 로그인 + Edge smoke, IAP/AD happy-path 미검증 |
-| 성능 | 미구현 | 40마리 FlatList, API p95 < 300ms |
+| 성능 | 부분 | `/ops/today` 40마리 실제 Toss 렌더 PASS; API p95 < 300ms 별도 계측 필요 |
 
 ## 크리티컬 패스 블로커
 
@@ -219,7 +231,7 @@ vibehub-media 하네스 이식 완료:
 4. IAP E2E 테스트 (Sandbox 결제 플로우)
 5. B2B RPC 함수 (`verify_parent_phone_last4`)
 6. Ads 실 Ad Group ID 교체 + 검증
-7. B2B P2 페이지 2개 (`/ops/settings`, `/parent/reports`) → 21/21 Done
+7. B2B P2/P2+ route QA (`/ops/today`, `/ops/settings`, `/parent/reports`) → board 기준 `QA`, B2B-001 parity는 In Progress
 
 ## 최신 AUTH 증적 (2026-02-28)
 
@@ -291,14 +303,14 @@ vibehub-media 하네스 이식 완료:
 
 | 영역 | 완성도 | 핵심 잔여 |
 |------|--------|----------|
-| FE 페이지 | 95% | Ready 2페이지 (B2B P2) |
+| FE 페이지 | 95% | `PAGE-UPGRADE-BOARD.md` 기준 Done 14 / QA 11 |
 | FE 컴포넌트 | 90% | mock 3곳 전환 |
 | Backend | 95% | BE↔DB 통합 테스트 |
 | DB/Infra | 95% | ~~mTLS 실 인증서~~ ✅ 완료 |
 | Toss SDK | 85% | ~~SDK 2.x~~ ✅ + Ads 실 ID 교체 |
-| 테스트 | 60% | E2E/성능 미구현 |
+| 테스트 | 60% | E2E/성능 부분 검증, IAP/AD happy-path 잔여 |
 | 퍼블리싱 | 55% | mTLS 완료, 심사 요건 일부 미충족 |
-| **종합** | **82%** | 실기기 E2E + Ads ID + B2B 2페이지 |
+| **종합** | **82%** | 실기기 E2E + Ads ID + B2B QA 잔여 |
 
 ## 비고
 

@@ -427,6 +427,25 @@ CREATE POLICY "org_dogs_update" ON org_dogs FOR UPDATE
 CREATE POLICY "org_dogs_delete" ON org_dogs FOR DELETE
   USING (public.is_org_member_with_role(org_id, ARRAY['owner','manager']));
 
+-- dog_assignments: owner/manager 전체 관리 + staff/trainer 본인 담당 self-service
+CREATE POLICY "dog_assignments_insert" ON dog_assignments FOR INSERT WITH CHECK (
+  (org_id IS NOT NULL AND public.is_org_member_with_role(org_id, ARRAY['owner','manager']))
+  OR (org_id IS NOT NULL AND trainer_user_id = auth.uid()
+      AND public.is_org_member_with_role(org_id, ARRAY['owner','manager','staff','trainer']))
+  OR (org_id IS NULL AND trainer_user_id = auth.uid())
+);
+CREATE POLICY "dog_assignments_update" ON dog_assignments FOR UPDATE USING (
+  (org_id IS NOT NULL AND public.is_org_member_with_role(org_id, ARRAY['owner','manager']))
+  OR (org_id IS NOT NULL AND trainer_user_id = auth.uid()
+      AND public.is_org_member_with_role(org_id, ARRAY['owner','manager','staff','trainer']))
+  OR (org_id IS NULL AND trainer_user_id = auth.uid())
+) WITH CHECK (
+  (org_id IS NOT NULL AND public.is_org_member_with_role(org_id, ARRAY['owner','manager']))
+  OR (org_id IS NOT NULL AND trainer_user_id = auth.uid()
+      AND public.is_org_member_with_role(org_id, ARRAY['owner','manager','staff','trainer']))
+  OR (org_id IS NULL AND trainer_user_id = auth.uid())
+);
+
 -- daily_reports INSERT/UPDATE: 생성 주체
 CREATE POLICY "daily_reports_insert" ON daily_reports FOR INSERT WITH CHECK (
   (created_by_org_id IS NOT NULL AND public.is_org_member_with_role(created_by_org_id, ARRAY['owner','manager','staff']))

@@ -7,11 +7,15 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.exceptions import ForbiddenException
 from app.core.security import get_current_user_id
 from app.features.log import repository, schemas, service
+from app.features.org.service import verify_org_membership
+from app.shared.models import OrgDog
 from app.shared.utils.ownership import verify_dog_ownership
 
 router = APIRouter()
@@ -25,8 +29,20 @@ async def create_quick_log(
     db: AsyncSession = Depends(get_db),
 ):
     """빠른 기록 생성"""
-    await verify_dog_ownership(db, data.dog_id, user_id=user_id)
-    return await service.create_quick_log(db, data, x_timezone)
+    if data.org_id:
+        await verify_org_membership(db, data.org_id, user_id)
+        org_dog_result = await db.execute(
+            select(OrgDog).where(
+                OrgDog.org_id == data.org_id,
+                OrgDog.dog_id == data.dog_id,
+                OrgDog.status == "active",
+            )
+        )
+        if not org_dog_result.scalar_one_or_none():
+            raise ForbiddenException("Dog is not active in this organization")
+    else:
+        await verify_dog_ownership(db, data.dog_id, user_id=user_id)
+    return await service.create_quick_log(db, data, x_timezone, recorded_by=user_id)
 
 
 @router.post("/detailed", response_model=schemas.LogResponse, status_code=status.HTTP_201_CREATED)

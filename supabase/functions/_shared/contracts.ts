@@ -8,6 +8,7 @@ export type UserRole = 'user' | 'trainer' | 'org_owner' | 'org_staff' | 'service
 export interface EdgeContext {
   clientKey: string;
   role?: UserRole;
+  userId?: string;
   now?: Date;
 }
 

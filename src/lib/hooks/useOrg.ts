@@ -100,8 +100,28 @@ export function useAssignDog() {
       trainer_user_id: string;
       role: DogAssignment['role'];
     }) => orgApi.assignDog(input),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void qc.invalidateQueries({ queryKey: queryKeys.assignments.all });
+      if (variables.org_id) {
+        void qc.invalidateQueries({ queryKey: queryKeys.orgDogs.list(variables.org_id) });
+      }
+    },
+  });
+}
+
+export function useUnassignDog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      dog_id: string;
+      org_id?: string;
+      trainer_user_id: string;
+    }) => orgApi.unassignDog(input),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.assignments.all });
+      if (variables.org_id) {
+        void qc.invalidateQueries({ queryKey: queryKeys.orgDogs.list(variables.org_id) });
+      }
     },
   });
 }

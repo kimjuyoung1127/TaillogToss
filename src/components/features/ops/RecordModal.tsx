@@ -1,11 +1,12 @@
 /**
- * RecordModal — 개별 기록 바텀시트 (프리셋 칩 + 메모 + "저장 & 다음")
+ * RecordModal — 개별 기록 바텀시트 (프리셋 칩 + 메모 + "저장하고 다음")
  * Parity: B2B-001
  */
 import React, { useRef, useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from 'styles/tokens';
+import { Toast } from 'components/tds-ext/Toast';
 import { PresetChipGrid } from './PresetChipGrid';
 import { StepAttemptHistory } from 'components/features/training/StepAttemptHistory';
 import type { PresetOption } from 'lib/data/presets';
@@ -21,9 +22,24 @@ interface RecordModalProps {
   onClose: () => void;
   stepAttempts?: StepAttempt[];
   isOrgPro?: boolean;
+  isSaving?: boolean;
+  feedbackMessage?: string;
+  feedbackVisible?: boolean;
+  onFeedbackDismiss?: () => void;
 }
 
-export function RecordModal({ item, onSave, onSaveAndNext, onClose, stepAttempts = [], isOrgPro = false }: RecordModalProps) {
+export function RecordModal({
+  item,
+  onSave,
+  onSaveAndNext,
+  onClose,
+  stepAttempts = [],
+  isOrgPro = false,
+  isSaving = false,
+  feedbackMessage = '',
+  feedbackVisible = false,
+  onFeedbackDismiss,
+}: RecordModalProps) {
   return (
     <SafeAreaProvider>
       <RecordModalInner
@@ -33,14 +49,31 @@ export function RecordModal({ item, onSave, onSaveAndNext, onClose, stepAttempts
         onClose={onClose}
         stepAttempts={stepAttempts}
         isOrgPro={isOrgPro}
+        isSaving={isSaving}
+        feedbackMessage={feedbackMessage}
+        feedbackVisible={feedbackVisible}
+        onFeedbackDismiss={onFeedbackDismiss}
       />
     </SafeAreaProvider>
   );
 }
 
-function RecordModalInner({ item, onSave, onSaveAndNext, onClose, stepAttempts = [], isOrgPro = false }: RecordModalProps) {
+function RecordModalInner({
+  item,
+  onSave,
+  onSaveAndNext,
+  onClose,
+  stepAttempts = [],
+  isOrgPro = false,
+  isSaving = false,
+  feedbackMessage = '',
+  feedbackVisible = false,
+  onFeedbackDismiss,
+}: RecordModalProps) {
   const scrollRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, 0);
+  const bottomInset = Math.max(insets.bottom, 0);
   const [selectedPreset, setSelectedPreset] = useState<PresetOption | null>(null);
   const [memo, setMemo] = useState('');
   const [activeTab, setActiveTab] = useState<ActiveTab>('record');
@@ -76,7 +109,7 @@ function RecordModalInner({ item, onSave, onSaveAndNext, onClose, stepAttempts =
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: topInset + spacing.lg }]}>
         <View style={styles.headerInfo}>
           <Text style={styles.dogName}>{item.dogName}</Text>
           {item.parentName && <Text style={styles.parentName}>{item.parentName}</Text>}
@@ -108,7 +141,10 @@ function RecordModalInner({ item, onSave, onSaveAndNext, onClose, stepAttempts =
         <ScrollView
           ref={scrollRef}
           style={styles.body}
-          contentContainerStyle={[styles.bodyContent, { paddingBottom: spacing.lg }]}
+          contentContainerStyle={[
+            styles.bodyContent,
+            { paddingBottom: bottomInset + spacing.xxxl },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -124,6 +160,7 @@ function RecordModalInner({ item, onSave, onSaveAndNext, onClose, stepAttempts =
               placeholderTextColor={colors.textTertiary}
               multiline
               numberOfLines={3}
+              textAlignVertical="top"
               onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120)}
             />
           </View>
@@ -131,7 +168,11 @@ function RecordModalInner({ item, onSave, onSaveAndNext, onClose, stepAttempts =
       ) : (
         <ScrollView
           style={styles.body}
-          contentContainerStyle={[styles.bodyContent, { paddingBottom: insets.bottom + spacing.lg }]}
+          contentContainerStyle={[
+            styles.bodyContent,
+            { paddingBottom: bottomInset + spacing.xxxl },
+          ]}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <StepAttemptHistory attempts={stepAttempts} />
@@ -139,25 +180,31 @@ function RecordModalInner({ item, onSave, onSaveAndNext, onClose, stepAttempts =
       )}
 
       {activeTab === 'record' && (
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        <View style={[styles.footer, { paddingBottom: bottomInset + spacing.lg }]}>
           <TouchableOpacity
-            style={[styles.saveBtn, !selectedPreset && styles.saveBtnDisabled]}
+            style={[styles.saveBtn, (!selectedPreset || isSaving) && styles.saveBtnDisabled]}
             onPress={handleSave}
-            disabled={!selectedPreset}
+            disabled={!selectedPreset || isSaving}
             activeOpacity={0.8}
           >
-            <Text style={styles.saveBtnText}>저장</Text>
+            <Text style={styles.saveBtnText}>{isSaving ? '저장 중' : '저장 후 닫기'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.saveNextBtn, !selectedPreset && styles.saveBtnDisabled]}
+            style={[styles.saveNextBtn, (!selectedPreset || isSaving) && styles.saveBtnDisabled]}
             onPress={handleSaveAndNext}
-            disabled={!selectedPreset}
+            disabled={!selectedPreset || isSaving}
             activeOpacity={0.8}
           >
-            <Text style={styles.saveNextBtnText}>저장 & 다음</Text>
+            <Text style={styles.saveNextBtnText}>{isSaving ? '저장 중' : '저장하고 다음'}</Text>
           </TouchableOpacity>
         </View>
       )}
+      <Toast
+        message={feedbackMessage}
+        visible={feedbackVisible}
+        duration={1200}
+        onDismiss={onFeedbackDismiss ?? (() => undefined)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -171,8 +218,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingBottom: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -199,10 +246,11 @@ const styles = StyleSheet.create({
   },
   bodyContent: {
     flexGrow: 1,
+    paddingTop: spacing.lg,
   },
   memoSection: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingTop: spacing.lg,
   },
   memoLabel: {
     ...typography.detail,
@@ -223,17 +271,17 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 8,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingTop: spacing.lg,
+    gap: spacing.elementGap,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   saveBtn: {
     flex: 1,
     backgroundColor: colors.divider,
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
   saveBtnDisabled: {
@@ -247,8 +295,8 @@ const styles = StyleSheet.create({
   saveNextBtn: {
     flex: 1,
     backgroundColor: colors.primaryBlue,
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
   saveNextBtnText: {
@@ -263,7 +311,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: spacing.md,
     alignItems: 'center',
   },
   tabActive: {

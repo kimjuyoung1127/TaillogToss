@@ -47,6 +47,7 @@ class OrgDogResponse(BaseModel):
     dog_id: UUID
     parent_user_id: Optional[UUID] = None
     parent_name: Optional[str] = None
+    parent_phone_last4: Optional[str] = None
     group_tag: str = "default"
     enrolled_at: datetime
     discharged_at: Optional[datetime] = None
@@ -63,6 +64,8 @@ class OrgDogWithStatus(OrgDogResponse):
     has_today_report: bool = False
     last_log_time: Optional[str] = None
     trainer_name: Optional[str] = None
+    needs_attention: bool = False
+    attention_reason: Optional[str] = None
 
 
 class DogAssignmentResponse(BaseModel):
@@ -123,4 +126,5 @@ class UpdateOrgRequest(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    logo_url: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None

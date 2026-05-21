@@ -39,6 +39,7 @@ interface GeneratedReportContent {
 const OPENAI_CHAT_COMPLETIONS_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_INPUT_PRICE_PER_M = 0.15;
 const OPENAI_OUTPUT_PRICE_PER_M = 0.6;
+const STAFF_MEMBERSHIP_ROLES = new Set(['owner', 'admin', 'trainer', 'staff', 'org_owner', 'org_staff']);
 
 function defaultDeps(): GenerateReportDeps {
   return {
@@ -53,6 +54,84 @@ function defaultDeps(): GenerateReportDeps {
 
 function isAdminRole(role: EdgeContext['role']): boolean {
   return role === 'trainer' || role === 'org_owner' || role === 'org_staff' || role === 'service_role';
+}
+
+function restHeaders(serviceKey: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': serviceKey,
+    'Authorization': `Bearer ${serviceKey}`,
+  };
+}
+
+async function fetchSingleRestRow<T>(
+  deps: GenerateReportDeps,
+  supabaseUrl: string,
+  serviceKey: string,
+  path: string
+): Promise<T | null> {
+  const res = await deps.fetchImpl(`${supabaseUrl}/rest/v1/${path}`, {
+    method: 'GET',
+    headers: restHeaders(serviceKey),
+  });
+  if (!res.ok) {
+    return null;
+  }
+
+  const rows = (await res.json()) as unknown;
+  return Array.isArray(rows) ? (rows[0] as T | undefined) ?? null : null;
+}
+
+async function hasReportMembershipAccess(
+  reportId: string,
+  context: EdgeContext,
+  deps: GenerateReportDeps,
+  supabaseUrl: string,
+  serviceKey: string
+): Promise<boolean> {
+  if (!context.userId) {
+    return false;
+  }
+
+  const report = await fetchSingleRestRow<{
+    created_by_org_id: string | null;
+    created_by_trainer_id: string | null;
+  }>(
+    deps,
+    supabaseUrl,
+    serviceKey,
+    `daily_reports?select=created_by_org_id,created_by_trainer_id&id=eq.${encodeURIComponent(reportId)}`
+  );
+  if (!report) {
+    return false;
+  }
+
+  if (report.created_by_trainer_id === context.userId) {
+    return true;
+  }
+
+  if (!report.created_by_org_id) {
+    return false;
+  }
+
+  const membership = await fetchSingleRestRow<{ role: string; status: string }>(
+    deps,
+    supabaseUrl,
+    serviceKey,
+    [
+      'org_members?select=role,status',
+      `org_id=eq.${encodeURIComponent(report.created_by_org_id)}`,
+      `user_id=eq.${encodeURIComponent(context.userId)}`,
+      'status=eq.active',
+      'limit=1',
+    ].join('&')
+  );
+
+  return Boolean(
+    membership &&
+    membership.status === 'active' &&
+    STAFF_MEMBERSHIP_ROLES.has(membership.role)
+  );
 }
 
 function resolveReportAiMode(getEnv: EnvGetter): ReportAiMode {
@@ -181,13 +260,13 @@ export function createGenerateReportHandler(overrides?: Partial<GenerateReportDe
     request: GenerateReportRequest,
     context: EdgeContext
   ): Promise<EdgeResult<unknown>> => {
-    if (!isAdminRole(context.role)) {
-      return fail('AUTH_FORBIDDEN', 'Only staff roles can generate reports', 403);
-    }
-
     const { report_id, dog_id, report_date } = request;
     if (!report_id || !dog_id || !report_date) {
       return fail('INVALID_PARAMS', 'report_id, dog_id, report_date 필수', 400);
+    }
+
+    if (!isAdminRole(context.role) && !context.userId) {
+      return fail('AUTH_FORBIDDEN', 'Only staff roles can generate reports', 403);
     }
 
     const supabaseUrl = deps.getEnv('SUPABASE_URL') ?? '';
@@ -197,6 +276,12 @@ export function createGenerateReportHandler(overrides?: Partial<GenerateReportDe
     }
 
     try {
+      const hasAccess = isAdminRole(context.role) ||
+        await hasReportMembershipAccess(report_id, context, deps, supabaseUrl, serviceKey);
+      if (!hasAccess) {
+        return fail('AUTH_FORBIDDEN', 'Only staff roles can generate reports', 403);
+      }
+
       const generated = await generateReportContent(request, deps);
       if (!generated.ok || !generated.data) {
         return generated;
@@ -205,9 +290,7 @@ export function createGenerateReportHandler(overrides?: Partial<GenerateReportDe
       const updateRes = await deps.fetchImpl(`${supabaseUrl}/rest/v1/daily_reports?id=eq.${report_id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'apikey': serviceKey,
-          'Authorization': `Bearer ${serviceKey}`,
+          ...restHeaders(serviceKey),
           'Prefer': 'return=representation',
         },
         body: JSON.stringify({

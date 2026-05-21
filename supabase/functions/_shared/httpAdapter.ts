@@ -10,9 +10,14 @@ const ALLOWED_ROLES: UserRole[] = ['user', 'trainer', 'org_owner', 'org_staff', 
 const JWT_SEGMENTS = 3;
 
 type JwtClaims = Record<string, unknown> & {
+  sub?: string;
   role?: string;
   user_role?: string;
   app_metadata?: {
+    role?: string;
+    user_role?: string;
+  };
+  user_metadata?: {
     role?: string;
     user_role?: string;
   };
@@ -67,6 +72,8 @@ function resolveRoleFromJwt(claims: JwtClaims | null): UserRole | undefined {
     claims.user_role,
     claims.app_metadata?.user_role,
     claims.app_metadata?.role,
+    claims.user_metadata?.user_role,
+    claims.user_metadata?.role,
     claims.role,
   ];
 
@@ -79,10 +86,12 @@ function resolveRoleFromJwt(claims: JwtClaims | null): UserRole | undefined {
 }
 
 export function buildEdgeContext(request: Request): EdgeContext {
+  const claims = parseJwtClaims(request);
   return {
     clientKey: request.headers.get('x-client-key') ?? 'local-invoke',
     // Never trust caller-controlled role headers. Resolve role from verified JWT claims only.
-    role: resolveRoleFromJwt(parseJwtClaims(request)),
+    role: resolveRoleFromJwt(claims),
+    userId: typeof claims?.sub === 'string' ? claims.sub : undefined,
     now: new Date(),
   };
 }

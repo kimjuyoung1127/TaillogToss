@@ -99,6 +99,13 @@ export function useCreateInteraction() {
   });
 }
 
+export function useVerifyParentPhoneLast4() {
+  return useMutation({
+    mutationFn: (input: { share_token: string; last4: string }) =>
+      reportApi.verifyParentPhoneLast4(input),
+  });
+}
+
 export function useReportInteractions(reportId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.reports.interactions(reportId ?? ''),

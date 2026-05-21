@@ -211,9 +211,15 @@ function WelcomePage() {
 
       // 갱신된 세션으로 AuthContext 업데이트
       const updatedSession = await authApi.getSession();
+      const refreshedRole = updatedSession?.user?.user_metadata?.role;
+      const nextRole = isB2BRole(refreshedRole as UserRole)
+        ? refreshedRole
+        : isB2BRole(loginResult.user.role as UserRole)
+          ? loginResult.user.role
+          : 'org_owner';
       const updatedUser = {
         ...loginResult.user,
-        role: (updatedSession?.user?.user_metadata?.role ?? 'org_owner') as UserRole,
+        role: nextRole as UserRole,
       };
       login(updatedUser);
 
@@ -236,6 +242,7 @@ function WelcomePage() {
     tracker.onboardingStarted();
 
     try {
+      await authApi.setPreferredAuthEntryFlow('B2C');
       const { authorizationCode, referrer } = await appLoginWithTimeout('B2C');
       const loginResult = await loginWithTossWithTimeout(authorizationCode, referrer, 'B2C');
       const sessionEstablished = await setSessionWithTimeout(loginResult, 'B2C');

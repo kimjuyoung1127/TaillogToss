@@ -20,6 +20,8 @@ class QuickLogCreate(BaseModel):
     memo: Optional[str] = None
     location: Optional[str] = None
     duration_minutes: Optional[int] = None
+    org_id: Optional[UUID] = None
+    recorded_by: Optional[UUID] = None
 
 
 class DetailedLogCreate(BaseModel):

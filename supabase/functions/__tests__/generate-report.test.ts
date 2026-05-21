@@ -51,6 +51,91 @@ describe('generate-report handler', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  test('allows active org membership when JWT role is user', async () => {
+    const fetchMock = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/rest/v1/daily_reports?select=created_by_org_id')) {
+        return new Response(JSON.stringify([
+          { created_by_org_id: 'org-1', created_by_trainer_id: null },
+        ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/rest/v1/org_members?select=role,status')) {
+        return new Response(JSON.stringify([
+          { role: 'owner', status: 'active' },
+        ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify([{ id: 'report-1', generation_status: 'generated' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const handler = createGenerateReportHandler({
+      fetchImpl: fetchMock,
+      now: () => new Date('2026-02-28T12:00:00.000Z'),
+      getEnv: (key: string) => {
+        if (key === 'SUPABASE_URL') return 'https://example.supabase.co';
+        if (key === 'SUPABASE_SERVICE_ROLE_KEY') return 'service-key';
+        return undefined;
+      },
+    });
+
+    const result = await handler(
+      {
+        report_id: 'report-1',
+        dog_id: 'dog-1',
+        report_date: '2026-02-28',
+      },
+      { clientKey: 'client-a', role: 'user', userId: 'user-1' }
+    );
+
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  test('rejects inactive org membership when JWT role is user', async () => {
+    const fetchMock = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/rest/v1/daily_reports?select=created_by_org_id')) {
+        return new Response(JSON.stringify([
+          { created_by_org_id: 'org-1', created_by_trainer_id: null },
+        ]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url.includes('/rest/v1/org_members?select=role,status')) {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify([{ id: 'report-1', generation_status: 'generated' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const handler = createGenerateReportHandler({
+      fetchImpl: fetchMock,
+      getEnv: (key: string) => {
+        if (key === 'SUPABASE_URL') return 'https://example.supabase.co';
+        if (key === 'SUPABASE_SERVICE_ROLE_KEY') return 'service-key';
+        return undefined;
+      },
+    });
+
+    const result = await handler(
+      {
+        report_id: 'report-1',
+        dog_id: 'dog-1',
+        report_date: '2026-02-28',
+      },
+      { clientKey: 'client-a', role: 'user', userId: 'user-1' }
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(403);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   test('uses OpenAI path when REPORT_AI_MODE=real', async () => {
     const fetchMock = jest.fn(async (input: RequestInfo | URL) => {
       const url = String(input);

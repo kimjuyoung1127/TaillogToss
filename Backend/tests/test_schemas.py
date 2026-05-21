@@ -29,6 +29,7 @@ from app.features.report.schemas import (
     CreateInteractionRequest,
     DailyReportResponse,
     GenerateReportRequest,
+    VerifyParentPhoneLast4Request,
 )
 from app.features.settings.schemas import (
     AiPersonaSchema,
@@ -173,14 +174,20 @@ class TestDogSchemas:
 class TestLogSchemas:
     def test_quick_log_required_fields(self):
         """QuickLogCreate 필수 필드 검증"""
+        org_id = uuid4()
+        recorded_by = uuid4()
         log = QuickLogCreate(
             dog_id=uuid4(),
             category="bark",
             intensity=5,
             occurred_at=datetime.now(timezone.utc),
+            org_id=org_id,
+            recorded_by=recorded_by,
         )
         assert log.category == "bark"
         assert log.intensity == 5
+        assert log.org_id == org_id
+        assert log.recorded_by == recorded_by
 
     def test_quick_log_missing_category(self):
         """category 누락 시 에러"""
@@ -224,6 +231,20 @@ class TestReportSchemas:
             interaction_type="like",
         )
         assert req.content is None
+
+    def test_verify_parent_phone_last4_request(self):
+        req = VerifyParentPhoneLast4Request(
+            share_token="token-123",
+            last4="1234",
+        )
+        assert req.last4 == "1234"
+
+    def test_verify_parent_phone_last4_requires_four_digits(self):
+        with pytest.raises(ValidationError):
+            VerifyParentPhoneLast4Request(
+                share_token="token-123",
+                last4="123",
+            )
 
 
 class TestSettingsSchemas:

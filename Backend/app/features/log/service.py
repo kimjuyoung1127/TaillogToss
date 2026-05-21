@@ -3,7 +3,7 @@
 FE api/log.ts 매핑: getLogs, createQuickLog, createDetailedLog, deleteLog
 Parity: LOG-001
 """
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,10 @@ from app.shared.utils.timezone import to_utc
 
 
 async def create_quick_log(
-    db: AsyncSession, data: schemas.QuickLogCreate, timezone_str: str,
+    db: AsyncSession,
+    data: schemas.QuickLogCreate,
+    timezone_str: str,
+    recorded_by: Optional[str] = None,
 ) -> schemas.LogResponse:
     """빠른 기록 생성"""
     utc_occurred = to_utc(data.occurred_at, timezone_str)
@@ -29,6 +32,8 @@ async def create_quick_log(
         "memo": data.memo,
         "location": data.location,
         "duration_minutes": data.duration_minutes,
+        "org_id": data.org_id,
+        "recorded_by": UUID(recorded_by) if recorded_by else data.recorded_by,
     }
     new_log = await repository.create_log(db, log_data)
     return schemas.LogResponse.model_validate(new_log)

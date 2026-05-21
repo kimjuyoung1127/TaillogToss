@@ -54,6 +54,16 @@ async def get_report_by_share_token(
     return await service.get_report_by_share_token(db, token)
 
 
+@router.post("/share/verify-parent-phone", response_model=schemas.VerifyParentPhoneLast4Response)
+async def verify_parent_phone_last4(
+    data: schemas.VerifyParentPhoneLast4Request,
+    user_id: Optional[str] = Depends(get_current_user_id_optional),
+    db: AsyncSession = Depends(get_db),
+):
+    """공유 리포트 보호자 전화번호 뒷4자리 검증 (비인증 보호자 접근 허용)"""
+    return await service.verify_parent_phone_last4(db, data.share_token, data.last4)
+
+
 @router.get("/{report_id}", response_model=schemas.DailyReportResponse)
 async def get_report(
     report_id: UUID,

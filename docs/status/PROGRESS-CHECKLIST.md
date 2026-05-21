@@ -1,7 +1,7 @@
 # TaillogToss 진행도 체크리스트
 
-> 생성: 2026-04-02 | 갱신: 2026-05-19 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
-> 종합 완성도: **89%** (Backend 5개 버그 수정 + E2E Wave 1~9 로컬 완료 + 신규 skill 생성)
+> 생성: 2026-04-02 | 갱신: 2026-05-21 | 기준: SSOT 4종 + 코드 스캔 + 토스 SDK 공식 문서 대조
+> 종합 완성도: **89%** (route board 상태 재정렬 + B2B 로고 DEV_LOCAL/Storage 증적 반영)
 
 ---
 
@@ -49,28 +49,24 @@
 
 ## B. 페이지 완성도 (PAGE-UPGRADE-BOARD 기준)
 
-### B1. Done (20/20 = 100%)
+### B1. Done (14/25)
 
-- [x] `/onboarding/welcome` — AUTH-001, UIUX-004 | 2026-04-20
-- [x] `/onboarding/survey` — UIUX-004 | 2026-03-02
-- [x] `/onboarding/survey-result` — UI-001 | 2026-04-02
-- [x] `/onboarding/notification` — APP-001 | 2026-04-20
-- [x] `/dashboard` — UIUX-001 | 2026-03-01
-- [x] `/dashboard/quick-log` — LOG-001 | 2026-05-19 (QA hotfix: intensity/occurrence/time UX)
-- [x] `/dashboard/analysis` — UIUX-001 | 2026-05-19 (QA hotfix: Korean labels/occurrence charts/share)
-- [x] `/coaching/result` — UIUX-005, AI-001 | 2026-04-20
-- [x] `/training/academy` — UIUX-002, UIUX-003 | 2026-03-01
-- [x] `/training/detail` — UIUX-005 | 2026-04-20
-- [x] `/dog/profile` — UIUX-006 | 2026-03-02
-- [x] `/dog/add` — APP-001 | 2026-04-02
-- [x] `/dog/switcher` — UIUX-006 | 2026-04-02
-- [x] `/settings` — APP-001 | 2026-03-02
-- [x] `/settings/subscription` — IAP-001 | 2026-04-02
-- [x] `/legal/terms` — APP-001 | 2026-04-02
-- [x] `/legal/privacy` — APP-001 | 2026-04-02
-- [x] `/ops/today` — B2B-001 | 2026-04-20
-- [x] `/parent/reports` — B2B-001 | 2026-04-21 (FlatList 목록+선택 상세 개선)
-- [x] `/ops/settings` — B2B-001, B2B-002 | 2026-04-21 (센터정보수정+강아지현황+멤버관리+플랜카드 실데이터)
+- [x] `/onboarding/stage1-form`, `/onboarding/stage2-form`, `/onboarding/stage3-form`
+- [x] `/onboarding/survey`, `/onboarding/survey-result`, `/onboarding/notification`
+- [x] `/coaching/result`
+- [x] `/dog/profile`, `/dog/add`, `/dog/switcher`
+- [x] `/legal/terms`, `/legal/privacy`
+- [x] `/ops/setup`, `/ops/dog-add`
+
+### B2. QA (11/25)
+
+- [ ] `/onboarding/welcome`
+- [ ] `/dashboard`, `/dashboard/quick-log`, `/dashboard/analysis`
+- [ ] `/training/academy`, `/training/detail`
+- [ ] `/settings`, `/settings/subscription`
+- [ ] `/ops/today`, `/ops/settings`, `/parent/reports`
+
+> Source of truth: `docs/status/PAGE-UPGRADE-BOARD.md` as of 2026-05-21. `/ops/settings` logo upload is DEV_LOCAL PASS, but route remains QA until broader B2B share/performance/regression checks close.
 
 ---
 
@@ -113,14 +109,15 @@
   - [x] log API backend-first + supabase fallback
   - [ ] FastAPI 로그 API 실기기 E2E 검증
 
-- [ ] **AI-001** AI 코칭
+- [x] **AI-001** AI 코칭
   - [x] 코칭 6블록 (Free 3 + PRO 3)
   - [x] 피드백 별점 useSubmitFeedback
   - [x] Backend BE-P5 완료 (AI 6블록 생성 + 예산 게이팅 + 룰 폴백)
   - [x] Backend 12모듈 60+ endpoints
   - [x] coaching API backend-first + supabase fallback
   - [x] coaching/result P0 업그레이드
-  - [ ] FastAPI 코칭 API 실 연동 검증
+  - [x] FastAPI 코칭 API DEV_LOCAL 실 연동 검증
+  - [x] Production AIT 코칭 회귀 검증
 
 - [ ] **IAP-001** 결제
   - [x] 구독 화면 Card Stack + useIsPro + usePurchaseIAP
@@ -142,6 +139,7 @@
   - [x] SCHEMA-B2B.md ↔ b2b.ts 100% 일치
   - [x] BE-P7 완료 (org 14 + report 9 endpoints)
   - [x] B2B IAP 공식 패턴 + roleGuard test 8케이스
+  - [x] `/ops/settings` center logo upload/display/save DEV_LOCAL PASS + remote `org-logos` bucket/RLS applied
   - [ ] 40마리 FlatList 성능 실측
   - [ ] 공유 링크 실기기 검증
   - [ ] B2C 회귀 테스트
@@ -169,7 +167,7 @@
 - [x] ~~send-smart-message → mock mTLS~~ → ✅ real mTLS (v14)
 - [x] ~~grant-toss-points → mock mTLS~~ → ✅ real mTLS (v14)
 - [x] ~~verify-iap-order → mock mTLS~~ → ✅ real mTLS (v17)
-- [ ] DogPhotoPicker → 카메라/앨범 브릿지 미연결
+- [x] DogPhotoPicker/PhotoPicker → Android Photo Picker 기반 프로필 사진 및 센터 로고 업로드 DEV_LOCAL/AIT 증적 확보
 - [ ] IAP 구독/복원 → Toss IAP 복원 API 공개 대기
 
 ### D3. 미구현 (25% → 17%)
@@ -203,13 +201,13 @@
 
 | Function | 버전 | 상태 | 잔여 |
 |----------|------|------|------|
-| login-with-toss | v13 | ✅ | fresh authCode 재증적 |
+| login-with-toss | v18 | ✅ | fresh authCode 재증적 |
 | verify-iap-order | v17 | ✅ | ✅ real mTLS 완료 |
 | send-smart-message | v14 | ✅ | ✅ real mTLS 완료 |
 | grant-toss-points | v14 | ✅ | ✅ real mTLS 완료 |
-| legal | v9 | ✅ | - |
-| toss-disconnect | v10 | ✅ | 콘솔 콜백 검증 |
-| generate-report | v4 | ⚠️ | real OpenAI 키 검증 |
+| legal | v13 | ✅ | - |
+| toss-disconnect | v17 | ✅ | 콘솔 콜백 검증 |
+| generate-report | v8 | ⚠️ | real OpenAI 키 검증 + B2B 공유 CTA device proof |
 
 ### E3. DB / Infra
 

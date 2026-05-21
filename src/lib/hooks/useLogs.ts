@@ -52,6 +52,8 @@ function buildOptimisticLog(input: QuickLogInput): BehaviorLog {
     duration_minutes: input.duration_minutes ?? null,
     location: input.location ?? null,
     memo: input.memo ?? null,
+    org_id: input.org_id,
+    recorded_by: input.recorded_by,
     occurred_at: input.occurred_at,
     created_at: now,
     updated_at: now,

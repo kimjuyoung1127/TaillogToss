@@ -18,6 +18,7 @@ import { queryKeys } from 'lib/api/queryKeys';
 import { clearPersistedQueryCache, setQueryCacheOwner } from 'lib/queryPersistence';
 import { queryClient } from './queryClient';
 import { clearPostLoginRedirect } from 'stores/postLoginRedirect';
+import { isB2BAuthRole, resolveEffectiveSessionRole } from 'stores/authRole';
 import type { AuthState, User } from 'types/auth';
 import type { AuthEntryFlow } from 'lib/api/auth';
 
@@ -38,21 +39,59 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function isB2BRole(role: unknown): role is User['role'] {
+  return isB2BAuthRole(role);
+}
+
+async function getPublicUserRole(userId: string): Promise<User['role'] | null> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) return null;
+    const role = (data as { role?: unknown } | null)?.role;
+    return isB2BRole(role) || role === 'user' ? role : null;
+  } catch {
+    return null;
+  }
+}
+
 function buildUserFromSession(sessionUser: SessionUserLike, preferredFlow?: AuthEntryFlow | null): User {
   const metadata = sessionUser.user_metadata ?? {};
   const now = new Date().toISOString();
-  const sessionRole = (metadata.role as User['role']) ?? 'user';
+  const sessionRole = resolveEffectiveSessionRole({
+    sessionRole: metadata.role,
+    preferredFlow,
+  });
 
   return {
     id: sessionUser.id,
     toss_user_key: String(metadata.toss_user_key ?? sessionUser.id),
-    role: preferredFlow === 'B2C' ? 'user' : sessionRole,
+    role: sessionRole,
     status: (metadata.status as User['status']) ?? 'active',
     pepper_version: Number(metadata.pepper_version ?? 1),
     timezone: String(metadata.timezone ?? 'Asia/Seoul'),
     last_login_at: sessionUser.last_sign_in_at ?? now,
     created_at: sessionUser.created_at ?? now,
     updated_at: sessionUser.updated_at ?? now,
+  };
+}
+
+async function buildUserFromSessionWithPublicRole(
+  sessionUser: SessionUserLike,
+  preferredFlow?: AuthEntryFlow | null,
+): Promise<User> {
+  const user = buildUserFromSession(sessionUser, preferredFlow);
+  const publicRole = await getPublicUserRole(user.id);
+  return {
+    ...user,
+    role: resolveEffectiveSessionRole({
+      sessionRole: user.role,
+      preferredFlow,
+      publicRole,
+    }),
   };
 }
 
@@ -129,7 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const preferredFlow = await authApi.getPreferredAuthEntryFlow();
-        const user = buildUserFromSession(session.user as SessionUserLike, preferredFlow);
+        const user = await buildUserFromSessionWithPublicRole(
+          session.user as SessionUserLike,
+          preferredFlow,
+        );
         await setQueryCacheOwner(user.id);
         const hasCompletedOnboarding = await getHasCompletedOnboarding(user.id);
         if (!mounted) return;
@@ -150,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const syncSessionUser = async (sessionUser: SessionUserLike) => {
       const preferredFlow = await authApi.getPreferredAuthEntryFlow();
-      const user = buildUserFromSession(sessionUser, preferredFlow);
+      const user = await buildUserFromSessionWithPublicRole(sessionUser, preferredFlow);
       await setQueryCacheOwner(user.id);
       const hasCompletedOnboarding = await getHasCompletedOnboarding(user.id);
       if (!mounted) return;
@@ -164,7 +206,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           const applySessionState = async () => {
             const preferredFlow = await authApi.getPreferredAuthEntryFlow();
-            const user = buildUserFromSession(session.user as SessionUserLike, preferredFlow);
+            const user = await buildUserFromSessionWithPublicRole(
+              session.user as SessionUserLike,
+              preferredFlow,
+            );
             if (!mounted) return;
             setState((prev) => ({
               user,

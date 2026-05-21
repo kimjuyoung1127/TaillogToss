@@ -12,11 +12,13 @@ import { colors, typography, spacing } from 'styles/tokens';
 import { createRoute, useNavigation } from '@granite-js/react-native';
 import { ErrorState } from 'components/tds-ext';
 import { usePageGuard } from 'lib/hooks/usePageGuard';
+import { useAuth } from 'stores/AuthContext';
 import { useOrg } from 'stores/OrgContext';
 import {
   useOrgMembers, useInviteMember, useOrgTodayStats,
   useOrgDogs, useUpdateOrg,
 } from 'lib/hooks/useOrg';
+import { uploadOrgLogoImage } from 'lib/api/org';
 import { useOrgEntitlement, useOrgSubscription } from 'lib/hooks/useOrgSubscription';
 import { MemberList } from 'components/features/ops/MemberList';
 import { InviteSheet } from 'components/features/ops/InviteSheet';
@@ -40,6 +42,7 @@ function OpsSettingsPage() {
   });
   const navigation = useNavigation();
   const { org } = useOrg();
+  const { user } = useAuth();
 
   const { data: members, isLoading: membersLoading, isError: membersError, refetch: refetchMembers } = useOrgMembers(org?.id);
   const { data: todayStats, isLoading: statsLoading, isError: statsError, refetch: refetchStats } = useOrgTodayStats(org?.id);
@@ -55,6 +58,7 @@ function OpsSettingsPage() {
 
   const [showInvite, setShowInvite] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const activeCount = orgDogs?.filter((d) => d.status === 'active').length ?? 0;
 
@@ -74,13 +78,34 @@ function OpsSettingsPage() {
     );
   }, [org, inviteMember]);
 
-  const handleOrgSave = useCallback((updates: Pick<Organization, 'name' | 'phone' | 'address'>) => {
-    updateOrg.mutate(updates, {
+  const handleOrgSave = useCallback(async (updates: Pick<Organization, 'name' | 'phone' | 'address' | 'logo_url'>) => {
+    if (!org) return;
+    let nextUpdates = updates;
+
+    if (updates.logo_url && !/^https?:\/\//i.test(updates.logo_url)) {
+      if (!user?.id) {
+        Alert.alert('로그인이 필요해요', '센터 로고를 저장하려면 다시 로그인해주세요.');
+        return;
+      }
+
+      try {
+        setIsUploadingLogo(true);
+        const logoUrl = await uploadOrgLogoImage(user.id, org.id, updates.logo_url);
+        nextUpdates = { ...updates, logo_url: logoUrl };
+      } catch {
+        Alert.alert('로고를 저장하지 못했어요', '사진 업로드에 실패했어요. 다시 선택한 뒤 저장해주세요.');
+        return;
+      } finally {
+        setIsUploadingLogo(false);
+      }
+    }
+
+    updateOrg.mutate(nextUpdates, {
       onError: () => {
         Alert.alert('저장하지 못했어요', '센터 정보를 저장하지 못했어요. 다시 시도해주세요.');
       },
     });
-  }, [updateOrg]);
+  }, [org, user?.id, updateOrg]);
 
   if (!isReady) return null;
 
@@ -114,7 +139,7 @@ function OpsSettingsPage() {
         {org && (
           <OrgInfoEditForm
             org={org}
-            isLoading={updateOrg.isPending}
+            isLoading={updateOrg.isPending || isUploadingLogo}
             onSave={handleOrgSave}
           />
         )}

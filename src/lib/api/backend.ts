@@ -67,6 +67,16 @@ async function getAccessTokenOrThrow(): Promise<string> {
   return accessToken;
 }
 
+async function getAccessTokenOptional(): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) return null;
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function toBackendApiError(message: string, status?: number, details?: unknown): BackendApiError {
   const error = new Error(message) as BackendApiError;
   error.status = status;
@@ -117,6 +127,53 @@ export async function requestBackend<TResponse, TBody = unknown>(
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
+      ...(options?.headers ?? {}),
+    },
+    body: serializedBody,
+  });
+
+  logBackendServerTiming(method, path, response);
+
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
+
+  const text = await response.text();
+  const parsed = text ? JSON.parse(text) : null;
+
+  if (!response.ok) {
+    const detail =
+      typeof parsed === 'object' && parsed !== null && 'detail' in parsed
+        ? (parsed as { detail?: unknown }).detail
+        : parsed;
+    if (__DEV__) {
+      console.warn(`[FE-BE] ${method} ${path} → ${response.status}`, detail);
+    }
+    throw toBackendApiError(`BACKEND_${response.status}`, response.status, detail);
+  }
+
+  return parsed as TResponse;
+}
+
+export async function requestBackendPublic<TResponse, TBody = unknown>(
+  path: string,
+  options?: RequestOptions<TBody>,
+): Promise<TResponse> {
+  const method = options?.method ?? 'GET';
+  const url = buildUrl(path);
+  const accessToken = await getAccessTokenOptional();
+
+  const serializedBody = options?.body ? JSON.stringify(options.body) : undefined;
+
+  if (__DEV__ && serializedBody) {
+    console.log(`[FE-BE] ${method} ${path} body:`, serializedBody);
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(options?.headers ?? {}),
     },
     body: serializedBody,

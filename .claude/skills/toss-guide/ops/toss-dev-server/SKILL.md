@@ -130,7 +130,7 @@ GET /api/v1/... 200 OK
 const DEV_LAN_BACKEND_URL = 'http://172.30.1.2:8765'; // ipconfig getifaddr en0
 ```
 
-`resolveBackendUrl()` 내 `return DEFAULT_BACKEND_URL;` 을 `return DEV_LAN_BACKEND_URL;` 로 교체.  
+`resolveBackendUrl()` 내 `return DEFAULT_BACKEND_URL;` 을 `return DEV_LAN_BACKEND_URL;` 로 교체.
 FastAPI는 `--host 0.0.0.0`으로 시작해야 LAN에서 수신 가능.
 
 > LAN IP는 세션마다 바뀔 수 있으니 `ipconfig getifaddr en0`으로 매번 확인.

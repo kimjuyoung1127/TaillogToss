@@ -74,6 +74,9 @@ src/components/shared/CLAUDE.md
 .claude/skills/page-skills/page/onboarding/page-onboarding-survey-upgrade/SKILL.md
 .claude/skills/page-skills/page/settings/page-settings-subscription-upgrade/SKILL.md
 .claude/skills/page-skills/page/dog/page-dog-profile-upgrade/SKILL.md
+.claude/skills/page-skills/page/ops/page-ops-today-upgrade/SKILL.md
+.claude/skills/page-skills/page/ops/page-ops-settings-upgrade/SKILL.md
+.claude/skills/page-skills/page/parent/page-parent-reports-upgrade/SKILL.md
 
 # 피처 스킬
 .claude/skills/page-skills/feature/feature-ui-empty-and-skeleton/SKILL.md
@@ -93,7 +96,7 @@ docs/status/PROJECT-STATUS.md             # 최신 상태 (항상 읽을 것)
 docs/status/11-FEATURE-PARITY-MATRIX.md   # 파리티 Done/InProgress/Blocked
 docs/status/PAGE-UPGRADE-BOARD.md         # 라우트별 완성도
 docs/status/MISSING-AND-UNIMPLEMENTED.md  # 미구현/목업 목록 ★
-docs/status/PROGRESS-CHECKLIST.md         # 종합 완성도 (72%)
+docs/status/PROGRESS-CHECKLIST.md         # 종합 완성도/라우트 상태 스냅샷
 docs/status/SKILL-DOC-MATRIX.md           # 스킬 ↔ 코드 매핑
 ```
 
@@ -121,7 +124,7 @@ cd Backend && venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8765 --reload
 node_modules/.bin/granite dev
 
 # adb 포트 포워딩
-adb reverse tcp:8765 tcp:8765 && adb reverse tcp:8081 tcp:8081
+adb reverse tcp:8765 tcp:8765 && adb reverse tcp:8081 tcp:8081 && adb reverse tcp:5173 tcp:5173
 ```
 
 ---
@@ -275,7 +278,7 @@ Page/feature skill root: `.claude/skills/page-skills/`
 | `docs/status/11-FEATURE-PARITY-MATRIX.md` | parity notes and verification logs |
 | `docs/status/MISSING-AND-UNIMPLEMENTED.md` | missing implementations and V2 candidates |
 | `docs/status/PAGE-UPGRADE-BOARD.md` | route-level execution board |
-| `docs/status/PROGRESS-CHECKLIST.md` | 종합 완성도 체크리스트 (72%) |
+| `docs/status/PROGRESS-CHECKLIST.md` | 종합 완성도/라우트 상태 스냅샷 |
 | `docs/status/SKILL-DOC-MATRIX.md` | page skill to code/doc mapping |
 | `docs/status/NIGHTLY-RUN-LOG.md` | nightly organizer execution history |
 | `docs/ref/BACKEND-PLAN.md` | backend implementation details |

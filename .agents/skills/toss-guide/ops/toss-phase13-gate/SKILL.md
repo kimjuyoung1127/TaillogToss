@@ -13,7 +13,7 @@ Phase 13(출시 직전)에서 게이트 항목을 빠르게 판정하고, 증적
 - 세션 종료 전 다음 우선순위를 정리할 때
 
 ## 입력 기준 문서
-- `AGENTS.md`
+- `CLAUDE.md`
 - `docs/11-FEATURE-PARITY-MATRIX.md`
 - `docs/MISSING-AND-UNIMPLEMENTED.md`
 - `docs/2-28/PHASE13-FE-BE-ROLLING-MIGRATION.md`

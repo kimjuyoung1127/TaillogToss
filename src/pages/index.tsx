@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { colors, typography } from 'styles/tokens';
 import { useAuth } from 'stores/AuthContext';
+import { isB2BAuthRole } from 'stores/authRole';
 
 export const Route = createRoute('/', {
   component: RootEntryPage,
@@ -15,14 +16,20 @@ export const Route = createRoute('/', {
 
 function RootEntryPage() {
   const navigation = useNavigation();
-  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
+  const { user, isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
 
   useEffect(() => {
     if (isLoading) return;
-    const target = isAuthenticated && hasCompletedOnboarding ? '/dashboard' : '/onboarding/welcome';
+    const target = isAuthenticated
+      ? isB2BAuthRole(user?.role)
+        ? '/ops/today'
+        : hasCompletedOnboarding
+          ? '/dashboard'
+          : '/onboarding/welcome'
+      : '/onboarding/welcome';
     const timer = setTimeout(() => navigation.navigate(target as never), 0);
     return () => clearTimeout(timer);
-  }, [hasCompletedOnboarding, isAuthenticated, isLoading, navigation]);
+  }, [hasCompletedOnboarding, isAuthenticated, isLoading, navigation, user?.role]);
 
   return (
     <View

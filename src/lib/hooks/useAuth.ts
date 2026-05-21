@@ -11,6 +11,7 @@ export function useLogin() {
 
   const loginWithToss = useCallback(
     async (authCode: string) => {
+      await authApi.setPreferredAuthEntryFlow('B2C');
       const result = await authApi.loginWithToss(authCode, undefined, 'B2C');
       const sessionEstablished = await authApi.setSessionFromBridgeResponse(result);
       if (!sessionEstablished) {

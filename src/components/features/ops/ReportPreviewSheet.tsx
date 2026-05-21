@@ -6,13 +6,8 @@ import React, { useRef, useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from '@granite-js/native/react-native-safe-area-context';
 import { colors, typography, spacing } from 'styles/tokens';
+import { buildReportDeepLink } from 'lib/api/report';
 import type { DailyReport } from 'types/b2b';
-
-/** 토스 미니앱 공유 링크 생성 (getTossShareLink 래퍼) */
-function buildTossShareUrl(shareToken: string): string {
-  // 토스 미니앱 내 보호자용 딥링크
-  return `/parent/reports?token=${shareToken}`;
-}
 
 /** 비토스 공개 링크 생성 */
 function buildPublicShareUrl(shareToken: string): string {
@@ -120,13 +115,13 @@ function ReportPreviewSheetInner({ report, dogName, onSend, onUpdate, onClose }:
           <View style={styles.section}>
             <Text style={styles.label}>공유 링크</Text>
             <View style={styles.shareRow}>
-              <Text style={styles.shareLabel}>토스 보호자</Text>
+              <Text style={styles.shareLabel}>토스 링크</Text>
               <Text style={styles.shareLink} selectable>
-                {buildTossShareUrl(report.share_token)}
+                {report.toss_share_url ?? buildReportDeepLink(report.share_token)}
               </Text>
             </View>
             <View style={styles.shareRow}>
-              <Text style={styles.shareLabel}>비토스 보호자</Text>
+              <Text style={styles.shareLabel}>웹 경로</Text>
               <Text style={styles.shareLink} selectable>
                 {buildPublicShareUrl(report.share_token)}
               </Text>
@@ -142,13 +137,13 @@ function ReportPreviewSheetInner({ report, dogName, onSend, onUpdate, onClose }:
               <Text style={styles.saveBtnText}>저장</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.sendBtn} onPress={handleSend} activeOpacity={0.8}>
-              <Text style={styles.sendBtnText}>보호자에게 발송</Text>
+              <Text style={styles.sendBtnText}>보호자에게 공유</Text>
             </TouchableOpacity>
           </>
         )}
         {isSent && (
           <View style={styles.sentNotice}>
-            <Text style={styles.sentText}>이미 보낸 리포트예요</Text>
+            <Text style={styles.sentText}>공유 링크가 저장됐어요</Text>
           </View>
         )}
       </View>

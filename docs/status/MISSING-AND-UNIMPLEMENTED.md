@@ -106,7 +106,6 @@
 | APP-001 | 실기기 라우팅 완전 검증 |
 | UI-001 | ~~토큰화/Lottie/상태UI/UX라이팅~~ → 완료. 실기기 비주얼 QA (23화면) |
 | LOG-001 | FastAPI 로그 API 실기기 E2E 증적 |
-| AI-001 | ~~Backend/ 미존재~~ → BE-P5 완료. FastAPI 코칭 API backend-first 전환 완료, 실연동 E2E 증적 필요 |
 | IAP-001 | 3시나리오 패널/실패/복구 증적 확보. false-success/loading 잔여 버그 수정 완료. 새 AIT 업로드 후 성공 테스트 실패 피드백 + 버튼 복귀 확인. Edge/proxy 404 원인 정리 잔여 |
 | MSG-001 | `TAILLOG_BEHAVIOR_REMIND` HTTP 200 + noti_history success=true 확보. 추가 캠페인 등록 잔여 |
 | AD-001 | 실 Ad Group ID 교체 + 상수 fallback 완료. 새 AIT 업로드 후 mock fallback 제거 + B1 real SDK `ad_error` 확인. render success/no-fill 사유 세부값 확보 잔여 |
@@ -123,7 +122,7 @@
 |------|------|------|----------|
 | Ads SDK | `src/lib/ads/config.ts` | ✅ real FullScreen SDK wrapper + live Ad Group ID 7종 상수 fallback 적용. 새 AIT `019e00c2...` test ad id 0개, B1 real SDK `ad_error` 확인 | render success 또는 no-fill 사유 세부값 확보 |
 | IAP | `src/lib/api/iap.ts` | ✅ 실 SDK `createOneTimePurchaseOrder`/`getPendingOrders`/`completeProductGrant` 연결. 서버 grant 실패 시 `GRANT_FAILED` 처리 | 새 AIT 업로드 후 성공 UI 최종 재검증 |
-| generate-report | `supabase/functions/generate-report/` | 배포 완료(v3), mock/real 스위치(`REPORT_AI_MODE`) + staff role guard | OpenAI 실키 검증 (BE-P7) |
+| generate-report | `supabase/functions/generate-report/` | 배포 완료(v3), mock/real 스위치(`REPORT_AI_MODE`) + staff role guard. FE는 FastAPI pending row 생성 후 Edge invoke까지 연결됨(2026-05-20) | OpenAI 실키 검증 + remote Edge role parser 배포 여부 확인 |
 | verify-iap-order | `supabase/functions/verify-iap-order/` | ✅ real mTLS(v17) | Sandbox order 성공 경로 최종 재검증 |
 | send-smart-message | `supabase/functions/send-smart-message/` | ✅ real mTLS + `toss_user_key` 해석 후 실발송 200 확인 | 추가 캠페인 등록/회귀 발송 |
 | grant-toss-points | `supabase/functions/grant-toss-points/` | ✅ real mTLS(v14) | 포인트 happy-path 회귀 증적 추가 |
@@ -153,14 +152,14 @@
 | Function | 배포 | verify_jwt | 실연동 |
 |----------|------|-----------|--------|
 | login-with-toss | v18 ✅ | false | ✅ Sandbox 200 + 실패 400 증적 / fresh authCode 최종 증적 잔여 |
-| legal | v9 ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
-| toss-disconnect | v10 ✅ | false | ✅ invoke smoke(GET/POST 401, 인증정책 동작) / 콘솔 콜백 대기 |
-| verify-iap-order | v17 ✅ real mTLS | false | ✅ `completeProductGrant` 경로 포함 테스트 통과 / IAP 성공 실기기 최종 증적 잔여 |
+| legal | v13 ✅ | false | ✅ URL 접근 + invoke smoke(GET 200 / POST 405) |
+| toss-disconnect | v17 ✅ | false | ✅ ping 처리 + 콘솔 콜백 대기 |
+| verify-iap-order | v17 ✅ real mTLS | true | ✅ `completeProductGrant` 경로 포함 테스트 통과 / IAP 성공 실기기 최종 증적 잔여 |
 | send-smart-message | v14 ✅ real mTLS | true | ✅ current user HTTP 200 + `noti_history.success=true` 확인 / 추가 캠페인 등록 잔여 |
 | grant-toss-points | v14 ✅ real mTLS | true | ✅ 위조 role 우회 차단 + real mTLS 전환 / 포인트 happy-path 회귀 증적 잔여 |
-| generate-report | v4 ✅ mock/real switch | true | ✅ Edge test 통과 / `REPORT_AI_MODE=real` + OpenAI 실키 검증 잔여 |
+| generate-report | v8 ✅ mock/real switch | true | ✅ Edge test 통과 / `REPORT_AI_MODE=real` + B2B 공유 CTA device proof 잔여 |
 
-기준: 2026-05-12 KST (PROJECT-STATUS 최신 상태 + 로컬 코드/테스트 재스캔)
+기준: 2026-05-21 KST (PROJECT-STATUS + Supabase schema index 정합성 패스)
 
 ---
 

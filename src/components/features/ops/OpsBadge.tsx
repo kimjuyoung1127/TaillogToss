@@ -1,23 +1,22 @@
 /**
- * OpsBadge — Ops 큐 상태 Badge (긴급/주의/일반/대기/완료)
+ * OpsBadge — Ops 큐 상태 Badge (기록 전/확인 필요/리포트 필요/공유 완료)
  * Parity: B2B-001
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, typography } from 'styles/tokens';
 
-export type OpsStatus = 'urgent' | 'warning' | 'normal' | 'pending' | 'done';
+export type OpsStatus = 'unrecorded' | 'needs_check' | 'needs_report' | 'shared';
 
 interface OpsBadgeProps {
   status: OpsStatus;
 }
 
 const STATUS_CONFIG: Record<OpsStatus, { label: string; bg: string; color: string }> = {
-  urgent: { label: '긴급', bg: colors.badgeRedBg, color: colors.badgeRed },
-  warning: { label: '주의', bg: colors.badgeAmberBg, color: colors.badgeAmber },
-  normal: { label: '일반', bg: colors.badgeBlueBg, color: colors.badgeBlue },
-  pending: { label: '대기', bg: colors.badgeGreyBg, color: colors.badgeGrey },
-  done: { label: '완료', bg: colors.badgeGreenBg, color: colors.badgeGreen },
+  unrecorded: { label: '기록 전', bg: colors.badgeGreyBg, color: colors.badgeGrey },
+  needs_check: { label: '확인 필요', bg: colors.badgeAmberBg, color: colors.badgeAmber },
+  needs_report: { label: '리포트 필요', bg: colors.badgeBlueBg, color: colors.badgeBlue },
+  shared: { label: '공유 완료', bg: colors.badgeGreenBg, color: colors.badgeGreen },
 };
 
 export function OpsBadge({ status }: OpsBadgeProps) {

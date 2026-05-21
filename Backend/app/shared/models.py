@@ -698,6 +698,7 @@ class OrgDog(Base):
     dog_id = Column(UUID(as_uuid=True), ForeignKey("dogs.id", ondelete="CASCADE"), nullable=False, index=True)
     parent_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
     parent_name = Column(String(100))
+    parent_phone_last4 = Column(String(4))
     group_tag = Column(String(50), default="default")
     enrolled_at = Column(DateTime(timezone=True), server_default=func.now())
     discharged_at = Column(DateTime(timezone=True))

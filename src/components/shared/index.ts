@@ -7,4 +7,5 @@ export { FormLayout } from './layouts/FormLayout';
 export { TabLayout } from './layouts/TabLayout';
 export { ModalLayout } from './layouts/ModalLayout';
 export { BackButton, BackButtonSpacer } from './BackButton';
+export { PhotoPicker } from './PhotoPicker';
 export { RewardedAdButton } from './ads/RewardedAdButton';

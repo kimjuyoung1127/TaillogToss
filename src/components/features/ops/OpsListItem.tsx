@@ -12,6 +12,8 @@ export interface OpsItem {
   dogName: string;
   parentName: string | null;
   trainerName: string | null;
+  isMyAssignment?: boolean;
+  attentionReason?: string | null;
   status: OpsStatus;
   lastLogTime: string | null;
   todayLogCount: number;
@@ -48,8 +50,11 @@ function OpsListItemInner({ item, isSelected, onPress, onLongPress }: OpsListIte
           <Text style={styles.meta}>
             {item.todayLogCount > 0 ? `오늘 ${item.todayLogCount}건` : '미기록'}
           </Text>
-          {item.trainerName && (
-            <Text style={styles.trainer}>{item.trainerName}</Text>
+          {item.attentionReason && (
+            <Text style={styles.attentionReason} numberOfLines={1}>{item.attentionReason}</Text>
+          )}
+          {item.isMyAssignment && (
+            <Text style={styles.trainer}>내 담당</Text>
           )}
         </View>
       </View>
@@ -114,5 +119,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.primaryBlue,
     marginLeft: 8,
+  },
+  attentionReason: {
+    ...typography.caption,
+    color: colors.badgeAmber,
+    marginLeft: 8,
+    maxWidth: 120,
   },
 });

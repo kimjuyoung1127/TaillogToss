@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ──────────────────────────────────────
@@ -88,3 +88,14 @@ class CreateInteractionRequest(BaseModel):
     parent_identifier: Optional[str] = None
     interaction_type: str  # like | question | comment | goal_request
     content: Optional[str] = None
+
+
+class VerifyParentPhoneLast4Request(BaseModel):
+    """공유 리포트 보호자 전화번호 뒷4자리 검증"""
+    share_token: str
+    last4: str = Field(..., pattern=r"^\d{4}$")
+
+
+class VerifyParentPhoneLast4Response(BaseModel):
+    """보호자 인증 결과"""
+    verified: bool

@@ -6,9 +6,10 @@
  */
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, StyleSheet,
+  View, Text, TextInput, StyleSheet, Image,
   TouchableOpacity, ActivityIndicator,
 } from 'react-native';
+import { PhotoPicker } from 'components/shared/PhotoPicker';
 import { colors, typography, spacing } from 'styles/tokens';
 import type { Organization, OrgType } from 'types/b2b';
 
@@ -22,7 +23,7 @@ const ORG_TYPE_LABEL: Record<OrgType, string> = {
 interface OrgInfoEditFormProps {
   org: Organization;
   isLoading?: boolean;
-  onSave: (updates: Pick<Organization, 'name' | 'phone' | 'address'>) => void;
+  onSave: (updates: Pick<Organization, 'name' | 'phone' | 'address' | 'logo_url'>) => void;
 }
 
 export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps) {
@@ -30,6 +31,7 @@ export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps
   const [name, setName] = useState(org.name);
   const [phone, setPhone] = useState(org.phone ?? '');
   const [address, setAddress] = useState(org.address ?? '');
+  const [logoUri, setLogoUri] = useState(org.logo_url ?? '');
 
   // org 변경 시 폼 동기화
   useEffect(() => {
@@ -37,6 +39,7 @@ export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps
       setName(org.name);
       setPhone(org.phone ?? '');
       setAddress(org.address ?? '');
+      setLogoUri(org.logo_url ?? '');
     }
   }, [org, editing]);
 
@@ -44,6 +47,7 @@ export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps
     setName(org.name);
     setPhone(org.phone ?? '');
     setAddress(org.address ?? '');
+    setLogoUri(org.logo_url ?? '');
     setEditing(false);
   };
 
@@ -53,6 +57,7 @@ export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps
       name: name.trim(),
       phone: phone.trim() || null,
       address: address.trim() || null,
+      logo_url: logoUri || null,
     });
     setEditing(false);
   };
@@ -70,6 +75,15 @@ export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps
 
       {editing ? (
         <View>
+          <PhotoPicker
+            uri={logoUri}
+            onSelect={setLogoUri}
+            hint="센터 로고를 등록해주세요"
+            loadingHint="로고 사진을 불러오고 있어요"
+            size={88}
+            borderRadius={18}
+          />
+
           <Text style={styles.label}>센터 이름 *</Text>
           <TextInput
             style={[styles.input, !name.trim() && styles.inputError]}
@@ -120,6 +134,19 @@ export function OrgInfoEditForm({ org, isLoading, onSave }: OrgInfoEditFormProps
         </View>
       ) : (
         <View>
+          <View style={styles.logoRow}>
+            <View style={styles.logoPreview}>
+              {org.logo_url ? (
+                <Image source={{ uri: org.logo_url }} style={styles.logoImage} resizeMode="cover" />
+              ) : (
+                <Text style={styles.logoInitial}>{org.name.slice(0, 1)}</Text>
+              )}
+            </View>
+            <View style={styles.logoTextBox}>
+              <Text style={styles.logoLabel}>센터 로고</Text>
+              <Text style={styles.logoValue}>{org.logo_url ? '등록됨' : '미등록'}</Text>
+            </View>
+          </View>
           <InfoRow label="이름" value={org.name} />
           <InfoRow label="유형" value={ORG_TYPE_LABEL[org.type] ?? org.type} />
           <InfoRow label="전화번호" value={org.phone ?? '—'} />
@@ -162,6 +189,31 @@ const styles = StyleSheet.create({
   },
   infoLabel: { ...typography.detail, color: colors.badgeGrey },
   infoValue: { ...typography.detail, fontWeight: '600', color: colors.textPrimary, flexShrink: 1, textAlign: 'right', marginLeft: spacing.sm },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  logoPreview: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  logoInitial: { ...typography.subtitle, fontWeight: '700', color: colors.primaryBlue },
+  logoTextBox: { marginLeft: spacing.md },
+  logoLabel: { ...typography.detail, fontWeight: '700', color: colors.textPrimary },
+  logoValue: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   label: {
     ...typography.detail,
     fontWeight: '600',

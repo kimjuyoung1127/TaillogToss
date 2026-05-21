@@ -8,12 +8,12 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException
 from app.features.report import schemas
-from app.shared.models import DailyReport, ParentInteraction
+from app.shared.models import DailyReport, OrgDog, ParentInteraction
 
 
 # ──────────────────────────────────────
@@ -73,6 +73,35 @@ async def get_report_by_share_token(
     if not report:
         raise NotFoundException("Report not found or link expired")
     return _to_report_response(report)
+
+
+async def verify_parent_phone_last4(
+    db: AsyncSession, share_token: str, last4: str,
+) -> schemas.VerifyParentPhoneLast4Response:
+    """공유 리포트 토큰으로 연결된 보호자 전화번호 뒷4자리를 검증한다."""
+    normalized_last4 = "".join(ch for ch in last4 if ch.isdigit())[-4:]
+    if len(normalized_last4) != 4:
+        return schemas.VerifyParentPhoneLast4Response(verified=False)
+
+    stmt = (
+        select(OrgDog.parent_phone_last4)
+        .join(
+            DailyReport,
+            (DailyReport.dog_id == OrgDog.dog_id)
+            & (DailyReport.created_by_org_id == OrgDog.org_id),
+        )
+        .where(DailyReport.share_token == share_token)
+        .where(
+            or_(
+                DailyReport.expires_at.is_(None),
+                DailyReport.expires_at > datetime.now(timezone.utc),
+            )
+        )
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    stored_last4 = result.scalar_one_or_none()
+    return schemas.VerifyParentPhoneLast4Response(verified=stored_last4 == normalized_last4)
 
 
 # ──────────────────────────────────────

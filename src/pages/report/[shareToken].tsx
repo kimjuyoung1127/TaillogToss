@@ -14,7 +14,7 @@ import { useReportByShareToken, useCreateInteraction } from 'lib/hooks/useReport
 import { ReportViewer } from 'components/features/parent/ReportViewer';
 import { ReactionForm } from 'components/features/parent/ReactionForm';
 import { tracker } from 'lib/analytics/tracker';
-import { supabase } from 'lib/api/supabase';
+import { verifyParentPhoneLast4 } from 'lib/api/report';
 
 export const Route = createRoute('/report/[shareToken]', {
   validateParams: (params: unknown) => params as { shareToken: string },
@@ -31,13 +31,12 @@ function ShareTokenReportPage() {
     skipAuth: true,
     skipOnboarding: true,
   });
-  const { data: report, isLoading, error } = useReportByShareToken(shareToken);
-  const createInteraction = useCreateInteraction();
-
   const [phoneLastFour, setPhoneLastFour] = useState('');
   const [isVerified, setIsVerified] = useState(false);
   const [verifyError, setVerifyError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const { data: report, isLoading, error } = useReportByShareToken(isVerified ? shareToken : undefined);
+  const createInteraction = useCreateInteraction();
 
   const handleVerify = useCallback(async () => {
     if (phoneLastFour.length !== 4) {
@@ -47,13 +46,11 @@ function ShareTokenReportPage() {
     setIsVerifying(true);
     setVerifyError('');
     try {
-      // RPC 호출로 서버에서 뒷4자리 대조 (PII는 서버에서만 복호화)
-      const { data, error: rpcError } = await supabase.rpc('verify_parent_phone_last4', {
-        p_share_token: shareToken,
-        p_last_four: phoneLastFour,
+      const verified = await verifyParentPhoneLast4({
+        share_token: shareToken,
+        last4: phoneLastFour,
       });
-      if (rpcError) throw rpcError;
-      if (data === true) {
+      if (verified) {
         setIsVerified(true);
       } else {
         setVerifyError('전화번호가 맞지 않아요');
@@ -66,28 +63,6 @@ function ShareTokenReportPage() {
   }, [phoneLastFour, shareToken]);
 
   if (!isReady) return null;
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primaryBlue} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error || !report) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          <Text style={styles.errorIcon}>{'\uD83D\uDD12'}</Text>
-          <Text style={styles.errorTitle}>리포트를 찾을 수 없어요</Text>
-          <Text style={styles.errorDesc}>링크가 만료됐거나 주소가 달라요</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   // 전화번호 인증 단계
   if (!isVerified) {
@@ -119,6 +94,28 @@ function ShareTokenReportPage() {
               {isVerifying ? '확인하고 있어요' : '확인'}
             </Text>
           </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primaryBlue} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.center}>
+          <Text style={styles.errorIcon}>{'\uD83D\uDD12'}</Text>
+          <Text style={styles.errorTitle}>리포트를 찾을 수 없어요</Text>
+          <Text style={styles.errorDesc}>링크가 만료됐거나 주소가 달라요</Text>
         </View>
       </SafeAreaView>
     );

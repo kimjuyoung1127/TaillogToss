@@ -82,6 +82,7 @@ export interface QuickLogInput {
   location?: string;
   duration_minutes?: number;
   org_id?: string; // B2B ops 기록 시 org_id 포함 → getOrgDogsFromSupabase 카운트용
+  recorded_by?: string;
 }
 
 /** ABC 상세 기록 입력 DTO */

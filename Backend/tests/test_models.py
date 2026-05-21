@@ -94,6 +94,12 @@ def test_behavior_log_b2b_extension():
     assert "recorded_by" in columns
 
 
+def test_org_dog_parent_phone_last4_field():
+    """OrgDog 보호자 인증용 전화번호 뒷4자리 필드"""
+    columns = {c.name for c in OrgDog.__table__.columns}
+    assert "parent_phone_last4" in columns
+
+
 def test_case_intake_model_fields():
     """Pro 상담지 저장 테이블 필드"""
     assert "case_intakes" in Base.metadata.tables
