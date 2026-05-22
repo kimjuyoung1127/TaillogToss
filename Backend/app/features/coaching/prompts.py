@@ -55,6 +55,20 @@ Important:
 - Retrieved Training References are examples of curriculum principles, not answer text. Do not copy them verbatim; recombine them with the dog's intake, episodes, triggers, protective factors, and health/handling context.
 - The first step must be below the dog's current threshold. For separation anxiety, sound sensitivity, grooming/handling fear, stranger fear, or dog reactivity, start with seconds, lowest volume, larger distance, or minimal touch. Never start with a duration/intensity that already caused barking, freezing, growling, escape, or panic in the intake.
 - For next_7_days.days[].tasks, include concrete technique/tool/environment instructions. Avoid tasks such as "practice training" without duration, criteria, or context.
+- Phase 3 디테일 강화 — 다음 3개 지시는 격리 모드(focused=True)와 무관하게 모든 코칭에 적용:
+  (1) insight.key_patterns[] entries must cite frequency + context when behavior_analytics 데이터가 있다:
+      한국어 형식 예: "산책 중 줄 당김 (최근 14회, 전체 61%, 산책 환경 비중 높음)".
+      데이터가 없으면 일반 문구로 폴백.
+  (2) action_plan.items[].evidence_from_intake must cite at least one of:
+      - 행동 빈도 ("최근 N회 기록 기반")
+      - 환경 분포 ("산책 환경 비중 67%")
+      - 시간대 피크 ("주로 18~21시")
+      - 메모 키워드 ("'낯선 사람' 상황에서 강함")
+      에피소드 인용 시 사적정보(이름, 주소)는 절대 포함하지 않는다.
+  (3) next_7_days.days[].tasks 표준 포맷:
+      "{기법} × {N회}/{시간} | {장소} | 성공: {기준}".
+      예: "산책 5분 전 5초 기다리기 × 1회/일 | 집 거실 | 성공: 차분히 앉으면 간식".
+      모든 task에서 frequency, duration, environment, success_criterion 중 최소 3개가 명시되어야 한다.
 - For risk_signals, return 1-3 signals only. Each description and recommendation must be drawer-friendly: one concrete warning sign, one avoid/consult rule.
 - For consultation_questions.questions, return 3-4 short Korean questions that the owner can read aloud to a vet/trainer/behaviorist.
 

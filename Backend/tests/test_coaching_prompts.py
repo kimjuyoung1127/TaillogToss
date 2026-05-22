@@ -134,6 +134,30 @@ def test_build_user_prompt_focused_without_user_context_no_section():
     assert "CRITICAL FOCUS DIRECTIVE" not in prompt
 
 
+def test_build_user_prompt_phase3_detail_directives_present():
+    """Phase 3: Block ①②④ 디테일 강화 지시가 시스템 프롬프트에 포함."""
+    # SYSTEM_PROMPT_6BLOCK 자체에 지시가 박혀있으므로 직접 검증
+    assert "Phase 3 디테일 강화" in prompts.SYSTEM_PROMPT_6BLOCK
+    assert "key_patterns[] entries must cite frequency" in prompts.SYSTEM_PROMPT_6BLOCK
+    assert "evidence_from_intake must cite at least one of" in prompts.SYSTEM_PROMPT_6BLOCK
+    assert "next_7_days.days[].tasks 표준 포맷" in prompts.SYSTEM_PROMPT_6BLOCK
+    assert "frequency, duration, environment, success_criterion" in prompts.SYSTEM_PROMPT_6BLOCK
+
+
+def test_phase3_safety_guards_preserved():
+    """Phase 3 변경 후에도 기존 안전장치(한국어/safety/risk≤3/7일×2-3) 유지."""
+    sp = prompts.SYSTEM_PROMPT_6BLOCK
+    # 한국어 전용
+    assert "Write all text in Korean" in sp
+    # 위험신호 ≤3
+    assert "1-3 signals only" in sp or "risk_signals, return 1-3" in sp
+    # 7일 × 2~3 tasks
+    assert "7-day plan with 2-3 tasks per day" in sp
+    # safety rules
+    assert "NEVER output advice involving physical punishment" in sp
+    assert "human self-harm" in sp
+
+
 def test_extract_behaviors_from_text_matches_korean_keywords():
     """training_references.extract_behaviors_from_text가 한국어 키워드를 정확히 추출."""
     from app.features.coaching.training_references import extract_behaviors_from_text

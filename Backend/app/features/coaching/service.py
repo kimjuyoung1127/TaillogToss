@@ -823,15 +823,30 @@ async def _build_behavior_analytics_text(
     if trend_lines:
         lines.append("[추이] " + ", ".join(trend_lines))
 
-    # peak hour overall
+    # peak hour overall (시간대 피크 — Phase 2 유지)
     if hour_counts:
         peak_h = max(hour_counts, key=lambda h: hour_counts[h])
-        lines.append(f"[피크 시간대] {peak_h:02d}시")
+        lines.append(f"[피크 시간대] {peak_h:02d}시 ({hour_counts[peak_h]}건)")
+
+    # Phase 2: 환경(location) 분포 — 로그 ≥5건일 때만, top 3
+    if total >= 5:
+        location_counts: dict[str, int] = {}
+        for log in logs[:50]:
+            loc = (getattr(log, 'location', None) or '').strip()
+            if loc:
+                # 너무 다양한 자유 입력 노이즈 방지: 첫 12자만 키로 사용
+                key = loc[:12]
+                location_counts[key] = location_counts.get(key, 0) + 1
+        if location_counts:
+            top_locations = sorted(location_counts.items(), key=lambda kv: -kv[1])[:3]
+            loc_strs = [f"{loc} {cnt}건 ({int(cnt/total*100)}%)" for loc, cnt in top_locations]
+            lines.append(f"[환경 분포] {' / '.join(loc_strs)}")
 
     # 메모 컨텍스트 섹션 — 로그 10개 이상 + 메모 있는 로그 3개 이상일 때만 포함 (토큰 절감)
     memo_logs_count = sum(1 for log in logs[:50] if log.memo and isinstance(log.memo, str) and log.memo.strip())
     if total >= 10 and memo_logs_count >= 3:
         memo_contexts: dict[str, list[str]] = {}
+        memo_keyword_counts: dict[str, int] = {}  # Phase 2: 메모 키워드 빈도
         for log in logs[:50]:
             if log.memo and isinstance(log.memo, str) and log.memo.strip():
                 key = log.quick_category or log.behavior or "other"
@@ -840,10 +855,19 @@ async def _build_behavior_analytics_text(
                 trimmed = log.memo.strip()[:80]
                 if trimmed not in memo_contexts[key] and len(memo_contexts[key]) < 3:
                     memo_contexts[key].append(trimmed)
+                # Phase 2: 키워드 빈도 카운트 (간단 토큰 분리, ≥2자)
+                for token in trimmed.replace(',', ' ').replace('.', ' ').split():
+                    t = token.strip()
+                    if len(t) >= 2 and not t.isdigit():
+                        memo_keyword_counts[t] = memo_keyword_counts.get(t, 0) + 1
         if memo_contexts:
             lines.append("\n[행동 발생 상황 메모]")
             for behavior, contexts in list(memo_contexts.items())[:3]:
                 lines.append(f"- {behavior}: {', '.join(contexts)}")
+        # Phase 2: 자주 언급된 키워드 top 5 (2회 이상 등장 한정)
+        top_keywords = [k for k, c in sorted(memo_keyword_counts.items(), key=lambda kv: -kv[1]) if c >= 2][:5]
+        if top_keywords:
+            lines.append(f"[자주 언급된 단어] {', '.join(top_keywords)}")
 
     analytics_text = "\n".join(lines)
     metadata = {
