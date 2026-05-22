@@ -10,77 +10,52 @@ import type { Next7DaysBlock, RiskSignalsBlock, ConsultationQuestionsBlock, DayP
 import { colors, typography, spacing } from 'styles/tokens';
 import { ICONS } from 'lib/data/iconSources';
 import { ModalLayout } from 'components/shared/layouts/ModalLayout';
+import {
+  formatLocalizedList,
+  localizeCurriculum,
+  localizeStructuredText,
+  localizeTool,
+} from 'lib/data/coachingLocalization';
 
-const BLOCK_META: Record<string, { label: string; iconSource: string; teaser: string }> = {
+const BLOCK_META: Record<string, {
+  label: string;
+  iconSource: string;
+  teaser: string;
+  previewItems: string[];
+}> = {
   next_7_days: {
     label: '7일 맞춤 플랜',
     iconSource: ICONS['ic-training']!,
     teaser: '다음 7일 동안 해볼 훈련 계획을 확인해요',
+    previewItems: [
+      '날짜별 초점·목표',
+      '구체적 연습 (시간·빈도)',
+      '장소·준비물',
+      '성공 기준·다음 단계',
+    ],
   },
   risk_signals: {
     label: '위험 신호 분석',
     iconSource: ICONS['ic-bolt']!,
     teaser: '놓치기 쉬운 행동 신호를 AI가 살펴봤어요',
+    previewItems: [
+      '경고 신호 식별',
+      '심각도 평가',
+      '즉시 대응법',
+      '전문가 상담 기준',
+    ],
   },
   consultation_questions: {
     label: '전문가 상담 질문',
     iconSource: ICONS['ic-trainer']!,
     teaser: '수의사나 훈련사에게 물어볼 질문을 준비했어요',
+    previewItems: [
+      '기질·성향 확인',
+      '건강상 원인',
+      '실전 기법·장비',
+    ],
   },
 };
-
-const TOOL_LABELS: Record<string, string> = {
-  'high-value treats': '좋아하는 간식',
-  'treat pouch': '간식 파우치',
-  'marker word': '표시어',
-  clicker: '클리커',
-  'marker word/clicker': '표시어/클리커',
-  mat: '매트',
-  'mat/bed': '매트/침대',
-  toys: '장난감',
-  'front-clip harness': '앞고리 하네스',
-  'fixed leash': '고정 리드줄',
-  'long line': '롱라인',
-  'fixed leash/long line': '고정 리드줄/롱라인',
-  'baby gate/pen': '안전문/펜스',
-  'visual barrier': '시야 차단막',
-  'white noise': '백색소음',
-  'sound file': '소리 파일',
-  'white noise/sound file': '백색소음/소리 파일',
-  'lick mat/snuffle mat': '리킹매트/노즈워크 매트',
-  'grooming dummy tools': '모형 미용 도구',
-  'towel/non-slip mat': '수건/미끄럼 방지 매트',
-  'video log': '영상 기록',
-};
-
-const CURRICULUM_LABELS: Record<string, string> = {
-  separation_anxiety: '분리불안 완화 훈련',
-  reactivity_management: '반응성 관리 훈련',
-  fear_desensitization: '공포·소리·핸들링 둔감화',
-  impulse_control: '충동 조절 훈련',
-  leash_manners: '산책 매너 훈련',
-  basic_obedience: '기본 예절 루틴',
-  socialization: '사회화 적응 훈련',
-};
-
-const ASCIIISH_PATTERN = /^[a-z0-9_\-/ ]+$/i;
-
-function localizeTool(value: string): string {
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return '준비물';
-  return TOOL_LABELS[normalized] ?? (ASCIIISH_PATTERN.test(value) ? '맞춤 준비물' : value);
-}
-
-function localizeCurriculum(value: string): string {
-  const normalized = value.trim();
-  if (!normalized) return '맞춤 훈련';
-  return CURRICULUM_LABELS[normalized] ?? (ASCIIISH_PATTERN.test(value) ? '맞춤 훈련' : value);
-}
-
-function formatLocalizedList(values: string[] | undefined, formatter: (value: string) => string): string {
-  if (!values?.length) return '';
-  return Array.from(new Set(values.map(formatter).filter(Boolean))).join(', ');
-}
 
 interface LockedBlockProps {
   blockKey: 'next_7_days' | 'risk_signals' | 'consultation_questions';
@@ -96,6 +71,17 @@ export function LockedBlock({ blockKey }: LockedBlockProps) {
         <Image source={{ uri: meta.iconSource }} style={styles.lockIconImg} />
         <Text style={styles.lockTitle}>{meta.label}</Text>
         <Text style={styles.lockTeaser}>{meta.teaser}</Text>
+
+        {/* Phase 5: 카테고리 + 1줄 힌트 미리보기 — PRO 가치 명시 */}
+        <View style={styles.previewSection} testID="locked-block-preview">
+          <Text style={styles.previewLabel}>이 블록에서 확인할 수 있어요</Text>
+          {meta.previewItems.map((item) => (
+            <View key={item} style={styles.previewItem}>
+              <Text style={styles.previewBullet}>{'•'}</Text>
+              <Text style={styles.previewItemText}>{item}</Text>
+            </View>
+          ))}
+        </View>
 
         {/* Skeleton 블러 효과 */}
         <View style={styles.skeletonGroup}>
@@ -115,12 +101,32 @@ export function LockedBlock({ blockKey }: LockedBlockProps) {
 }
 
 /** 잠금 해제된 PRO 블록 렌더링 */
-export function UnlockedBlock({ blockKey, children }: { blockKey: string; children: React.ReactNode }) {
+export function UnlockedBlock({
+  blockKey,
+  children,
+  defaultCollapsed = false,
+}: {
+  blockKey: string;
+  children: React.ReactNode;
+  defaultCollapsed?: boolean;
+}) {
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const meta = BLOCK_META[blockKey];
   return (
     <View style={styles.card}>
-      <Text style={styles.blockLabel}>{meta?.label ?? blockKey}</Text>
-      {children}
+      <TouchableOpacity
+        style={styles.unlockedHeader}
+        onPress={() => setIsCollapsed((prev) => !prev)}
+        activeOpacity={0.75}
+      >
+        <Text style={styles.blockLabel}>{meta?.label ?? blockKey}</Text>
+        {defaultCollapsed && (
+          <Text style={styles.drawerToggleText}>{isCollapsed ? '열기' : '접기'}</Text>
+        )}
+      </TouchableOpacity>
+      {isCollapsed ? (
+        <Text style={styles.drawerPreview}>{meta?.teaser ?? '자세한 내용을 접어두었어요.'}</Text>
+      ) : children}
     </View>
   );
 }
@@ -131,12 +137,13 @@ export function UnlockedBlock({ blockKey, children }: { blockKey: string; childr
 
 export function Next7DaysView({
   data,
+  generatedAt,
 }: {
   data: Next7DaysBlock;
+  generatedAt?: string;
 }) {
   const [selectedDay, setSelectedDay] = useState<DayPlan | null>(null);
-  const today = new Date().getDay(); // 0=Sun
-  const todayIndex = today === 0 ? 6 : today - 1; // 0=Mon
+  const activeDayNumber = getGeneratedPlanDayNumber(generatedAt);
 
   return (
     <>
@@ -146,27 +153,27 @@ export function Next7DaysView({
         contentContainerStyle={styles.timelineScroll}
       >
         {data.days.map((day) => {
-          const isToday = day.day_number - 1 === todayIndex;
+          const isActiveDay = day.day_number === activeDayNumber;
           return (
             <TouchableOpacity
               key={day.day_number}
               activeOpacity={0.82}
               onPress={() => setSelectedDay(day)}
-              style={[styles.timelineCard, isToday && styles.timelineCardToday]}
+              style={[styles.timelineCard, isActiveDay && styles.timelineCardToday]}
             >
               <View style={styles.timelineHeader}>
-                <View style={[styles.dayBadge, isToday && styles.dayBadgeToday]}>
-                  <Text style={[styles.dayNumber, isToday && styles.dayNumberToday]}>
+                <View style={[styles.dayBadge, isActiveDay && styles.dayBadgeToday]}>
+                  <Text style={[styles.dayNumber, isActiveDay && styles.dayNumberToday]}>
                     {day.day_number}일차
                   </Text>
                 </View>
-                {isToday && <Text style={styles.todayLabel}>오늘</Text>}
+                {isActiveDay && <Text style={styles.todayLabel}>오늘</Text>}
               </View>
-              <Text style={styles.dayFocus} numberOfLines={2}>{day.focus}</Text>
+              <Text style={styles.dayFocus} numberOfLines={2}>{localizeStructuredText(day.focus)}</Text>
               {day.tasks.slice(0, 2).map((task, i) => (
                 <View key={i} style={styles.taskRow}>
                   <Text style={styles.taskBullet}>{'•'}</Text>
-                  <Text style={styles.dayTask} numberOfLines={2}>{task}</Text>
+                  <Text style={styles.dayTask} numberOfLines={2}>{localizeStructuredText(task)}</Text>
                 </View>
               ))}
               <DayPlanMeta day={day} compact />
@@ -196,9 +203,9 @@ export function Next7DaysView({
 function DayPlanMeta({ day, compact = false }: { day: DayPlan; compact?: boolean }) {
   const rows: Array<{ label: string; value: string }> = [];
   if (day.session_duration_minutes) rows.push({ label: '시간', value: `${day.session_duration_minutes}분` });
-  if (day.environment) rows.push({ label: '장소', value: day.environment });
+  if (day.environment) rows.push({ label: '장소', value: localizeStructuredText(day.environment) });
   if (!compact && day.tools?.length) rows.push({ label: '준비물', value: formatLocalizedList(day.tools, localizeTool) });
-  if (day.progression_rule) rows.push({ label: '다음 기준', value: day.progression_rule });
+  if (day.progression_rule) rows.push({ label: '다음 기준', value: localizeStructuredText(day.progression_rule) });
   if (!compact && day.reference_curriculum_ids?.length) rows.push({ label: '참고 훈련', value: formatLocalizedList(day.reference_curriculum_ids, localizeCurriculum) });
 
   if (rows.length === 0) return null;
@@ -221,14 +228,14 @@ function DayPlanDetail({ day }: { day: DayPlan }) {
 
   return (
     <View>
-      <Text style={styles.detailFocus}>{day.focus}</Text>
+      <Text style={styles.detailFocus}>{localizeStructuredText(day.focus)}</Text>
       <Text style={styles.detailSectionTitle}>할 일</Text>
       {day.tasks.map((task, index) => (
         <View key={`${day.day_number}-${index}`} style={styles.detailTaskRow}>
           <View style={styles.detailTaskBadge}>
             <Text style={styles.detailTaskBadgeText}>{index + 1}</Text>
           </View>
-          <Text style={styles.detailTaskText}>{task}</Text>
+          <Text style={styles.detailTaskText}>{localizeStructuredText(task)}</Text>
         </View>
       ))}
 
@@ -236,13 +243,25 @@ function DayPlanDetail({ day }: { day: DayPlan }) {
         {day.session_duration_minutes ? (
           <DetailRow label="시간" value={`${day.session_duration_minutes}분`} />
         ) : null}
-        {day.environment ? <DetailRow label="장소" value={day.environment} /> : null}
+        {day.environment ? <DetailRow label="장소" value={localizeStructuredText(day.environment)} /> : null}
         {toolText ? <DetailRow label="준비물" value={toolText} /> : null}
-        {day.progression_rule ? <DetailRow label="다음 단계 기준" value={day.progression_rule} /> : null}
+        {day.progression_rule ? <DetailRow label="다음 단계 기준" value={localizeStructuredText(day.progression_rule)} /> : null}
         {curriculumText ? <DetailRow label="참고 훈련" value={curriculumText} /> : null}
       </View>
     </View>
   );
+}
+
+function getGeneratedPlanDayNumber(generatedAt?: string): number | null {
+  if (!generatedAt) return null;
+  const generated = new Date(generatedAt);
+  if (Number.isNaN(generated.getTime())) return null;
+  const generatedDate = new Date(generated.getFullYear(), generated.getMonth(), generated.getDate());
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((todayDate.getTime() - generatedDate.getTime()) / 86_400_000);
+  if (diffDays < 0 || diffDays > 6) return null;
+  return diffDays + 1;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -308,12 +327,12 @@ export function RiskSignalsView({ data }: { data: RiskSignalsBlock }) {
         <View key={idx} style={styles.signalCard}>
           <View style={styles.signalHeader}>
             <View style={[styles.signalDot, { backgroundColor: SEVERITY_COLOR[signal.severity] ?? colors.grey400 }]} />
-            <Text style={styles.signalType}>{signal.type}</Text>
+            <Text style={styles.signalType}>{localizeStructuredText(signal.type)}</Text>
           </View>
-          <Text style={styles.signalDesc}>{signal.description}</Text>
+          <Text style={styles.signalDesc}>{localizeStructuredText(signal.description)}</Text>
           <View style={styles.signalRecBox}>
             <Text style={styles.signalRecLabel}>권장사항</Text>
-            <Text style={styles.signalRec}>{signal.recommendation}</Text>
+            <Text style={styles.signalRec}>{localizeStructuredText(signal.recommendation)}</Text>
           </View>
         </View>
       ))}
@@ -358,7 +377,7 @@ export function ConsultationView({ data }: { data: ConsultationQuestionsBlock })
           <View style={styles.questionBadge}>
             <Text style={styles.questionBadgeText}>Q{idx + 1}</Text>
           </View>
-          <Text style={styles.questionText}>{q}</Text>
+          <Text style={styles.questionText}>{localizeStructuredText(q)}</Text>
         </View>
       ))}
     </View>
@@ -389,6 +408,22 @@ const styles = StyleSheet.create({
     height: 40,
     marginBottom: spacing.sm,
   },
+  unlockedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  drawerToggleText: {
+    ...typography.caption,
+    color: colors.primaryBlue,
+    fontWeight: '700',
+    marginBottom: spacing.md,
+  },
+  drawerPreview: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
   lockTitle: {
     ...typography.label,
     fontWeight: '700',
@@ -400,6 +435,34 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
+  },
+  previewSection: {
+    width: '100%',
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  previewLabel: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  previewItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.xs,
+  },
+  previewBullet: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginRight: spacing.xs,
+    marginTop: 2,
+  },
+  previewItemText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
+    lineHeight: 18,
   },
   skeletonGroup: {
     width: '100%',

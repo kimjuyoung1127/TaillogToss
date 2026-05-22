@@ -113,19 +113,32 @@ describe('generateCoaching', () => {
     );
   });
 
-  it('userContext 전달 시 body에 user_context 포함된다', async () => {
+  it('userContext 전달 시 격리 모드 엔드포인트(/generate-focused)로 라우팅 (Phase 1)', async () => {
     mockRequestBackend.mockResolvedValue({ id: 'c-3' });
 
     await generateCoaching('dog-1', 'DAILY', '오늘 산책 중 줄 당김 발생');
 
     expect(mockRequestBackend).toHaveBeenCalledWith(
-      '/api/v1/coaching/generate',
+      '/api/v1/coaching/generate-focused',
       expect.objectContaining({
         body: {
           dog_id: 'dog-1',
           report_type: 'DAILY',
           user_context: '오늘 산책 중 줄 당김 발생',
         },
+      }),
+    );
+  });
+
+  it('userContext 없으면 기존 /generate 엔드포인트로 라우팅 (Phase 1)', async () => {
+    mockRequestBackend.mockResolvedValue({ id: 'c-3b' });
+
+    await generateCoaching('dog-1', 'DAILY');
+
+    expect(mockRequestBackend).toHaveBeenCalledWith(
+      '/api/v1/coaching/generate',
+      expect.objectContaining({
+        body: { dog_id: 'dog-1', report_type: 'DAILY' },
       }),
     );
   });
