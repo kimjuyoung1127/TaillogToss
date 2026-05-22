@@ -18,9 +18,11 @@ Date: 2026-05-22 KST
 ## Validation
 - [x] `npx tsc --noEmit` PASS
 - [x] `npx jest src/lib/hooks/__tests__/usePageGuard.test.ts src/lib/api/__tests__/queryPersistence.test.ts --runInBand --passWithNoTests` PASS
+- [x] AIT `019e4e15-2489-7f1a-9a82-092ab1e56fa4` actual Toss Metro-off `/dashboard` 렌더 PASS, 화면상 B1 광고 배너 미노출 확인
 
 ## Board Sync
 - [x] `docs/status/PAGE-UPGRADE-BOARD.md` `/dashboard` remains `QA`, `last_updated=2026-05-22`
 
 ## Risks
-- [ ] 실기기 PRO 계정에서 B1 배너 무마운트 로그/화면 재확인 필요.
+- [x] 실기기 PRO 계정에서 B1 배너 화면 미노출 확인 완료.
+- [ ] 광고 SDK 무마운트 로그까지 필요하면 별도 tracker 필터로 재수집.
