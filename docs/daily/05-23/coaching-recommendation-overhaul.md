@@ -19,7 +19,8 @@
 | **6. 7일 플랜 Swipeable + dots** | ✅ | snapToInterval + 7 dots indicator + 오늘 day 자동 스크롤 |
 | **7. 코칭↔Academy 동기화** | ✅ | engine 4번째 인자 `recentCoachingReferenceIds`, +20 coachingBonus, "최근 코칭 추천" 배지 |
 | **8. ScoreBand v3 다차원** | ✅ | progressBonus(+8) + memoKeywordScore(0~15) + 종합 점수 게이지 + PRO 5종 분해 |
-| **9. adb 실기기 QA** | ⏸ 남음 | 6장 스크린샷 시나리오 대기 (디바이스 연결 필요) |
+| **9. adb 실기기 QA** | ✅ 부분 (academy 시나리오 6) | 메이 실기기 진단 + DEV/PROD 양쪽 36~44.png |
+| **10. Phase 7 A-2 후속 + 점수 셀 가독성** | ✅ + AIT 배포 검증 | `getRecommendationsFromCoaching` cold-start 우회 helper, `TodayTrainingCard`가 추천 primary 기준, scoreStyles.value width 36→minWidth 52 |
 
 ## 검증 결과
 
@@ -70,3 +71,39 @@
 - LLM이 격리 지시 준수 여부는 실제 호출 검증 필요 (Phase 9 시나리오 5)
 - ScoreBand v3 점수 분포 변경으로 기존 추천 ranking이 일부 바뀔 수 있음 → 사용자 학습 경로 영향 모니터링
 - Phase 2 토큰 증가 ~200 → 일일 OpenAI 비용 약간 상승 예상 (budget 모니터링)
+
+## Phase 10 — Phase 7 A-2 follow-up (16:00 KST 추가)
+
+### 문제
+DEV/PROD 양쪽 academy에서 "오늘의 훈련" 카드가 코칭 추천이 아닌 화장실 가이드 67%를 보여줌. 사용자 메이는 0 logs라 cold-start path로 빠져 Phase 7 코칭 boost 무효화, 그리고 `activeProgress`(in_progress 첫 항목)가 추천 로직과 무관하게 화장실 가이드를 그대로 노출했음. 추가로 "AI 맞춤 추천" 카드의 점수 `20/100`이 셀 폭 부족으로 `20/10\n0`으로 줄바꿈됨.
+
+### 처리
+- `src/lib/data/recommendation/engine.ts` — `getRecommendationsFromCoaching(refs, completed)` helper 신규. coaching reference만으로 primary/secondary 선정, scoreBand `{coachingBonus:20, total:20}`, invalid/all-completed 시 `null` 반환(cold-start fallback 신호).
+- `src/pages/training/academy.tsx`
+  - cold-start 직전 분기에서 `recentCoachingReferenceIds.length > 0` 시 `getRecommendationsFromCoaching` 우선.
+  - `TodayTrainingCard` 시그니처 `{progress}` → `{curriculumId, progress|null}`. progressMap.get(primary)로 옵셔널 동기. hasProgress=false일 때 일차/진행률 숨김 + "오늘 시작하기 →" CTA.
+  - dead `activeProgress` useMemo 제거.
+- `src/components/features/training/RecommendedCurriculumCard.tsx` — `scoreStyles.value` `width:36` → `minWidth:52` + `<Text numberOfLines={1}>`.
+
+### 검증
+| 단계 | 결과 |
+|---|---|
+| `tsc --noEmit` | PASS (ShareRewardCard 기존 무관 에러만) |
+| jest engine.test.ts (Phase 7 A-2 4건) | 13/13 PASS |
+| DEV Fast Refresh academy | 용기 내기 수업 2일차 20% + 이어서 하기 + 20/100 한 줄 (36, 37.png) |
+| `ait build` | deploymentId `019e53a0-3658-7c2e-9d58-68766b1a2890` |
+| 번들 스캔 | supabase URL ✅, brandIcon HTTPS ✅, isDevToolsEnabled=false ✅, ait-ad-test-* 0개 ✅ |
+| `ait deploy --scheme-only` | `intoss-private://taillog-app?_deploymentId=019e53a0-3658-7c2e-9d58-68766b1a2890` |
+| PROD `viva.republica.toss` 진입 | 씩씩한 독립심 클래스 + 오늘 시작하기 + 20/100 한 줄 (43, 44.png) |
+| BE health (`/health` 200, `/api/v1/coaching/generate-focused` 401) | PASS — BE 재배포 불필요 (FE only 패치) |
+
+### Files
+- `src/lib/data/recommendation/engine.ts` (+helper)
+- `src/lib/data/recommendation/__tests__/engine.test.ts` (+4 tests)
+- `src/pages/training/academy.tsx`
+- `src/components/features/training/RecommendedCurriculumCard.tsx`
+- `qa-screenshots/05-23-ait-upload/{30..44}.png`
+
+### Production deploymentId 갱신
+- 신규: `019e53a0-3658-7c2e-9d58-68766b1a2890` (16:00 KST)
+- 이전 deploymentId(들)는 콘솔 history에서만 확인.

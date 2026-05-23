@@ -294,3 +294,43 @@ export function getRecommendationsV2(
     isFromRecentCoaching: coachingRefSet.has(primary),
   };
 }
+
+/**
+ * 코칭 reference 단독 추천 (Phase 7 A-2).
+ *
+ * "코칭이 있으면 코칭이 곧 행동 진단 결과"라는 원칙으로,
+ * 로그가 5건 미만이라도 최근 코칭의 reference_curriculum_ids를 그대로 추천한다.
+ *
+ * 유효 ID(CURRICULUMS에 존재) + 미완료만 통과시키고,
+ * 모두 무효/완료면 null을 반환 — 호출처에서 cold-start로 폴백한다.
+ */
+export function getRecommendationsFromCoaching(
+  referenceIds: CurriculumId[],
+  completedCurriculumIds: CurriculumId[] = [],
+): CurriculumRecommendationV2 | null {
+  const completedSet = new Set(completedCurriculumIds);
+  const validIds = referenceIds.filter(
+    (id) => CURRICULUMS.some((c) => c.id === id) && !completedSet.has(id),
+  );
+  if (validIds.length === 0) return null;
+
+  const primary = validIds[0] as CurriculumId;
+  const secondary = (validIds[1] ?? null) as CurriculumId | null;
+
+  return {
+    primary,
+    secondary,
+    reasoning: '최근 AI 코칭에서 우선 추천한 훈련이에요',
+    scoreBand: {
+      behaviorScore: 0,
+      logIntensityScore: 0,
+      progressBonus: 0,
+      memoKeywordScore: 0,
+      coachingBonus: 20,
+      total: 20,
+    },
+    logBased: false,
+    coldStart: false,
+    isFromRecentCoaching: true,
+  };
+}

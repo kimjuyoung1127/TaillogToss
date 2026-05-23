@@ -19,7 +19,7 @@ import { EmptyState } from 'components/tds-ext/EmptyState';
 import { ICONS } from 'lib/data/iconSources';
 import { ErrorState } from 'components/tds-ext/ErrorState';
 import { CURRICULUMS } from 'lib/data/published/runtime';
-import { getRecommendations, getRecommendationsV2 } from 'lib/data/recommendation/engine';
+import { getRecommendations, getRecommendationsV2, getRecommendationsFromCoaching } from 'lib/data/recommendation/engine';
 import { useTrainingProgress, useStepFeedback, useBehaviorAnalytics } from 'lib/hooks/useTraining';
 import { useLatestCoaching } from 'lib/hooks/useCoaching';
 import { useIsPro } from 'lib/hooks/useSubscription';
@@ -119,6 +119,13 @@ function TrainingAcademyPage() {
       ) ??
       ['other'];
 
+    // Phase 7 A-2: 최근 코칭이 있으면 로그 수와 무관하게 코칭 reference를 우선 추천
+    // "코칭이 있으면 코칭이 곧 행동 진단 결과" — 신규 유저도 코칭 동기화 효과를 받음
+    if (recentCoachingReferenceIds.length > 0) {
+      const fromCoaching = getRecommendationsFromCoaching(recentCoachingReferenceIds, completedIds);
+      if (fromCoaching) return fromCoaching;
+    }
+
     if (!behaviorAnalytics || behaviorAnalytics.total_logs < 5) {
       return getRecommendations(coldStartBehaviors, completedIds);
     }
@@ -130,12 +137,6 @@ function TrainingAcademyPage() {
     // Phase 8: 진행 중 curriculum을 5번째 인자로 전달 → +8 progressBonus
     return getRecommendationsV2(behaviors, completedIds, behaviorAnalytics, recentCoachingReferenceIds, inProgressIds);
   }, [surveyData, dogEnv, completedIds, behaviorAnalytics, recentCoachingReferenceIds, inProgressIds]);
-
-  // 현재 진행 중인 커리큘럼
-  const activeProgress = useMemo(() => {
-    if (!Array.isArray(progressList)) return null;
-    return progressList.find((p: TrainingProgress) => p.status === 'in_progress') ?? null;
-  }, [progressList]);
 
   // 강아지 행동 텍스트 (설문 → DB 순 복원)
   const behaviorText = useMemo(() => {
@@ -322,16 +323,15 @@ function TrainingAcademyPage() {
             }}
           />
 
-          {/* 오늘의 훈련 카드 (현재 진행 중 커리큘럼 하이라이트) */}
-          {activeProgress && (
-            <TodayTrainingCard
-              progress={activeProgress}
-              onPress={() => {
-                const c = CURRICULUMS.find((cur) => cur.id === activeProgress.curriculum_id);
-                if (c) handleCardPress(c);
-              }}
-            />
-          )}
+          {/* 오늘의 훈련 카드 — 추천 primary 우선, 진행 중이면 진행률 동기 */}
+          <TodayTrainingCard
+            curriculumId={recommendation.primary}
+            progress={progressMap.get(recommendation.primary) ?? null}
+            onPress={() => {
+              const c = CURRICULUMS.find((cur) => cur.id === recommendation.primary);
+              if (c) handleCardPress(c);
+            }}
+          />
 
           {/* 인사이트 요약 바 (피드백 있을 때만) */}
           {feedbackList && feedbackList.length > 0 && (
@@ -391,34 +391,39 @@ function TrainingAcademyPage() {
 // ──────────────────────────────────────
 
 function TodayTrainingCard({
+  curriculumId,
   progress,
   onPress,
 }: {
-  progress: TrainingProgress;
+  curriculumId: CurriculumId;
+  progress: TrainingProgress | null;
   onPress: () => void;
 }) {
-  const curriculum = CURRICULUMS.find((c) => c.id === progress.curriculum_id);
+  const curriculum = CURRICULUMS.find((c) => c.id === curriculumId);
   if (!curriculum) return null;
 
   const totalSteps = curriculum.days.reduce((sum, d) => sum + d.steps.length, 0);
-  const completedSteps = progress.completed_steps.length;
+  const completedSteps = progress?.completed_steps.length ?? 0;
   const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+  const hasProgress = progress !== null && progressPercent > 0;
 
   return (
     <View style={styles.todayCard}>
       <View style={styles.todayHeader}>
         <Text style={styles.todayLabel}>오늘의 훈련</Text>
-        <Text style={styles.todayDay}>{progress.current_day}일차</Text>
+        {hasProgress && <Text style={styles.todayDay}>{progress.current_day}일차</Text>}
       </View>
       <Text style={styles.todayTitle}>{curriculum.title}</Text>
-      <View style={styles.todayProgress}>
-        <View style={styles.todayProgressTrack}>
-          <View style={[styles.todayProgressFill, { width: `${progressPercent}%` }]} />
+      {hasProgress && (
+        <View style={styles.todayProgress}>
+          <View style={styles.todayProgressTrack}>
+            <View style={[styles.todayProgressFill, { width: `${progressPercent}%` }]} />
+          </View>
+          <Text style={styles.todayProgressText}>{progressPercent}%</Text>
         </View>
-        <Text style={styles.todayProgressText}>{progressPercent}%</Text>
-      </View>
+      )}
       <TouchableOpacity style={styles.todayCTA} onPress={onPress} activeOpacity={0.7}>
-        <Text style={styles.todayCTAText}>이어서 하기 →</Text>
+        <Text style={styles.todayCTAText}>{hasProgress ? '이어서 하기 →' : '오늘 시작하기 →'}</Text>
       </TouchableOpacity>
     </View>
   );

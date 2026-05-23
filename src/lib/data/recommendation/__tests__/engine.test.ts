@@ -1,7 +1,7 @@
 /**
  * engine.test.ts — getRecommendationsV2 Phase 7 coaching↔academy 동기화 검증
  */
-import { getRecommendationsV2, type BehaviorAnalytics } from '../engine';
+import { getRecommendationsV2, getRecommendationsFromCoaching, type BehaviorAnalytics } from '../engine';
 import type { BehaviorType } from 'types/dog';
 import type { CurriculumId } from 'types/training';
 
@@ -99,5 +99,38 @@ describe('getRecommendationsV2 Phase 8 — progressBonus + memoKeywordScore', ()
     };
     const rec = getRecommendationsV2(['barking'], [], analytics, refs, inProgress);
     expect((rec.scoreBand?.total ?? 0)).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('getRecommendationsFromCoaching Phase 7 A-2 — coaching-only recommendation', () => {
+  it('유효 reference가 있으면 첫 번째를 primary, 두 번째를 secondary로 반환', () => {
+    const refs: CurriculumId[] = ['separation_anxiety', 'fear_desensitization'];
+    const rec = getRecommendationsFromCoaching(refs, []);
+
+    expect(rec).not.toBeNull();
+    expect(rec?.primary).toBe('separation_anxiety');
+    expect(rec?.secondary).toBe('fear_desensitization');
+    expect(rec?.isFromRecentCoaching).toBe(true);
+    expect(rec?.scoreBand?.coachingBonus).toBe(20);
+    expect(rec?.logBased).toBe(false);
+  });
+
+  it('완료된 reference는 스킵하고 다음 valid ID로 진행', () => {
+    const refs: CurriculumId[] = ['separation_anxiety', 'reactivity_management'];
+    const completed: CurriculumId[] = ['separation_anxiety'];
+    const rec = getRecommendationsFromCoaching(refs, completed);
+
+    expect(rec).not.toBeNull();
+    expect(rec?.primary).toBe('reactivity_management');
+  });
+
+  it('모든 reference가 invalid면 null 반환 (cold-start fallback 신호)', () => {
+    const refs = ['invalid_xyz' as CurriculumId, 'fake_id_2' as CurriculumId];
+    const rec = getRecommendationsFromCoaching(refs, []);
+    expect(rec).toBeNull();
+  });
+
+  it('reference 배열이 비어있으면 null 반환', () => {
+    expect(getRecommendationsFromCoaching([], [])).toBeNull();
   });
 });

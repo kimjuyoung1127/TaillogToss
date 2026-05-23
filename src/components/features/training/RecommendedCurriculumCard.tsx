@@ -136,7 +136,7 @@ function ScoreBandRow({
       <View style={scoreStyles.track}>
         <View style={[scoreStyles.fill, { width: `${pct}%`, backgroundColor: color }]} />
       </View>
-      <Text style={scoreStyles.value}>{value}/{max}</Text>
+      <Text style={scoreStyles.value} numberOfLines={1}>{value}/{max}</Text>
     </View>
   );
 }
@@ -305,7 +305,7 @@ const scoreStyles = StyleSheet.create({
   value: {
     ...typography.caption,
     color: colors.textSecondary,
-    width: 36,
+    minWidth: 52,
     textAlign: 'right',
   },
 });
