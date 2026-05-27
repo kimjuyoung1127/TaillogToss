@@ -482,11 +482,12 @@ function Stage3FormPage() {
             multiline
           />
           <TextInput
-            style={[styles.input, styles.mt8]}
+            style={[styles.input, styles.textArea, styles.mt8]}
             value={protectiveFactorsText}
             onChangeText={setProtectiveFactorsText}
-            placeholder="강점/보호요인 (예: 간식 보상 반응 좋음, 회복 빠름)"
+            placeholder={'강점/보호요인\n예: 간식 보상 반응이 좋아요. 회복이 빨라요.'}
             placeholderTextColor={colors.textSecondary}
+            multiline
           />
         </Section>
 
